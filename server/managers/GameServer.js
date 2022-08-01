@@ -8,14 +8,14 @@ module.exports = class GameServer {
         this.tickCount = 0;
         // i dont think there's a need for entities
 
-        setInterval(() => this.tick(), 1000 / 9); // 111.11111ms
+        setInterval(() => this.tick(), 100 / 9); // 11.11111ms
     }
 
     handlePayload(player, msg) {
         HandleMessage(player, msg);
     }
 
-    tick(delta) {
+    tick() {
         this.tickCount++;
         this.players.forEach(player => player.tick(this.tickCount));
     }
