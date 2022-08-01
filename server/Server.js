@@ -18,7 +18,7 @@ const PlayerManager = require('./managers/PlayerManager');
  * 1006 - Unknown Error
  */
 
-process.game = new GameServer();
+const game = new GameServer();
 process.CURRENT_BUILD = '213c2b12008132227b50c8441ee1639a54e0a104f7702a87796db70be6fec7ab';
 
 wss.on('listening', () => console.log('Server is listening for connections.'));
@@ -38,5 +38,5 @@ wss.on('connection', function(socket, request) {
         !request.headers["sec-websocket-key"] ||
         !request.headers["sec-websocket-extensions"]) return socket.close(1001);
 
-    process.game.addPlayer(new PlayerManager(socket));
+    game.addPlayer(new PlayerManager(game, socket));
 });

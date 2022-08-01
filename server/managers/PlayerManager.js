@@ -1,7 +1,8 @@
 const Colors = require('../util/Colors');
 
 module.exports = class PlayerManager {
-    constructor(socket) {
+    constructor(game, socket) {
+        this.game = game;
         this.angle = 0;
         this.moving = false;
         this.pinged = false;
@@ -14,13 +15,13 @@ module.exports = class PlayerManager {
     }
 
     _close() {
-        process.game.players.delete(this);
+        this.game.players.delete(this);
     }
 
     _attachListeners() { 
         this.socket.on('close', () => this._close());
         this.socket.on('error', console.error); // haha RSV1 error go brr
-        this.socket.on('message', msg => process.game.handlePayload(this, msg));
+        this.socket.on('message', msg => this.game.handlePayload(this, msg));
     }
 
     tick(count) { 
