@@ -38,5 +38,5 @@ wss.on('connection', function(socket, request) {
         !request.headers["sec-websocket-key"] ||
         !request.headers["sec-websocket-extensions"]) return socket.close(1001);
 
-    process.game.addPlayer(socket);
+    process.game.addPlayer(new PlayerManager(socket));
 });
