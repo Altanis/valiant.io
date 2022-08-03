@@ -31,7 +31,7 @@
     const socket = new WebSocket('wss://localhost:3000');*/
 
     document.getElementById('loading').style.display = 'none';
-    document.getElementById('textInputContainer').style.display = 'absolute';
+    document.getElementById('textInput').style.display = 'block';
 
     const CanvasEditor = {
         linedText: (text, x, y) => { context.strokeText(text, x, y); context.fillText(text, x, y) },
@@ -53,7 +53,7 @@
     
         context.font = `700 ${canvas.height / 50}px Ubuntu`;
         CanvasEditor.linedText('This turd is named...', canvas.width / 2, canvas.height / 2 - 50);
-        requestAnimationFrame(menu);
+        // requestAnimationFrame(menu);
     }
 
     requestAnimationFrame(menu);
