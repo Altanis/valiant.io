@@ -3,8 +3,8 @@
     const context = canvas.getContext('2d');
 
     // Mouse position is { x: event.clientX * dpr, y: event.clientY * dpr };
+    let width = 0, height = 0, dpr = 0;
     function resize() {
-        let width = 0, height = 0, dpr = 0;
         if (width !== window.innerWidth || height !== innerHeight || dpr !== window.devicePixelRatio) {
             width = window.innerWidth;
             height = window.innerHeight;
