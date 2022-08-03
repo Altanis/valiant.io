@@ -6,9 +6,12 @@ module.exports = class GameServer {
         this.players = new Set();
         this.mapSize = 10000;
         this.tickCount = 0;
-        // i dont think there's a need for entities
+        this.database = { // Will set up a proper database later.
+            accounts: {},
+            banned: [],
+        };
 
-        setInterval(() => this.tick(), 100 / 9); // 11.11111ms
+        setInterval(() => this.tick(), 1000 / 25); // 25 tps
     }
 
     handlePayload(player, msg) {
@@ -21,6 +24,6 @@ module.exports = class GameServer {
     }
 
     addPlayer(socket) {
-        this.players.add(new PlayerManager(socket));
+        this.players.add(new PlayerManager(this, socket));
     }
 };

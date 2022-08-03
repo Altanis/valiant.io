@@ -1,24 +1,27 @@
+/**
+ * PROTOCOL
+ * SERVERBOUND:
+    * 
+ * CLIENTBOUND:
+    * 
+ * ERRNO CODES
+ * 
+ * 1000 - Too Many Connections
+ * 1001 - Cheater Detected
+ * 1002 - Update Version
+ * 1003 - Invalid Account
+ * 1006 - Unknown Error
+ */
+
 module.exports = (player, message) => {
     try {
         message = message.toString();
         message = JSON.parse(string);
 
-        if (!Object.hasOwn(message, 'header')) return player.close(1001);
+        if (!Object.hasOwn(message, 'header')) 
+            return player.close(1001);
         switch (message.header) {
-            case 'INIT': {
-                const { build } = message;
-                if (CURRENT_BUILD !== build) {
-                    player.send({ header: 'INVALID_BUILD', build: CURRENT_BUILD });
-                    return player.close(1002);
-                }
-
-                player.send({ header: 'ACCEPT' });
-                break;
-            }
-            case 'PING': {
-                player.pinged = true;
-                break;
-            }
+            // Think of this later.
         }
     } catch (error) {
         player.close(1001);

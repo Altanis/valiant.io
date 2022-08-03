@@ -1,3 +1,4 @@
+const Vector = require('../structs/Vector');
 const Colors = require('../util/Colors');
 
 module.exports = class PlayerManager {
@@ -7,8 +8,15 @@ module.exports = class PlayerManager {
         this.moving = false;
         this.pinged = false;
 
-        this.position = { x: 0, y: 0 };
+        this.name = '';
+        this.alive = false;
+        this.account = null;
+
+        this.position = new Vector(0, 0);
+        this.velocity = new Vector(0, 0);
+
         this.socket = socket;
+        this.id = game.players.size;
         this.color = Colors.BROWN;
 
         this._attachListeners();
@@ -26,6 +34,7 @@ module.exports = class PlayerManager {
 
     tick(count) { 
         if (this.pinged) doMagic(); // doMagic = send changes
+        this.position = this.position.add(this.velocity);
 
         this.pinged = false;
         this.send({ header: 'PING' });

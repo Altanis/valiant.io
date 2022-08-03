@@ -1,30 +1,34 @@
+require('dotenv').config();
+
+// -- INITIALIZE SERVERS --
+const Express = require('express');
+const app = Express();
+const server = app.listen(3000, () => console.log('HTTP Server listening [PORT 3000].'));
+
 const { Server } = require('ws');
-const wss = new Server({ port: 3000 });
+const wss = new Server({ server });
+
+// -- SET UP DATABASE -- //
+const mongoose = require('mongoose');
+mongoose.connect(process.env.DB_URI)
+    .then(() => console.log('Connected to Database.'))
+    .catch(error => console.error('Could not connect to database: ', error));
+    
+// -- SET UP SERVERS -- //
+const { AccountRouter } = require('./routes/AccountRouter');
+app.use(Express.json());
+app.use('/account', AccountRouter)
 
 const GameServer = require('./managers/GameServer');
 const PlayerManager = require('./managers/PlayerManager');
 
-/**
- * PROTOCOL
- * SERVERBOUND:
-    * INIT: Initiates packet exchange. 
- * CLIENTBOUND:
-    * INVALID_BUILD: Invalid build sent in INIT packet. Returns { build: CURRENT_BUILD }
- * ERRNO CODES
- * 
- * 1000 - Too Many Connections
- * 1001 - Cheater Detected
- * 1002 - Update Version
- * 1006 - Unknown Error
- */
-
 const game = new GameServer();
-process.CURRENT_BUILD = '213c2b12008132227b50c8441ee1639a54e0a104f7702a87796db70be6fec7ab';
 
 wss.on('listening', () => console.log('Server is listening for connections.'));
 wss.on('connection', function(socket, request) {
     socket.ip = request.headers['x-forwarded-for'] || request.socket.remoteAddress;
-    if ([...wss.clients].filter(client => client.ip === socket.ip).length > 1) return socket.close(1000);
+    if ([...wss.clients].filter(client => client.ip === socket.ip).length > 1) 
+        return socket.close(1000);
 
     if (!request.headers.upgrade ||
         !request.headers.connection ||
@@ -36,7 +40,8 @@ wss.on('connection', function(socket, request) {
         !request.headers["accept-encoding"] ||
         !request.headers["accept-language"] ||
         !request.headers["sec-websocket-key"] ||
-        !request.headers["sec-websocket-extensions"]) return socket.close(1001);
+        !request.headers["sec-websocket-extensions"])
+            return socket.close(1001);
 
     game.addPlayer(new PlayerManager(game, socket));
 });
