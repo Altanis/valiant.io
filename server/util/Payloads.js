@@ -6,5 +6,6 @@ module.exports = {
     SERVERBOUND: {
         INIT: 0, // [0, string(id)]
         PING: 1, // [1]
+        SPAWN: 2,
     }
 }

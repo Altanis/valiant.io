@@ -21,7 +21,6 @@ const Writer = class {
 
     int(number) {
         this.buffer[this.at++] = number;
-        
         return this;
     }
 

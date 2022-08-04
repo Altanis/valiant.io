@@ -37,6 +37,13 @@ module.exports = async (player, message) => {
             case SERVERBOUND.PING: {
                 return player.send(writer.int(CLIENTBOUND.PING).out());
             }
+            case SERVERBOUND.SPAWN: {
+                const name = reader.string();
+
+                player.alive = true;
+                player.name = name || '';
+                break;
+            }
             default: {
                 return player.close(1001);
             }

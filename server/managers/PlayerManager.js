@@ -9,7 +9,7 @@ module.exports = class PlayerManager {
         this.pinged = false;
 
         this.name = '';
-        this.alive = false;
+        this.alive = null;
         this.account = null;
 
         this.position = new Vector(0, 0);
@@ -33,12 +33,11 @@ module.exports = class PlayerManager {
     }
 
     tick(count) { 
-        if (this.pinged) doMagic(); // doMagic = send changes
+        if (this.pinged && typeof this.alive !== 'object') doMagic(); // doMagic = send changes. only send changes if pinged (to save bandwith for zombied connections) and if player has spawned once.
         this.position = this.position.add(this.velocity);
 
         this.pinged = false;
         this.send(new Uint8Array([1])); // no need of wasting resources importing and instantiating a class
-        // this.send({ header: 'PING' });
     }
 
     send(message) {

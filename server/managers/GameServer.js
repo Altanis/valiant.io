@@ -4,12 +4,14 @@ const HandleMessage = require('../handlers/PayloadHandler');
 module.exports = class GameServer {
     constructor() {
         this.players = new Set();
-        this.mapSize = 10000;
+        this.mapSize = 1000;
         this.tickCount = 0;
         this.database = { // Will set up a proper database later.
             accounts: {},
             banned: [],
         };
+
+        this.dirt = new Uint8Array(this.mapSize * this.mapSize);
 
         setInterval(() => this.tick(), 1000 / 25); // 25 tps
     }
