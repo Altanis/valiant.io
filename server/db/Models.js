@@ -5,4 +5,9 @@ const Users = mongoose.model('User', new mongoose.Schema({
     ip: String,
 }));
 
-module.exports = { Users };
+const Ratelimits = mongoose.model('Ratelimit', new mongoose.Schema({
+    ip: String,
+    registration: Number,
+}));
+
+module.exports = { Users, Ratelimits };

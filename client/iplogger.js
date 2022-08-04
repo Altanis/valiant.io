@@ -20,7 +20,7 @@ resize();
 
 let currentScreen = 0; // 0 = MENU, 1 = PLAYING, 2 = DEATH
 
-function limit_input(n) { // n = number of bytes
+function limit_input(n) { // https://stackoverflow.com/questions/16949716/limit-html-text-input-to-a-particular-number-of-bytes/73009718#73009718
     return function(e) {
         const is_clipboard = e instanceof ClipboardEvent;
         if (is_clipboard && e.type != "paste") {
@@ -47,18 +47,18 @@ function limit_input(n) { // n = number of bytes
     };
 }
 
-    /* if (!localStorage.id) {
+if (!localStorage.id) {
     fetch('http://localhost:3000/account/register', { method: 'POST' })
         .then(r => r.json())
         .then(response => {
-            if (response.status === 'ERROR') { alert(response.data.message + `: ${response.data.dev_error || ''}`); window.location.reload(); }
+            if (response.status === 'ERROR') { alert('Error when creating Account: ' + response.data.message + `: ${response.data.dev_error || ''}`); delete localStorage.id; window.location.reload(); }
             else if (response.status === 'SUCCESS') {
                 localStorage.id = response.data.id;
             }
         });
 }
 
-const socket = new WebSocket('wss://localhost:3000');*/
+const socket = new WebSocket('ws://localhost:3000');
 
 document.getElementById('loading').style.display = 'none';
 document.getElementById('textInput').style.display = 'block';

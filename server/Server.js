@@ -15,9 +15,14 @@ mongoose.connect(process.env.DB_URI)
     .catch(error => console.error('Could not connect to database: ', error));
     
 // -- SET UP SERVERS -- //
-const { AccountRouter } = require('./routes/AccountRouter');
+const AccountRouter = require('./routes/AccountRouter');
 app.use(Express.json());
-app.use('/account', AccountRouter)
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();  
+})
+app.use('/account', AccountRouter);
 
 const GameServer = require('./managers/GameServer');
 const PlayerManager = require('./managers/PlayerManager');
@@ -43,5 +48,5 @@ wss.on('connection', function(socket, request) {
         !request.headers["sec-websocket-extensions"])
             return socket.close(1001);
 
-    game.addPlayer(new PlayerManager(game, socket));
+    game.addPlayer(socket);
 });

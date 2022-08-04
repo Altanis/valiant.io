@@ -1,3 +1,5 @@
+const { Users, Ratelimits } = require('../db/Models');
+
 /**
  * PROTOCOL
  * SERVERBOUND:
