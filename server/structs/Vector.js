@@ -1,65 +1,32 @@
-// Credits to @Craaby (https://github.com/Craabby/brutal-private/blob/master/Vector.js)
-
-class Vector {
+module.exports = class Vector {
     constructor(x, y) {
         this.x = x;
         this.y = y;
     }
 
     add(vector) {
-        return new Vector(this.x + vector.x, this.y + vector.y);
+        this.x += vector.x;
+        this.y += vector.y;
+
+        return this;
     }
 
     subtract(vector) {
-        return new Vector(this.x - vector.x, this.y - vector.y);
+        this.x -= vector.x;
+        this.y -= vector.y;
+
+        return this;
     }
 
-    /*scale(scalar) {
-        return new Vector(this.x * scalar, this.y * scalar);
-    }*/
-
-    distance(vector) {
-        const subtracted = this.subtract(vector);
-        return Math.sqrt(Math.pow(subtracted.x, 2) + Math.pow(subtracted.y, 2)); // math.pow(a, b) is faster than a ** b but makes the code less readable
+    distance(vector) { // d = sqrt(∆x^2 + ∆y^2)
+        return Math.sqrt(Math.pow(this.x - vector.x, 2), Math.pow(this.y - vector.y, 2));
     }
 
-    /*dot(vector) {
-        return this.x * vector.x + this.y * vector.y;
+    clone() {
+        return new Vector(this.x, this.y);
     }
 
-    divideByVector(vector) {
-        return new Vector(this.x / vector.x, this.y, vector.y);
-    }
-
-    divideByNumber(scale) {
-        return new Vector(this.x / scale, this.y / scale);
-    }
-
-    movePointByAngle(distance, angle) { // useful
-        const vec = new Vector(
-            distance * Math.cos(angle),
-            distance * Math.sin(angle)
-        );
-
-        return this.add(vec);
-    }
-
-    get mag() {
+    get magnitude() { // m = sqrt(x^2 + y^2)
         return Math.hypot(this.x, this.y);
     }
-
-    get dir() {
-        return Math.atan2(this.y, this.x); // for Math.atan2 it actually takes the y param first for some reason
-    }
-
-    get normalize() {
-        const mag = this.mag;
-
-        const x = this.x / mag || 0;
-        const y = this.y / mag || 0;
-
-        return new Vector(x, y);
-    }*/
 }
-
-module.exports = Vector;
