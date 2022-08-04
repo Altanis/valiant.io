@@ -37,11 +37,11 @@ module.exports = class PlayerManager {
         this.position = this.position.add(this.velocity);
 
         this.pinged = false;
-        this.send({ header: 'PING' });
+        this.send(new Uint8Array([1])); // no need of wasting resources importing and instantiating a class
+        // this.send({ header: 'PING' });
     }
 
     send(message) {
-        if (typeof message !== 'string') message = JSON.stringify(message);
         this.socket.send(message);
     }
 

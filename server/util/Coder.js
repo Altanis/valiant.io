@@ -61,3 +61,5 @@ const Reader = class {
         return f32[0];
     }
 }
+
+module.exports = { Reader, Writer };

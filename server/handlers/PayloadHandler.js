@@ -1,4 +1,6 @@
 const { Users, Ratelimits } = require('../db/Models');
+const { Reader, Writer } = require('../util/Coder');
+const { SERVERBOUND, CLIENTBOUND } = require('../util/Payloads');
 
 /**
  * PROTOCOL
@@ -15,15 +17,29 @@ const { Users, Ratelimits } = require('../db/Models');
  * 1006 - Unknown Error
  */
 
-module.exports = (player, message) => {
-    try {
-        message = message.toString();
-        message = JSON.parse(string);
+module.exports = async (player, message) => {
+    const reader = new Reader(message);
+    const writer = new Writer();
 
-        if (!Object.hasOwn(message, 'header')) 
-            return player.close(1001);
-        switch (message.header) {
-            // Think of this later.
+    const users = await Users.find(), ratelimits = await Ratelimits.find();
+
+    try {
+        switch (reader.int()) {
+            case SERVERBOUND.INIT: {
+                const id = reader.string();
+                const user = users.filter(user => user.id === id);
+
+                if (!user) return player.close(1003);
+                player.account = user;
+
+                return player.send(writer.int(CLIENTBOUND.ACCEPT).out());
+            }
+            case SERVERBOUND.PING: {
+                return player.send(writer.int(CLIENTBOUND.PING).out());
+            }
+            default: {
+                return player.close(1001);
+            }
         }
     } catch (error) {
         player.close(1001);

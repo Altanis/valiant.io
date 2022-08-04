@@ -1,4 +1,66 @@
 // ADD IIFE LATER
+const base = new ArrayBuffer(4),
+    u8 = new Uint8Array(base),
+    f32 = new Float32Array(base);
+
+const Writer = class {
+    constructor(length = 4096) {
+        this.at = 0;
+        this.buffer = new Uint8Array(length);
+
+        this.TextEncoder = new TextEncoder();
+    }
+
+    string(str) {
+        const bytes = this.TextEncoder.encode(str);
+        this.buffer.set(bytes, this.at);
+        this.at += bytes.length;
+
+        return this;
+    }
+
+    int(number) {
+        this.buffer[this.at++] = number;
+        
+        return this;
+    }
+
+    float(number) {
+        f32[0] = number;
+        this.buffer.set(u8, this.at); 
+        this.at += 4;
+
+        return this;
+    }
+
+    out() {
+        return this.buffer.subarray(0, this.at);
+    }
+}
+
+const Reader = class {
+    constructor(buffer) {
+        this.at = 0;
+        this.buffer = buffer;
+
+        this.TextDecoder = new TextDecoder();
+    }
+
+    string() {
+        const start = this.at;
+        while (this.buffer[this.at]) this.at++;
+        return this.TextDecoder.decode(this.buffer.subarray(start, this.at));
+    }
+
+    int() {
+        return this.buffer[this.at++];
+    }
+
+    float() {
+        u8.set(this.buffer.subarray(this.buffer.at, this.buffer.at += 4));
+        return f32[0];
+    }
+}
 
 const canvas = window.canvas = document.getElementById('canvas');
 const context = canvas.getContext('2d');
@@ -51,14 +113,38 @@ if (!localStorage.id) {
     fetch('http://localhost:3000/account/register', { method: 'POST' })
         .then(r => r.json())
         .then(response => {
-            if (response.status === 'ERROR') { alert('Error when creating Account: ' + response.data.message + `: ${response.data.dev_error || ''}`); delete localStorage.id; window.location.reload(); }
+            if (response.status === 'ERROR') { alert('Error when creating Account: ' + response.data.message + `: ${response.data.dev_error || ''}`); delete localStorage.id; }
             else if (response.status === 'SUCCESS') {
                 localStorage.id = response.data.id;
             }
+
+            window.location.reload();
         });
 }
 
 const socket = new WebSocket('ws://localhost:3000');
+socket.binaryType = 'arraybuffer';
+
+socket.addEventListener('open', () => {
+    console.log('[WEBSOCKET]: Socket opened.');
+    socket.send(new Writer().int(0).string(localStorage.id).out());
+});
+socket.addEventListener('error', console.error);
+socket.addEventListener('close', ({ code }) => {
+    switch (code) {
+        // Deal with these later.
+    }
+});
+
+socket.addEventListener('message', ({ data }) => {
+    data = new Uint8Array(data);
+    const reader = new Reader(data);
+
+    switch (reader.int()) {
+        case 0: { return console.log('Logged in.'); }
+        case 1: { return socket.send(new Writer().int(1).out()); }
+    }
+});
 
 document.getElementById('loading').style.display = 'none';
 document.getElementById('textInput').style.display = 'block';
