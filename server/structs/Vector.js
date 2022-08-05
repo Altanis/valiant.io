@@ -18,12 +18,19 @@ module.exports = class Vector {
         return this;
     }
 
-    distance(vector) { // d = sqrt(∆x^2 + ∆y^2)
-        return Math.sqrt(Math.pow(this.x - vector.x, 2), Math.pow(this.y - vector.y, 2));
-    }
+    random(min, max) {
+        this.x = Math.floor(Math.random() * max) + min;        
+        this.y = Math.floor(Math.random() * max) + min;
 
+        return this;
+    }
+    
     clone() {
         return new Vector(this.x, this.y);
+    }
+
+    distance(vector) { // d = sqrt(∆x^2 + ∆y^2)
+        return Math.sqrt(Math.pow(this.x - vector.x, 2), Math.pow(this.y - vector.y, 2));
     }
 
     get magnitude() { // m = sqrt(x^2 + y^2)

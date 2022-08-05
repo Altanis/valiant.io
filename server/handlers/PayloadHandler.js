@@ -18,13 +18,17 @@ const { SERVERBOUND, CLIENTBOUND } = require('../util/Payloads');
  */
 
 module.exports = async (player, message) => {
+    message = new Uint8Array(message);
+
     const reader = new Reader(message);
     const writer = new Writer();
 
     const users = await Users.find(), ratelimits = await Ratelimits.find();
 
     try {
-        switch (reader.int()) {
+        const header = reader.int();
+
+        switch (header) {
             case SERVERBOUND.INIT: {
                 const id = reader.string();
                 const user = users.filter(user => user.id === id);
@@ -35,6 +39,7 @@ module.exports = async (player, message) => {
                 return player.send(writer.int(CLIENTBOUND.ACCEPT).out());
             }
             case SERVERBOUND.PING: {
+                player.pinged = true;
                 return player.send(writer.int(CLIENTBOUND.PING).out());
             }
             case SERVERBOUND.SPAWN: {
@@ -42,6 +47,9 @@ module.exports = async (player, message) => {
 
                 player.alive = true;
                 player.name = name || '';
+                player.position.random(0, player.game.mapSize);
+
+                console.log(player);
                 break;
             }
             default: {
@@ -49,6 +57,7 @@ module.exports = async (player, message) => {
             }
         }
     } catch (error) {
+        console.error(error);
         player.close(1001);
     }
 }

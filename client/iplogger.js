@@ -131,6 +131,7 @@ socket.addEventListener('open', () => {
 });
 socket.addEventListener('error', console.error);
 socket.addEventListener('close', ({ code }) => {
+    console.log('closed', code);
     switch (code) {
         // Deal with these later.
     }
@@ -143,6 +144,7 @@ socket.addEventListener('message', ({ data }) => {
     switch (reader.int()) {
         case 0: { return console.log('Logged in.'); }
         case 1: { return socket.send(new Writer().int(1).out()); }
+        case 2: { return console.log(data); }
     }
 });
 
@@ -191,5 +193,12 @@ function menu() {
     }
     requestAnimationFrame(menu);
 }
+
+document.addEventListener('keydown', ({ code }) => {
+    if (code === 'Enter') {
+        console.log('hi');
+        socket.readyState === 1 && socket.send(new Writer().int(2).string(document.getElementById('textInput').innerText).out());
+    }
+});
 
 requestAnimationFrame(menu);

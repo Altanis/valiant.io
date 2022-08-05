@@ -10,6 +10,8 @@ module.exports = class PlayerManager {
 
         this.name = '';
         this.alive = null;
+        this.points = 0;
+
         this.account = null;
 
         this.position = new Vector(0, 0);
@@ -33,8 +35,18 @@ module.exports = class PlayerManager {
     }
 
     tick(count) { 
-        if (this.pinged && typeof this.alive !== 'object') doMagic(); // doMagic = send changes. only send changes if pinged (to save bandwith for zombied connections) and if player has spawned once.
-        this.position = this.position.add(this.velocity);
+        if (this.pinged && typeof this.alive !== 'object') {
+            
+            const range = Math.floor(((this.points / 1000) + (this.game.mapSize / 200)) * 4); // range worm can see
+            const startIndex = this.position.x, endIndex = (this.position.x + (range * 5)) * 2;
+            let pixelsInRange = this.game.turd.subarray(startIndex - 1, endIndex); // pixels to send to client
+            pixelsInRange = pixelsInRange.filter(i => i % 5 === 0); // remove gametick respawn
+
+            const packet = new Uint8Array([2, ...pixelsInRange]);
+            this.send(packet);
+        }
+
+        this.position.add(this.velocity);
 
         this.pinged = false;
         this.send(new Uint8Array([1])); // no need of wasting resources importing and instantiating a class
