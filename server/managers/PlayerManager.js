@@ -11,6 +11,7 @@ module.exports = class PlayerManager {
         this.name = '';
         this.alive = null;
         this.points = 0;
+        this.size = { width: 10, length: 10 };
 
         this.account = null;
 
@@ -35,15 +36,11 @@ module.exports = class PlayerManager {
     }
 
     tick(count) { 
-        if (this.pinged && typeof this.alive !== 'object') {
-            
-            const range = Math.floor(((this.points / 1000) + (this.game.mapSize / 200)) * 4); // range worm can see
-            const startIndex = this.position.x, endIndex = (this.position.x + (range * 5)) * 2;
-            let pixelsInRange = this.game.turd.subarray(startIndex - 1, endIndex); // pixels to send to client
-            pixelsInRange = pixelsInRange.filter(i => i % 5 === 0); // remove gametick respawn
-
-            const packet = new Uint8Array([2, ...pixelsInRange]);
-            this.send(packet);
+        if (this.pinged && typeof this.alive !== 'object' && !this.didOnce) {
+            this.didOnce = true;
+            // const range = Math.floor(((this.points / 1000) + (this.game.mapSize / 200)) * 4); // range worm can see
+            console.log(this.position);
+            console.log(this.game.turd.find(this.position));
         }
 
         this.position.add(this.velocity);

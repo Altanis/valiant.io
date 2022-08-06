@@ -47,10 +47,7 @@ module.exports = async (player, message) => {
 
                 player.alive = true;
                 player.name = name || '';
-                player.position.random(0, player.game.mapSize);
-
-                console.log(player);
-                break;
+                return player.position.random(0, player.game.mapSize);
             }
             default: {
                 return player.close(1001);

@@ -1,19 +1,26 @@
 const PlayerManager = require("./PlayerManager");
 const HandleMessage = require('../handlers/PayloadHandler');
-const { Types, States } = require('../util/TurdType');
+const Types = require('../util/TurdType');
+const SpatialHashGrid = require("./SpatialHashGrid");
 
 module.exports = class GameServer {
     constructor() {
         this.players = new Set();
-        this.mapSize = 10000;
+        this.mapSize = 1000;
         this.tickCount = 0;
+        this.turd = new SpatialHashGrid(this);
 
-        this.turd = new Uint8Array(this.mapSize * this.mapSize * 5); // 1 byte for the type of turd, 4 bytes for respawn tick
-        let length = this.turd.length;
-        while (length--) {
-            if (length % 5 === 0) // a turd type byte
-                this.turd[length] = Types.Turd | States.NotDestroyed;
+        for (let x = this.mapSize; x > -(this.mapSize + 1); x--) {
+            for (let y = this.mapSize; y > -(this.mapSize + 1); y--) {
+                this.turd.insert({ x, y }, { width: 1, height: 1 }, {
+                    type: Types.Turd,
+                    destroyed: false,
+                    respawnAt: null,
+                });
+            }
         }
+
+        console.log(this.turd.find({ x: 1, y: 2 }))
 
         setInterval(() => this.tick(), 1000 / 25); // 25 tps
     }
@@ -24,9 +31,7 @@ module.exports = class GameServer {
 
     tick() {
         this.tickCount++;
-        if (this.turd.indexOf(this.tickCount) !== -1) { // turd wants to respawn this tick
-
-        }
+        // figure out how to check for respawns quickly every tick
 
         this.players.forEach(player => player.tick(this.tickCount));
     }
