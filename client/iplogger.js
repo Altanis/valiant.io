@@ -1,33 +1,39 @@
 // ADD IIFE LATER
-const base = new ArrayBuffer(4),
-    u8 = new Uint8Array(base),
-    f32 = new Float32Array(base);
+const convo = new ArrayBuffer(4),
+    i8 = new Int8Array(convo),
+    u32 = new Int32Array(convo),
+    f32 = new Float32Array(convo);
 
 const Writer = class {
     constructor(length = 4096) {
-        this.at = 0;
-        this.buffer = new Uint8Array(length);
-
-        this.TextEncoder = new TextEncoder();
+        this.at = 0, this.buffer = new Int8Array(length);
+        this.UTF8Encoder = new TextEncoder();
     }
 
     string(str) {
-        const bytes = this.TextEncoder.encode(str);
+        const bytes = this.UTF8Encoder.encode(str);
         this.buffer.set(bytes, this.at);
         this.at += bytes.length;
 
         return this;
     }
 
-    int(number) {
+    i8(number) {
         this.buffer[this.at++] = number;
-        
         return this;
     }
+    
+    u32(number) {
+        u32[0] = number;
+        this.buffer.set(i8, this.at);
+        this.at += 4;
 
-    float(number) {
+        return this; 
+    }
+
+    f32(number) {
         f32[0] = number;
-        this.buffer.set(u8, this.at); 
+        this.buffer.set(i8, this.at);
         this.at += 4;
 
         return this;
@@ -38,26 +44,27 @@ const Writer = class {
     }
 }
 
-const Reader = class {
+const Reader = class  {
     constructor(buffer) {
-        this.at = 0;
-        this.buffer = buffer;
-
-        this.TextDecoder = new TextDecoder();
+        this.at = 0, this.buffer = buffer;
+        this.UTF8Decoder = new TextDecoder();
     }
 
     string() {
         const start = this.at;
         while (this.buffer[this.at]) this.at++;
-        return this.TextDecoder.decode(this.buffer.subarray(start, this.at));
+        return this.UTF8Decoder.decode(this.buffer.subarray(start, this.at));
     }
 
-    int() {
-        return this.buffer[this.at++];
+    i8() { return this.buffer[this.at++]; }
+
+    u32() {
+        i8.set(this.buffer.subarray(this.at, this.at += 4));
+        return u32[0];
     }
 
-    float() {
-        u8.set(this.buffer.subarray(this.buffer.at, this.buffer.at += 4));
+    f32() {
+        i8.set(this.buffer.subarray(this.at, this.at += 4));
         return f32[0];
     }
 }
@@ -127,7 +134,7 @@ socket.binaryType = 'arraybuffer';
 
 socket.addEventListener('open', () => {
     console.log('[WEBSOCKET]: Socket opened.');
-    socket.send(new Writer().int(0).string(localStorage.id).out());
+    socket.send(new Writer().i8(0).string(localStorage.id).out());
 });
 socket.addEventListener('error', console.error);
 socket.addEventListener('close', ({ code }) => {
@@ -138,15 +145,43 @@ socket.addEventListener('close', ({ code }) => {
 });
 
 socket.addEventListener('message', ({ data }) => {
-    data = new Uint8Array(data);
+    data = new Int8Array(data);
+    data[0] === 2 && console.log(Array.from(data).toString());
     const reader = new Reader(data);
 
-    switch (reader.int()) {
+    switch (reader.i8()) {
         case 0: { return console.log('Logged in.'); }
-        case 1: { return socket.send(new Writer().int(1).out()); }
-        case 2: { return console.log(data); }
+        case 1: { return socket.send(new Writer().i8(1).out()); }
+        case 2: { 
+            updates++;
+            const data = [];
+            
+            const field = reader.i8();
+            switch (field) {
+                case 0: { // Arena
+                    while (reader.buffer[reader.at] >= 0) {
+                        data.push({
+                            type: reader.i8(),
+                            x: reader.u32(),
+                            y: reader.u32(),
+                            w: reader.u32(),
+                            h: reader.u32(),
+                        })
+                    }
+                    break;
+                }
+            }
+
+            return console.log(data);
+        }
     }
 });
+
+let updates = 0;
+setInterval(() => {
+    console.log(updates, 'updates per second.');
+    updates = 0;
+}, 1000);
 
 document.getElementById('loading').style.display = 'none';
 document.getElementById('textInput').style.display = 'block';
@@ -197,7 +232,7 @@ function menu() {
 document.addEventListener('keydown', ({ code }) => {
     if (code === 'Enter') {
         console.log('hi');
-        socket.readyState === 1 && socket.send(new Writer().int(2).string(document.getElementById('textInput').innerText).out());
+        socket.readyState === 1 && socket.send(new Writer().i8(2).string(document.getElementById('textInput').innerText).out());
     }
 });
 

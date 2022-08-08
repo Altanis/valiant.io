@@ -5,9 +5,15 @@ const { SERVERBOUND, CLIENTBOUND } = require('../util/Payloads');
 /**
  * PROTOCOL
  * SERVERBOUND:
-    * 
+    * INIT: [0, string(user_id)]
+    * PING: [1]
+    * SPAWN: [2, string(name)]
  * CLIENTBOUND:
-    * 
+    * ACCEPT: [0]
+    * PING: [1]
+    * MAGIC: (very complicated)
+        * Field 0 (ARENA): [2, 0, ...entities[i8(type), u32(posx), u32(posy), u32(height), u32(width)]]
+            * DEV_NOTE: When specializizng different entity types, remove height and width for turds. Client will auto assume 1x1. 
  * ERRNO CODES
  * 
  * 1000 - Too Many Connections
@@ -18,7 +24,7 @@ const { SERVERBOUND, CLIENTBOUND } = require('../util/Payloads');
  */
 
 module.exports = async (player, message) => {
-    message = new Uint8Array(message);
+    message = new Int8Array(message);
 
     const reader = new Reader(message);
     const writer = new Writer();
@@ -26,7 +32,7 @@ module.exports = async (player, message) => {
     const users = await Users.find(), ratelimits = await Ratelimits.find();
 
     try {
-        const header = reader.int();
+        const header = reader.i8();
 
         switch (header) {
             case SERVERBOUND.INIT: {
@@ -36,11 +42,11 @@ module.exports = async (player, message) => {
                 if (!user) return player.close(1003);
                 player.account = user;
 
-                return player.send(writer.int(CLIENTBOUND.ACCEPT).out());
+                return player.send(writer.i8(CLIENTBOUND.ACCEPT).out());
             }
             case SERVERBOUND.PING: {
                 player.pinged = true;
-                return player.send(writer.int(CLIENTBOUND.PING).out());
+                return player.send(writer.i8(CLIENTBOUND.PING).out());
             }
             case SERVERBOUND.SPAWN: {
                 const name = reader.string();

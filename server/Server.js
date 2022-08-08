@@ -20,6 +20,12 @@ app.use(Express.json());
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    if (!request.headers.upgrade ||
+        !request.headers.connection ||
+        !request.headers.host ||
+        !request.headers.pragma ||
+        !request.headers["cache-control"] ||
+        !request.headers["user-agent"]) return;
     next();  
 })
 app.use('/account', AccountRouter);
