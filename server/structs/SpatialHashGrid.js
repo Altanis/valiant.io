@@ -1,8 +1,6 @@
 // Credits to Crabby for his implementation of a Spatial Hash Grid. (my personal implementation is at ./zpersonal_grid.js)
 // I will be using this for some time to focus on development of Digturd.io.
 
-const cellSize = 4;
-
 class Box {
     constructor(x, y, w, h) {
         this.x = x;
@@ -20,8 +18,11 @@ class SpatialHashGrid {
     cells = new Map();
     cellSize = 4;
     queryId = 0;
+    entities = 0;
     
     insert(x, y, w, h, info) {
+        this.entities++;
+
         const box = new Box(x, y, w, h);
 
         const startX = box.x >> this.cellSize;
@@ -75,6 +76,8 @@ class SpatialHashGrid {
     }
 
     remove(x, y, type) {
+        this.entities--;
+        
         const box = new Box(x, y, 0, 0);
 
         const startX = box.x >> this.cellSize;
@@ -111,6 +114,7 @@ class SpatialHashGrid {
 }
 
 module.exports = SpatialHashGrid;
+
 /*const grid = new SpatialHashGrid();
 
 const insert_before = performance.now();

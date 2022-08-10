@@ -25,6 +25,7 @@ const Writer = class {
     
     u32(number) {
         u32[0] = number;
+        console.log(i8, this.buffer.length);
         this.buffer.set(i8, this.at);
         this.at += 4;
 

@@ -37,26 +37,28 @@ module.exports = class PlayerManager {
         this.socket.on('message', msg => this.game.handlePayload(this, msg));
     }
 
-    updatePos() {
-        this.position.add(this.velocity);
-    }
-
     tick(count) {
+        this.position.add(this.velocity);
+
         if (this.pinged && typeof this.alive !== 'object') {
-            const writer = new Writer().i8(2).i8(0); // Payload MAGIC, arena field
+            // Payload MAGIC
 
-            const range = Math.floor(this.points / 1000 + 5);
-            const found = this.game.arena.query(this.position.x, this.position.y, range, range);
+            // Field ARENA
+            const arena = new Writer().i8(2).i8(0);
 
-            for (let i = found.length; i--;) {
-                const entity = found[i];
-                writer.i8(entity.info.type).u32(entity.box.x).u32(entity.box.y).u32(entity.box.w).u32(entity.box.h);
+            const range = Math.floor(this.points / 1000 + 5); // flawed formula, will make a better one later
 
-                /*switch (entity.info.type) { // When specialization occurs
-                }*/
+            for (let rangedX = range + 1; rangedX--;) {
+                for (let rangedY = range + 1; rangedY--;) {
+                    const [type, [x, y]] = this.game.turd[this.position.x - rangedX][this.position.y - rangedY];
+                    arena.i8(type).u32(x).u32(y).u32(1).u32(1);
+                }
             }
 
-            this.send(writer.i8(-1).out()); //  Figure out how to terminate
+            // Field PLAYERS
+            
+
+            this.send(arena.i8(-1).out());
         }
 
         this.pinged = false;
