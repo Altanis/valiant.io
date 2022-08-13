@@ -17,6 +17,12 @@ module.exports = class PlayerManager {
 
         this.account = null;
 
+        this.old = {
+            position: new Vector(0, 0),
+            size: { width: 100, height: 100 },
+            points: 0,
+        }
+
         this.position = new Vector(0, 0);
         this.velocity = new Vector(0, 0);
 
@@ -27,38 +33,57 @@ module.exports = class PlayerManager {
         this._attachListeners();
     }
 
+    get updated() {
+        return (this.position.x === this.old.position.x && this.position.y === this.old.position.y) &&
+            (this.size.width === this.old.size.width && this.size.height === this.old.size.height) &&
+            this.points === this.old.points;
+    }
+
     _close() {
         this.game.players.splice(this.game.players.indexOf(this), 1);
     }
 
     _attachListeners() { 
         this.socket.on('close', () => this._close());
-        this.socket.on('error', console.error); // haha RSV1 error go brr
+        this.socket.on('error', console.error);
         this.socket.on('message', msg => this.game.handlePayload(this, msg));
     }
 
-    tick(count) {
+    update() {
+        this.old.position = this.position;
         this.position.add(this.velocity);
+        // update size, fov, points, etc
+    }
 
+    tick(count) {
         if (this.pinged && typeof this.alive !== 'object') {
-            // Payload MAGIC
+            const update = new Writer().i8(2);
 
-            // Field ARENA
-            const arena = new Writer().i8(2).i8(0);
+            if (this.updated) {
+                const range = Math.floor(this.points / 1000 + 5);
 
-            const range = Math.floor(this.points / 1000 + 5); // flawed formula, will make a better one later
+                if (this.velocity.x !== 0 || this.velocity.y !== 0) {
+                    update.i8(0); // turd field
+                    for (let rangedX = range + 1; rangedX--;) {
+                        for (let rangedY = range + 1; rangedY--;) {
+                            const [type, [x, y], respawnAt] = this.game.turd[this.position.x - rangedX][this.position.y - rangedY];
+                            if (respawnAt) update.i8(type).u32(x).u32(y);
+                        }
+                    }
+                    update.i8(-1);
 
-            for (let rangedX = range + 1; rangedX--;) {
-                for (let rangedY = range + 1; rangedY--;) {
-                    const [type, [x, y]] = this.game.turd[this.position.x - rangedX][this.position.y - rangedY];
-                    arena.i8(type).u32(x).u32(y).u32(1).u32(1);
+                    update.i8(1) // player field
+                        .i8(this.color)
+                        .u32(this.points)
+                        .u32(this.position.x)
+                        .u32(this.position.y)
+                        .u32(this.size.width)
+                        .u32(this.size.height)
+                    .i8(-1);
                 }
+    
+                this.send(update.out());
             }
-
-            // Field PLAYERS
-            
-
-            this.send(arena.i8(-1).out());
         }
 
         this.pinged = false;

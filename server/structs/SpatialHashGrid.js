@@ -118,8 +118,8 @@ module.exports = SpatialHashGrid;
 /*const grid = new SpatialHashGrid();
 
 const insert_before = performance.now();
-for (let x = 0; x < 2000; x++) {
-    for (let y = 0; y < 2000; y++) {
+for (let x = 0; x < 20000; x++) {
+    for (let y = 0; y < 20000; y++) {
         grid.insert(x, y, 1, 1, { type: 1, destroyed: 0, respawnAt: 1248943034 });
     }
 }

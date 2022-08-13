@@ -23,6 +23,8 @@ const Writer = class {
     }
     
     u32(number) {
+        // console.trace(number);
+
         u32[0] = number;
         this.buffer.set(i8, this.at);
         this.at += 4;

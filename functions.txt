@@ -1,2 +1,0 @@
-Range Function, given R = range (in px), p = points of player:
-R(p) = floor(p / 1000 + 5)
