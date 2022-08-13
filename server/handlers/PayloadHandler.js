@@ -48,8 +48,7 @@ module.exports = async (player, message) => {
                 return player.send(writer.i8(CLIENTBOUND.ACCEPT).out());
             }
             case SERVERBOUND.PING: {
-                player.pinged = true;
-                return player.send(writer.i8(CLIENTBOUND.PING).out());
+                return player.pinged = true;
             }
             case SERVERBOUND.SPAWN: {
                 const name = reader.string();
@@ -79,6 +78,7 @@ module.exports = async (player, message) => {
                     .u32(player.position.y)
                     .u32(player.size.width)
                     .u32(player.size.height)
+                    .u32(range)
                 .i8(-1);
 
                 return player.send(update.out());

@@ -34,9 +34,9 @@ module.exports = class PlayerManager {
     }
 
     get updated() {
-        return (this.position.x === this.old.position.x && this.position.y === this.old.position.y) &&
-            (this.size.width === this.old.size.width && this.size.height === this.old.size.height) &&
-            this.points === this.old.points;
+        return (this.position.x !== this.old.position.x || this.position.y !== this.old.position.y) ||
+            (this.size.width !== this.old.size.width || this.size.height !== this.old.size.height) ||
+            this.points !== this.old.points;
     }
 
     _close() {
@@ -56,6 +56,8 @@ module.exports = class PlayerManager {
     }
 
     tick(count) {
+        this.update();
+
         if (this.pinged && typeof this.alive !== 'object') {
             const update = new Writer().i8(2);
 
@@ -79,6 +81,7 @@ module.exports = class PlayerManager {
                         .u32(this.position.y)
                         .u32(this.size.width)
                         .u32(this.size.height)
+                        .u32(range)
                     .i8(-1);
                 }
     
@@ -86,8 +89,10 @@ module.exports = class PlayerManager {
             }
         }
 
-        this.pinged = false;
-        this.send(new Int8Array([1])); // no need of wasting resources importing and instantiating a class
+        if (count % 5 === 0) {
+            this.pinged = false;
+            this.send(new Int8Array([1])); // no need of wasting resources importing and instantiating a class
+        }
     }
 
     send(message) {

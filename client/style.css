@@ -12,6 +12,17 @@ body {
 	background-color: #754200;
 }
 
+#loading {
+    position: absolute;
+    top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+    color: #000;
+    font-size: 50px;
+    font-family: Ubuntu;
+    font-weight: bolder;
+}
+
 #canvas {
 	position: absolute;
 	top: 0;
@@ -34,4 +45,5 @@ body {
 	font-size: 47px;
 	font-family: 'Ubuntu';
 	font-weight: bolder;
+	display: none;
 }

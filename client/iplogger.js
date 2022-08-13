@@ -160,7 +160,10 @@ class Game {
                     y: reader.u32(),
                     w: reader.u32(),
                     h: reader.u32(),
+                    fov: reader.u32(),
                 };
+                
+                alert(data.player.fov);
             }
         }
     
@@ -206,14 +209,14 @@ class Game {
         this.socket.addEventListener('message', ({ data }) => {
             data = new Int8Array(data);
             const reader = new Reader(data);
-        
+
             switch (reader.i8()) {
                 case 0: { return console.log('Logged in.'); }
                 case 1: { return this.socket.send(new Writer().i8(1).out()); }
                 case 2: { 
                     updates++;
         
-                    while (reader.buffer.length !== reader.at) {
+                    while (reader.buffer.length > reader.at) {
                         const d = this._parseField(reader);
                         this.data[d.type] = d[d.type];
                     }
@@ -232,7 +235,7 @@ class Game {
     _normalize(x, y, posX, posY) {
         // doesn't work
         const distX = posX - x, distY = posY - y,
-            scaledHeight = canvas.height / 5, scaledWidth = canvas.width / 5;
+            scaledHeight = canvas.height / this.data.player.fov, scaledWidth = canvas.width / this.data.player.fov;
 
         return { x: distX * scaledHeight, y: distY * scaledWidth };
     }
@@ -267,6 +270,7 @@ class Game {
                 
                 for (const t of turd) {
                     const { x, y } = this._normalize(t.x, t.y, player.x, player.y);
+                    console.log(x, y);
                     context.rect(x, y, height, width);
                     context.fill();
                 }
