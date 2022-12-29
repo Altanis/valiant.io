@@ -1,7 +1,10 @@
-import { MaximumConnections } from './typings/Config';
-
 import { Server } from 'ws';
+
+import { MaximumConnections } from './typings/Config';
+import { CloseEvent } from './typings/Enums';
+
 import PlayerHandler from './handlers/PlayerHandler';
+import MessageHandler from './handlers/MessageHandler';
 
 export default class GameServer {
     /** The WebSocket server where clients connect to. */
@@ -10,6 +13,8 @@ export default class GameServer {
     public players = new Set<PlayerHandler>();
     /** The list of banned players. */
     public banned: Array<string> = [];
+    /** The handler for incoming messages. */
+    public MessageHandler = new MessageHandler(this);
 
     constructor(port = 8080) {
         this.wss = new Server({ port });
@@ -25,7 +30,7 @@ export default class GameServer {
             console.log("[WS]: A new connection has been established.");
             if (this.players.size >= MaximumConnections) {
                 request.destroy(new Error("Threshold for maximum amount of connections (per IP) has been exceeded."));
-                return socket.send("playercount exceeded.");
+                return socket.close(CloseEvent.ServerFilled);
             }
 
             const manager = new PlayerHandler(this, request, socket);
