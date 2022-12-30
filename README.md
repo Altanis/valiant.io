@@ -1,4 +1,4 @@
-# Digturd.io
+# Valiant.io
 
 Real-time game involving websocket protocol and canvas rendering.
 

@@ -1,0 +1,319 @@
+/* import ubuntu -*/
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
+
+* {
+    font-family: "Ubuntu";
+    color: white;
+    overflow: hidden;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    cursor: default;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+}
+
+/* HOMESCREEN */
+#title {
+    -webkit-text-stroke: 5px #FB6268;
+    text-shadow: -1px 1px 15px white;
+    text-align: center;
+    font-weight: bold;
+    color: #C8464B;
+    font-size: 100px;
+
+    /* ANIMATION */
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;
+}
+
+#homescreen {
+    position: absolute;
+    left: 50%;
+    bottom: -2%;
+    transform: translateX(-50%);
+    border: 5px solid #C8464B;
+    text-align: center;
+    justify-content: center;
+    background-color: #201E23;
+    box-shadow: 0 0 20px #C8464B;
+    border-radius: 20px;
+    height: calc(65% + 20px);
+    width: 50%;
+    overflow: visible;
+
+    /* ANIMATION */
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: FadeIn;
+}
+
+#play {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    height: 25%;
+    width: 75%;
+
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 95px;
+    background: #76E1CE;
+    color: white;
+    -webkit-text-stroke: 5px #46C8B1;
+    border: 5px solid #46C8B1;
+    border-radius: 10px;
+
+    /* ANIMATION */
+    animation-duration: 2s;
+    animation-fill-mode: both;
+    animation-name: FadeInPlay;
+}
+
+#play:hover {
+    transition: box-shadow 0.25s ease-in-out;
+    box-shadow: 0 0 40px #46C8B1;
+}
+
+#gamemodes {
+    width: 100%;
+    height: 100%;
+    margin-top: 100px;
+}
+
+#gamemode-duel {
+    /**position: absolute;
+    left: 0;
+    bottom: 50%;
+    transform: translate(-15%, -50%);*/
+    height: 15%;
+    width: 20%;
+
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 60px;
+    background: #7581E6;
+    color: white;
+    -webkit-text-stroke: 3px #4654C8;
+    border: 5px solid #4654C8;
+    border-radius: 5px;
+    margin: 20px;    
+
+    /* ANIMATION */
+    animation-duration: 1.5s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;
+}
+
+#gamemode-duel.selected {
+    transition: box-shadow 0.5s ease-in-out;
+    box-shadow: 0 0 40px #4654C8;
+}
+
+#gamemode-duel:hover {
+    border: 10px solid white;
+}
+
+#gamemode-ffa {
+    /*position: absolute;
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -150%);*/
+    height: 15%;
+    width: 15%;
+
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 60px;
+    background: #76E187;
+    color: white;
+    -webkit-text-stroke: 3px #48C846;
+    border: 5px solid #48C846;
+    border-radius: 5px;
+    margin: 20px;    
+
+    /* ANIMATION */
+    animation-duration: 2s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;
+}
+
+#gamemode-ffa.selected {
+    transition: box-shadow 0.5s ease-in-out;
+    box-shadow: 0 0 40px #48C846;
+}
+
+#gamemode-ffa:hover {
+    border: 10px solid white;
+}
+
+#gamemode-boss {
+    /*position: absolute;
+    left: 0;
+    bottom: 50%;
+    transform: translate(250%, -50%);*/
+    height: 15%;
+    width: 20%;
+
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 60px;
+    background: #B867E5;
+    color: white;
+    -webkit-text-stroke: 3px #9A46C8;
+    border: 5px solid #9A46C8;
+    border-radius: 5px;
+    margin: 20px;
+
+    /* ANIMATION */
+    animation-duration: 2.5s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;
+}
+
+#gamemode-boss.selected {
+    transition: box-shadow 0.5s ease-in-out;
+    box-shadow: 0 0 40px #9A46C8;
+}
+
+#gamemode-boss:hover {
+    border: 10px solid white;
+}
+
+#character {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translate(-50%, -50%);
+    border: 5px solid #C8464B;
+    text-align: center;
+    justify-content: center;
+    background-color: #201E23;
+    box-shadow: 0 0 20px #C8464B;
+    border-radius: 20px;
+    height: 40%;
+    width: 50%;
+    overflow: visible;
+}
+
+/**
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+*/
+
+#arrow-left {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translate(-50%, -50%);
+    height: 50%;
+    width: 10%;
+
+    text-align: center;
+    font-weight: bold;
+    font-size: 24px;
+    background: black;
+    color: white;
+    border: 5px solid black;
+    border-radius: 5px;
+
+    /* ANIMATION */
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+    animation-name: FadeInPlay;
+}
+
+#arrow-right {
+    position: absolute;
+    top: 50%;
+    right: -10%;
+    transform: translate(50%, -50%);
+    height: 50%;
+    width: 10%;
+
+    text-align: center;
+    font-weight: bold;
+    font-size: 24px;
+    background: black;
+    color: white;
+    border: 5px solid black;
+    border-radius: 5px;
+
+    /* ANIMATION */
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+    animation-name: FadeInPlay;
+}
+
+#settings {
+    position: absolute;
+    bottom: -25%;
+    left: 50%;
+    height: 25%;
+    width: 75%;
+
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 48px;
+    background: #EFEFEF;
+    color: white;
+    -webkit-text-stroke: 1px #999999;
+    border: 5px solid #999999;
+    border-radius: 5px;
+
+    /* ANIMATION */
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+    animation-name: FadeInPlay;
+}
+
+@keyframes FadeIn {
+    from {
+        transform: translate3d(0, 40px, 0);
+        opacity: 0;
+    }
+    
+    to {
+        transform: translate3d(0, 0, 0) translate(-50%);
+        opacity: 1;
+    }
+}
+
+@keyframes FadeInX {
+    from {
+        transform: translate3d(0, 40px, 0);
+        opacity: 0;
+    }
+    
+    to {
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+    }
+}
+
+@keyframes FadeInPlay {
+    from {
+        transform: translate3d(0, -20%, 0);
+        opacity: 0;
+    }
+    
+    to {
+        transform: translate3d(0, 0, 0) translate(-50%, -50%);
+        opacity: 1;
+    }
+}

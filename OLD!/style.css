@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css?family=Ubuntu');
+
+* {
+    font-family: "Ubuntu";
+    color: red;
+    overflow: hidden;
+}
+
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    cursor: default;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+}
+
+/* HOMESCREEN */
+#title {
+    font-size: 100px;
+    margin: 1px;
+    margin-top: 30px;
+    color: red;
+}
+
+#homescreen {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    border: 1px solid white;
+    text-align: center;
+    justify-content: center;
+    background-color: black;
+    box-shadow: 0 0 20px white;
+    border-radius: 20px;
+
+    /* ANIMATION */
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: FadeIn;
+}
+
+#homescreen-content, .image {
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    height: 100%;
+}
+
+#gamemodes {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 10px;
+}
+
+.selected {
+    border: 1px solid red;
+}
+
+#gamemode-duel, #gamemode-ffa, #gamemode-br {
+    border: none;
+    font-size: 50px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background-image: linear-gradient(45deg, rgba(243, 236, 120, 0.5), rgba(175, 66, 97, 0.5));
+    background-size: 100%;
+    background-repeat: repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; 
+    -moz-background-clip: text;
+    -moz-text-fill-color: transparent;
+    transition: 0.5s;
+    padding: 20px;
+
+    /* ANIMATION */
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;    
+}
+
+#gamemode-duel { background-color: #F00; }
+#gamemode-ffa { background-color: #0F0; }
+#gamemode-br { background-color: #00F; }
+
+.modal-button { 
+    border: none;
+    font-size: 50px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background-color: pink;
+    background-image: linear-gradient(45deg, rgba(243, 236, 120, 0.5), rgba(175, 66, 97, 0.5));
+    background-size: 100%;
+    background-repeat: repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; 
+    -moz-background-clip: text;
+    -moz-text-fill-color: transparent;
+    transition: 0.5s;
+    padding: 20px;
+
+    /* ANIMATION */
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;
+}
+
+.modal-button:hover {
+    letter-spacing: 7px;
+    transition: 0.5s;
+}
+
+@keyframes FadeIn {
+    from {
+        transform: translate3d(0, 40px, 0);
+        opacity: 0;
+    }
+    
+    to {
+        transform: translate3d(0, 0, 0) translate(-50%);
+        opacity: 1;
+    }
+}
+
+@keyframes FadeInX {
+    from {
+        transform: translate3d(0, 40px, 0);
+        opacity: 0;
+    }
+    
+    to {
+        transform: translate3d(0, 0, 0);
+        opacity: 1;
+    }
+}
