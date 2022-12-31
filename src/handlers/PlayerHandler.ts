@@ -1,11 +1,12 @@
 import WebSocket from 'ws';
 import { IncomingMessage } from "http";
 
-import { ConnectionsPerIP } from '../typings/Config';
-import { CloseEvent, ClientBound } from '../typings/Enums';
+import { ConnectionsPerIP } from '../Const/Config';
+import { CloseEvent, ClientBound } from '../Const/Enums';
+import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
 
 import GameServer from '../GameServer';
-import SwiftStream from '../utils/SwiftStream';
+import SwiftStream from '../Utils/SwiftStream';
 
 export default class PlayerHandler {
     /** The manager of the WebSocket Server. */
@@ -16,6 +17,10 @@ export default class PlayerHandler {
     public socket: WebSocket;
     /** The IP of the WebSocket connection. */
     public ip: string;
+    /** The character the player possesses. */
+    public character?: CharacterDefinition; 
+    /** The index of the ability the player has equipped. */
+    public abilityIndex?: number;
     /** The binary encoder for the player. */
     public SwiftStream = new SwiftStream();
 

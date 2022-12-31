@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico">
 
     <title>Valiant.io</title>
 </head>
@@ -15,15 +15,18 @@
     <div id="homescreen">
         <button id="play">Play</button>
         <div id="gamemodes">
-            <button id="gamemode-duel">duel</button>
             <button id="gamemode-ffa">ffa</button>
-            <button id="gamemode-boss">boss</button>
+            <button id="gamemode-duel" class="disabled" style="filter: grayscale(1)">duel</button>
+            <button id="gamemode-boss" class="disabled" style="filter: grayscale(1)">boss</button>
         </div>
         <div id="character">
             <button id="arrow-left">◀</button>
             <button id="arrow-right">▶</button>
             <p id="character-name">?</p>
             <img id="character-sprite" height="100" width="100">
+            <div id="ability"></div>
+            <span id="ability-name">Xd</span>
+            <span id="ability-desc"></span>
             <button id="settings">settings</button>  
         </div>
     </div>

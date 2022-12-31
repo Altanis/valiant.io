@@ -230,6 +230,7 @@ transform: translate(-50%, -50%);
     color: white;
     border: 5px solid black;
     border-radius: 5px;
+    outline: none;
 
     /* ANIMATION */
     animation-duration: 0.5s;
@@ -252,6 +253,7 @@ transform: translate(-50%, -50%);
     color: white;
     border: 5px solid black;
     border-radius: 5px;
+    outline: none;
 
     /* ANIMATION */
     animation-duration: 0.5s;
@@ -259,9 +261,44 @@ transform: translate(-50%, -50%);
     animation-name: FadeInPlay;
 }
 
+#ability {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0 0 15px 25px;
+}
+
+.character-ability {
+    border: 1px solid white;
+    bottom: 0;
+    left: 0;
+    float: left;
+}
+
+.character-ability.selected {
+    background: #C8464B;
+}
+
+#ability-name {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 0);
+    margin-bottom: 75px;
+    text-decoration: underline;
+}
+
+#ability-desc {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translate(-50%, 0);
+    margin-bottom: 20px;
+}
+
 #settings {
     position: absolute;
-    bottom: -25%;
+    bottom: -50%;
     left: 50%;
     height: 25%;
     width: 75%;

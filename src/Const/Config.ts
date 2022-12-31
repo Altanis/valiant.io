@@ -2,4 +2,4 @@
 export const ConnectionsPerIP: number = 2;
 
 /** The maximum amount of connections to the server. Infinity for unlimited. */
-export const MaximumConnections: number = -1;
+export const MaximumConnections: number = 50;

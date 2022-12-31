@@ -1,7 +1,7 @@
 import { Server } from 'ws';
 
-import { MaximumConnections } from './typings/Config';
-import { CloseEvent } from './typings/Enums';
+import { MaximumConnections } from './Const/Config';
+import { CloseEvent } from './Const/Enums';
 
 import PlayerHandler from './handlers/PlayerHandler';
 import MessageHandler from './handlers/MessageHandler';
@@ -12,7 +12,7 @@ export default class GameServer {
     /** The players in the game. */
     public players = new Set<PlayerHandler>();
     /** The list of banned players. */
-    public banned: Array<string> = [];
+    public banned: string[] = [];
     /** The handler for incoming messages. */
     public MessageHandler = new MessageHandler(this);
 
