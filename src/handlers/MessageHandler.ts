@@ -2,6 +2,8 @@ import { CloseEvent, Characters } from '../Const/Enums';
 
 import PlayerHandler from './PlayerHandler';
 import GameServer from '../GameServer';
+import Vector from './Vector';
+import { randInt } from '../Utils/Functions';
 
 export default class MessageHandler {
     /** The manager of the WebSocket Server. */
@@ -30,8 +32,12 @@ export default class MessageHandler {
         ) return player.close(CloseEvent.InvalidProtocol);
 
         player.name = name;
-        player.alive = true;
         player.character = Characters[characterIndex];
         player.abilityIndex = abilityIndex;
+
+        player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
+        player.velocity = new Vector(0, 0);
+
+        player.alive = true;
     }
  };

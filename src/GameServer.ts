@@ -47,8 +47,8 @@ export default class GameServer {
         });
     }
 
-    /** Tick-loop which executes every frame (25 TPS) */
+    /** Tick-loop which executes every frame (25 TPS). */
     public tick(): void {
-        this.SpatialHashGrid.clear();
+
     }
 }

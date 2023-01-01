@@ -19,7 +19,7 @@ export default class PlayerHandler {
     /** The IP of the WebSocket connection. */
     public ip: string;
     /** The character the player possesses. */
-    public character?: CharacterDefinition; 
+    public character?: CharacterDefinition;
     /** The index of the ability the player has equipped. */
     public abilityIndex?: number;
     /** The binary encoder for the player. */
@@ -31,9 +31,9 @@ export default class PlayerHandler {
     /** Whether or not the player is alive. */
     public alive: boolean = false;
     /** The position of the player. */
-    public position: Vector = new Vector(0, 0);
+    public position: Vector | null = null;
     /** The velocity of the player. */
-    public velocity: Vector = new Vector(0, 0);
+    public velocity: Vector | null = null;
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
         this.server = server;

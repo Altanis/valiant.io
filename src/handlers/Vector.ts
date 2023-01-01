@@ -12,17 +12,26 @@ export default class Vector {
 
     /** Adds by a vector. */
     public add(vector: Vector): Vector {
-        return new Vector(this.x + vector.x, this.y + vector.y);
+        this.x += vector.x;
+        this.y += vector.y;
+
+        return this;
     }
 
     /** Subtracts by a vector. */
     public subtract(vector: Vector): Vector {
-        return new Vector(this.x - vector.x, this.y - vector.y);
+        this.x -= vector.x;
+        this.y -= vector.y;
+
+        return this;
     }
 
     /** Scales (multiplies) by a vector. */
     public scale(scalar: number): Vector {
-        return new Vector(this.x * scalar, this.y * scalar);
+        this.x *= scalar;
+        this.y *= scalar;
+
+        return this;
     }
 
     /** Gets the magnitude (length) of the vector. */
@@ -31,8 +40,12 @@ export default class Vector {
     }
 
     /** Gets the normalized vector. */
-    public get normalize(): Vector {
-        return this.clone().scale(1 / this.magnitude);
+    public normalize(): Vector {
+        const magnitude = this.magnitude;
+        this.x /= magnitude || 0; 
+        this.y /= magnitude || 0;
+
+        return this;
     }
 
     /** Gets the dot product of the vector. */
