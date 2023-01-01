@@ -1,5 +1,5 @@
 {
-  "name": "digturd.io",
+  "name": "valiant.io",
   "version": "1.0.0",
   "description": "A real-time game involving websockets.",
   "main": "index.js",

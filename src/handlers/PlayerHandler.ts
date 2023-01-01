@@ -7,6 +7,7 @@ import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
 
 import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
+import Vector from './Vector';
 
 export default class PlayerHandler {
     /** The manager of the WebSocket Server. */
@@ -25,11 +26,14 @@ export default class PlayerHandler {
     public SwiftStream = new SwiftStream();
 
     /** PLAYER DATA INGAME */
-
     /** The name of the player. */
     public name: string = "unknown";
     /** Whether or not the player is alive. */
     public alive: boolean = false;
+    /** The position of the player. */
+    public position: Vector = new Vector(0, 0);
+    /** The velocity of the player. */
+    public velocity: Vector = new Vector(0, 0);
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
         this.server = server;

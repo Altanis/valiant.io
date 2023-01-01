@@ -11,11 +11,13 @@ export default class MessageHandler {
         this.server = server;
     }
 
-    // [0, string(name)]
+    // [0, string(name), i8(characterIdx), i8(abilityIdx))]
     Spawn(player: PlayerHandler) {
         const name = player.SwiftStream.ReadUTF8String()?.trim();
-        const character = player.SwiftStream.ReadI8();
+        const characterIndex = player.SwiftStream.ReadI8();
         const abilityIndex = player.SwiftStream.ReadI8();
+
+        console.log(name, characterIndex, abilityIndex);
 
         if (
             !name
@@ -23,13 +25,13 @@ export default class MessageHandler {
             || name.length >= 16
             || player.alive
 
-            || !Characters[character]
-            || !Characters[character].abilities[abilityIndex]
+            || !Characters[characterIndex]
+            || !Characters[characterIndex].abilities[abilityIndex]
         ) return player.close(CloseEvent.InvalidProtocol);
 
         player.name = name;
         player.alive = true;
-        player.character = Characters[character];
+        player.character = Characters[characterIndex];
         player.abilityIndex = abilityIndex;
     }
  };

@@ -11,24 +11,30 @@
     <title>Valiant.io</title>
 </head>
 <body>
-    <h1 id="title">Valiant.io</h1>
     <div id="homescreen">
-        <button id="play">Play</button>
-        <div id="gamemodes">
-            <button id="gamemode-ffa">ffa</button>
-            <button id="gamemode-duel" class="disabled" style="filter: grayscale(1)">duel</button>
-            <button id="gamemode-boss" class="disabled" style="filter: grayscale(1)">boss</button>
+        <h1 id="title">Valiant.io</h1>
+        <div id="buttons">
+            <button id="play">Play</button>
+            <div id="gamemodes">
+                <button id="gamemode-ffa">ffa</button>
+                <button id="gamemode-duel" class="disabled" style="filter: grayscale(1)">duel</button>
+                <button id="gamemode-boss" class="disabled" style="filter: grayscale(1)">boss</button>
+            </div>
+            <div id="character">
+                <button id="arrow-left">◀</button>
+                <button id="arrow-right">▶</button>
+                <p id="character-name">?</p>
+                <img id="character-sprite" height="100" width="100">
+                <div id="ability"></div>
+                <span id="ability-name"></span>
+                <span id="ability-desc"></span>
+                <button id="settings">settings</button>  
+            </div>
         </div>
-        <div id="character">
-            <button id="arrow-left">◀</button>
-            <button id="arrow-right">▶</button>
-            <p id="character-name">?</p>
-            <img id="character-sprite" height="100" width="100">
-            <div id="ability"></div>
-            <span id="ability-name">Xd</span>
-            <span id="ability-desc"></span>
-            <button id="settings">settings</button>  
-        </div>
+    </div>
+    <div id="disconnect" style="display: none; text-align: center;">
+        <h1 id="disconnect-title" style="font-size: 100px; text-decoration: underline;">Disconnected</h1>
+        <p id="disconnect-message" style="font-size: 25px;">You have been disconnected from the server.</p>
     </div>
     <canvas id="canvas"></canvas>
     <script src="bundle.js" defer></script>

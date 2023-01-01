@@ -1,3 +1,71 @@
+/** BUFFERS: Used to convert between different byte-lengths. */
+const conversion = new ArrayBuffer(4);
+const u8 = new Uint8Array(conversion);
+const f32 = new Float32Array(conversion);
+
+/** SwiftStream, an efficient binary protocol manager written by Altanis. */
+const SwiftStream = new (class {
+    /** The buffer SwiftStream is using. */
+    buffer = new Uint8Array(4096);
+    /** The position at which the buffer is being read. */
+    at = 0;
+    /** UTF8 Decoder. */
+    TextDecoder = new TextDecoder();
+    /** UTF8 Encoder. */
+    TextEncoder = new TextEncoder();
+
+    set(buffer) {
+        this.buffer = buffer;
+    }
+
+    clear() {
+        this.buffer = new Uint8Array(4096);
+        this.at = 0;
+    }
+
+    /** READER */
+    ReadI8() {
+        return this.buffer[this.at++];
+    }
+
+    ReadFloat32() {
+        u8.set(this.buffer.slice(this.at, this.at += 4));
+        return f32[0];
+    }
+
+    ReadUTF8String() {
+        const start = this.at;
+        while (this.buffer[this.at++]);
+        return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));
+    }
+
+    /** WRITER */
+    WriteI8(value) {
+        this.buffer[this.at++] = value;
+        return this;
+    }
+
+    WriteFloat32(value) {
+        f32[0] = value;
+        this.buffer.set(u8, this.at);
+        this.at += 4;
+        return this;
+    }
+
+    WriteCString(value) {
+        this.buffer.set(this.TextEncoder.encode(value), this.at);
+        this.at += value.length;
+        this.buffer[this.at++] = 0;
+        return this;
+    }
+
+    Write() {
+        const result = this.buffer.subarray(0, this.at);
+        this.clear();
+        return result;
+    }
+});
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
@@ -37,12 +105,18 @@ const Config = {
     Characters: {
         List: ["Knight", "Priest", "Assassin"],
         _cp: 0,
-        AbilityPointer: 0
+    },
+    Portal: {
+        /** The amount at which to rotate per frame. */
+        delta: 0.1,
     },
     Audio: {
         List: ["ffa"],
         Pointer: 0,
-    }
+    },
+
+    DisplayDisconnect: false,
+    CurrentPhase: 0 // [0: Homescreen, 1: Portal, 2: Arena, 3: Death]
 };
 
 const Data = {
@@ -85,25 +159,11 @@ const Data = {
     }
 };
 
-        /**
-         * This section manages the character selection.
-         */
-        /*characterName.innerText = Config.Characters.List[Config.Characters.CharacterPointer];
-        const src = `assets/img/characters/${characterName.innerText}.gif`;
-        if (!characterSprite.src.includes(src)) characterSprite.src = src;
-
-        /**
-         * This section manages the ability.
-         
-        abilities[Config.Abilities.Pointer].classList.add("selected");
-        abilityDesc.innerText = Config.Abilities.List[Config.Abilities.Pointer];*/
-
 /** Observe mutations. */
 Object.defineProperties(Config.Characters, {
     CharacterPointer: {
         get() { return this._cp },
         set(value) {
-            console.log(value);
             characterName.innerText = Config.Characters.List[value];
             const src = `assets/img/characters/${characterName.innerText}.gif`;
             characterSprite.src = src;
@@ -146,10 +206,13 @@ Object.defineProperties(Config.Characters, {
 /** DOM ELEMENTS */
 
 /** Home screen elements */
-const Gamemodes = document.getElementById("gamemodes");
+const HomeScreen = document.getElementById("homescreen"),
+    Play = document.getElementById("play"),
+    NameInput = document.getElementById("name"),
+    Gamemodes = document.getElementById("gamemodes"),
+    DisconnectScreen = document.getElementById("disconnect");
 
-const connecting = document.getElementById("connecting"),
-    characterName = document.getElementById("character-name"),
+const characterName = document.getElementById("character-name"),
     characterSprite = document.getElementById("character-sprite");
 
 const arrowLeft = document.getElementById("arrow-left"),
@@ -158,6 +221,9 @@ const arrowLeft = document.getElementById("arrow-left"),
 const abilityName = document.getElementById("ability-name"),
     abilityDesc = document.getElementById("ability-desc"),
     abilities = document.getElementById("ability");
+
+/** Image Caching */
+const ImageCache = new Map();
 
 const Storage = {
     get(key) {
@@ -214,16 +280,27 @@ const WebSocketManager = class {
 
             if ([3001, 3003, 3006].includes(event.code)) return this.migrate(this.url);
             console.log(Config.WebSocket.CloseEvents[event.code] || "An unknown error has occurred. Please refresh.");
+            
+            /** Inform client a connection was not able to be sustained. */
+            if (!Config.DisplayDisconnect) return;
+            HomeScreen.style.display = "none";
+            document.getElementById("disconnect-message").innerText = Config.WebSocket.CloseEvents[event.code] || "An unknown error has occurred. Please refresh.";
+            DisconnectScreen.style.display = "block";
         });
         
         this.socket.addEventListener("error", event => {
             console.log("An error has occured during the connection:", event);
         });
     }
+
+    /** Sends a packet to the server informing that the client wants to spawn. */
+    play() {    
+        this.socket.send(SwiftStream.WriteI8(0x00).WriteCString("Knight").WriteI8(Config.Characters.CharacterPointer).WriteI8(Config.Characters.AbilityPointer).Write());
+    }
 }
 
-let io;
-let audio = new AudioManager();
+const SocketManager = new WebSocketManager("ws://localhost:8080");
+const audio = new AudioManager();
 
 const Game = {
     RenderCircle(x, y, radius) {
@@ -239,9 +316,6 @@ const Game = {
 
         /** Sets up the character modal. */
         Config.Characters.CharacterPointer = 0;
-
-        /** Sets up the WebSocket Manager. */
-        io = new WebSocketManager("ws://localhost:8080");
 
         /** Adds a listener to each gamemode, selects them when clicked. 
          * TODO(Altanis|Feature): Connect to a new WebSocket when a gamemode is selected.
@@ -265,6 +339,15 @@ const Game = {
             console.log(Config.Characters.CharacterPointer);
             Config.Characters.CharacterPointer = (Config.Characters.CharacterPointer + 1) % Config.Characters.List.length;
         });
+
+        /** Clicks play on enter. */
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" && document.activeElement === NameInput) Play.click();
+        });
+        /** Adds a listener to the Play button to start the game. */
+        Play.addEventListener("click", function () {
+            SocketManager.play();
+        });
     },
 
     HomeScreen() {
@@ -283,7 +366,6 @@ const Game = {
         ctx.fillStyle = "#FFFFFF";
         if (Config.HomeScreen.stars.length !== Config.HomeScreen.starCount) {
             for (let i = Config.HomeScreen.starCount - Config.HomeScreen.stars.length; --i;) {
-                
                 Config.HomeScreen.stars.push({
                     x: Math.randomRange(0, canvas.width),
                     y: Math.randomRange(0, canvas.height),
@@ -294,36 +376,21 @@ const Game = {
 
         for (let i = Config.HomeScreen.stars.length; i--;) {
             const star = Config.HomeScreen.stars[i];
-            ctx.fillStyle = "#fff";
             Game.RenderCircle(star.x, star.y, star.radius);
             star.radius += Config.HomeScreen.increment;
             if (star.radius >= 3) {
                 Config.HomeScreen.stars.splice(i, 1);
             }
         }
-
-        /** 
-         * This section manages gamemodes and how they're displayed.
-         */
-        Gamemodes.children[Config.Gamemodes.Pointer].classList.add("selected");
-
-        /**
-         * This section manages the character selection.
-         */
-
-
-        /**
-         * This section manages the ability.
-         */
-        /*abilities[Config.Abilities.Pointer].classList.add("selected");
-        abilityDesc.innerText = Config.Abilities.List[Config.Abilities.Pointer];*/
     }
 }
 
 Game.Setup();
 
 function UpdateGame() {
-    Game.HomeScreen();
+    switch (Config.CurrentPhase) {
+        case 0: Game.HomeScreen(); break;
+    }
     requestAnimationFrame(UpdateGame);
 }
 

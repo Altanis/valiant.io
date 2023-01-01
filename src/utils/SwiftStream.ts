@@ -18,6 +18,11 @@ export default class SwiftStream {
         this.buffer = buffer;
     }
 
+    clear() {
+        this.buffer = new Uint8Array(4096);
+        this.at = 0;
+    }
+
     /** READER */
     ReadI8() {
         return this.buffer[this.at++];
@@ -52,5 +57,11 @@ export default class SwiftStream {
         this.at += value.length;
         this.buffer[this.at++] = 0;
         return this;
+    }
+
+    Write(): Uint8Array {
+        const result = this.buffer.subarray(0, this.at);
+        this.clear();
+        return result;
     }
 }

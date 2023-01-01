@@ -9,6 +9,7 @@
 }
 
 canvas {
+    background-color: black;
     position: absolute;
     top: 0;
     left: 0;
@@ -35,7 +36,7 @@ canvas {
     animation-name: FadeInX;
 }
 
-#homescreen {
+#buttons {
     position: absolute;
     left: 50%;
     bottom: -2%;
@@ -58,7 +59,6 @@ canvas {
 
 #play {
     position: absolute;
-    top: 0;
     left: 50%;
     height: 25%;
     width: 75%;

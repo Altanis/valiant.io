@@ -3,8 +3,9 @@ import { Server } from 'ws';
 import { MaximumConnections } from './Const/Config';
 import { CloseEvent } from './Const/Enums';
 
-import PlayerHandler from './handlers/PlayerHandler';
-import MessageHandler from './handlers/MessageHandler';
+import PlayerHandler from './Handlers/PlayerHandler';
+import MessageHandler from './Handlers/MessageHandler';
+import SpatialHashGrid from './Handlers/SpatialHashGrid';
 
 export default class GameServer {
     /** The WebSocket server where clients connect to. */
@@ -16,9 +17,17 @@ export default class GameServer {
     /** The handler for incoming messages. */
     public MessageHandler = new MessageHandler(this);
 
+    /** Arena information. */
+    /** The length and width of the arena. */
+    public arenaBounds = 5000;
+    /** The hashgrid for the arena. */
+    public SpatialHashGrid = new SpatialHashGrid();
+
     constructor(port = 8080) {
         this.wss = new Server({ port });
         this.handle();
+
+        setInterval(() => this.tick(), 1000 / 25);
     }
 
     /** Sets up handlers for the WebSocket server. */
@@ -36,5 +45,10 @@ export default class GameServer {
             const manager = new PlayerHandler(this, request, socket);
             this.players.add(manager);
         });
+    }
+
+    /** Tick-loop which executes every frame (25 TPS) */
+    public tick(): void {
+        this.SpatialHashGrid.clear();
     }
 }
