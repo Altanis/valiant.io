@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import { IncomingMessage } from "http";
 
 import { ConnectionsPerIP } from '../Const/Config';
-import { CloseEvent, ClientBound } from '../Const/Enums';
+import { CloseEvent, ClientBound, ServerBound, Fields } from '../Const/Enums';
 import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
 
 import GameServer from '../GameServer';
@@ -18,12 +18,14 @@ export default class PlayerHandler {
     public socket: WebSocket;
     /** The IP of the WebSocket connection. */
     public ip: string;
+    /** The binary encoder for the player. */
+    public SwiftStream = new SwiftStream();
     /** The character the player possesses. */
     public character?: CharacterDefinition;
     /** The index of the ability the player has equipped. */
     public abilityIndex?: number;
-    /** The binary encoder for the player. */
-    public SwiftStream = new SwiftStream();
+    /** Whether or not the player needs to be force updated. An array of properties is given. */
+    public update: Set<string> = new Set();
 
     /** PLAYER DATA INGAME */
     /** The name of the player. */
@@ -34,6 +36,11 @@ export default class PlayerHandler {
     public position: Vector | null = null;
     /** The velocity of the player. */
     public velocity: Vector | null = null;
+    /** 
+     * The angle at which the player is facing.
+     * Measured in radians, range [-Math.PI, Math.PI].
+    */
+    public angle: number = 0;
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
         this.server = server;
@@ -50,13 +57,13 @@ export default class PlayerHandler {
         socket.on("close", () => this.close(CloseEvent.Unknown));
         socket.on("message", (b: ArrayBufferLike) => {
             const buffer = new Uint8Array(b);
-            this.SwiftStream.set(buffer);
+            this.SwiftStream.Set(buffer);
 
             const header = this.SwiftStream.ReadI8();
-            if (!ClientBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
+            if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
 
             switch (header) {
-                case ClientBound.Spawn: return this.server.MessageHandler.Spawn(this);
+                case ServerBound.Spawn: return this.server.MessageHandler.Spawn(this);
             }
         });
     }
@@ -79,8 +86,52 @@ export default class PlayerHandler {
         }
     }
 
+    /** Sends creation data of the player. */
+    public SendUpdate() {
+        this.SwiftStream.Clear();
+        this.SwiftStream.WriteI8(ClientBound.Update);
+
+        /** Checks if the client requires an update. */
+        if (this.update.size) {
+            /** Signifies a client update. */
+            this.SwiftStream.WriteI8(0x00);
+            /** Tells the client their Entity ID. */
+            this.SwiftStream.WriteI8(this.id);
+            /** Tells the client the amount of field updates for the player. */
+            this.SwiftStream.WriteI8(this.update.size);
+            /** Informs the client of what properties have changed. */
+            this.update.forEach(property => {
+                switch (property) {
+                    case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
+                }
+            });
+        }
+
+        /** TODO(Altanis): Inform client of surroundings. */
+        // Note to self: Signify a world update by WriteI8(0x01).
+
+        this.update.clear();
+        const buffer = this.SwiftStream.Write();
+        if (buffer.byteLength > 1) this.socket.send(buffer);
+    }
+
     public close(reason: number) {
         this.socket.close(reason);
         this.server.players.delete(this);
+    }
+
+    /** Tick-loop called by main game loop. */
+    public tick() {
+        if (this.alive) {
+            /** Move position by player's velocity, reset player velocity. */
+            this.position!.add(this.velocity!);
+            this.velocity!.x = this.velocity!.y = 0;
+
+            /** Reinsert into the hashgrid with updated position. Player is 50x50 in dimension. */
+            this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, 50, 50);
+
+            /** Send update to player. */
+            this.SendUpdate();
+        }
     }
 };

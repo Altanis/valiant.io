@@ -14,11 +14,11 @@ export default class SwiftStream {
     /** UTF8 Encoder. */
     public TextEncoder = new TextEncoder();
 
-    set(buffer: Uint8Array) {
+    Set(buffer: Uint8Array) {
         this.buffer = buffer;
     }
 
-    clear() {
+    Clear() {
         this.buffer = new Uint8Array(4096);
         this.at = 0;
     }
@@ -46,9 +46,11 @@ export default class SwiftStream {
     }
 
     WriteFloat32(value: number) {
+        console.log(value);
         f32[0] = value;
         this.buffer.set(u8, this.at);
         this.at += 4;
+        console.log(this.buffer);
         return this;
     }
 
@@ -61,7 +63,7 @@ export default class SwiftStream {
 
     Write(): Uint8Array {
         const result = this.buffer.subarray(0, this.at);
-        this.clear();
+        this.Clear();
         return result;
     }
 }

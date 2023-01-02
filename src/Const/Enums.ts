@@ -10,6 +10,17 @@ export enum CloseEvent {
 };
 
 export enum ClientBound {
+    Update = 0x00
+};
+
+/** Fields of the Update packet. */
+export enum Fields {
+    /** The position of the entity. */
+    Position = 0x00,
+}
+
+export enum ServerBound {
+    /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */
     Spawn = 0x00
 };
 

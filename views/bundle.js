@@ -1,85 +1,3 @@
-/** BUFFERS: Used to convert between different byte-lengths. */
-const conversion = new ArrayBuffer(4);
-const u8 = new Uint8Array(conversion);
-const f32 = new Float32Array(conversion);
-
-/** SwiftStream, an efficient binary protocol manager written by Altanis. */
-const SwiftStream = new (class {
-    /** The buffer SwiftStream is using. */
-    buffer = new Uint8Array(4096);
-    /** The position at which the buffer is being read. */
-    at = 0;
-    /** UTF8 Decoder. */
-    TextDecoder = new TextDecoder();
-    /** UTF8 Encoder. */
-    TextEncoder = new TextEncoder();
-
-    set(buffer) {
-        this.buffer = buffer;
-    }
-
-    clear() {
-        this.buffer = new Uint8Array(4096);
-        this.at = 0;
-    }
-
-    /** READER */
-    ReadI8() {
-        return this.buffer[this.at++];
-    }
-
-    ReadFloat32() {
-        u8.set(this.buffer.slice(this.at, this.at += 4));
-        return f32[0];
-    }
-
-    ReadUTF8String() {
-        const start = this.at;
-        while (this.buffer[this.at++]);
-        return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));
-    }
-
-    /** WRITER */
-    WriteI8(value) {
-        this.buffer[this.at++] = value;
-        return this;
-    }
-
-    WriteFloat32(value) {
-        f32[0] = value;
-        this.buffer.set(u8, this.at);
-        this.at += 4;
-        return this;
-    }
-
-    WriteCString(value) {
-        this.buffer.set(this.TextEncoder.encode(value), this.at);
-        this.at += value.length;
-        this.buffer[this.at++] = 0;
-        return this;
-    }
-
-    Write() {
-        const result = this.buffer.subarray(0, this.at);
-        this.clear();
-        return result;
-    }
-});
-
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-function resize() {
-    canvas.width = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
-}
-
-window.addEventListener("resize", resize);
-resize();
-
-Math.TAU = Math.PI * 2;
-Math.randomRange = (min, max) => Math.random() * (max - min) + min;
-
 const Config = {
     WebSocket: {
         CloseEvents: {
@@ -106,15 +24,15 @@ const Config = {
         List: ["Knight", "Priest", "Assassin"],
         _cp: 0,
     },
-    Portal: {
-        /** The amount at which to rotate per frame. */
-        delta: 0.1,
+    Arena: {
+        /** The dimensions of the arena. */
+        arenaBounds: 1500,
     },
     Audio: {
         List: ["ffa"],
         Pointer: 0,
     },
-
+    
     DisplayDisconnect: false,
     CurrentPhase: 0 // [0: Homescreen, 1: Portal, 2: Arena, 3: Death]
 };
@@ -154,10 +72,92 @@ const Data = {
                 name: "Charge",
                 description: "Bash into a foe with your shield.",
                 src: "assets/img/abilities/charge.png"
-            }
+            },
         ]
     }
 };
+
+/** BUFFERS: Used to convert between different byte-lengths. */
+const conversion = new ArrayBuffer(4);
+const u8 = new Uint8Array(conversion);
+const f32 = new Float32Array(conversion);
+
+/** SwiftStream, an efficient binary protocol manager written by Altanis. */
+const SwiftStream = new (class {
+    /** The buffer SwiftStream is using. */
+    buffer = new Uint8Array(4096);
+    /** The position at which the buffer is being read. */
+    at = 0;
+    /** UTF8 Decoder. */
+    TextDecoder = new TextDecoder();
+    /** UTF8 Encoder. */
+    TextEncoder = new TextEncoder();
+    
+    Set(buffer) {
+        this.buffer = buffer;
+    }
+    
+    Clear() {
+        this.buffer = new Uint8Array(4096);
+        this.at = 0;
+    }
+    
+    /** READER */
+    ReadI8() {
+        return this.buffer[this.at++];
+    }
+    
+    ReadFloat32() {
+        u8.set(this.buffer.slice(this.at, this.at += 4));
+        return f32[0];
+    }
+    
+    ReadUTF8String() {
+        const start = this.at;
+        while (this.buffer[this.at++]);
+        return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));
+    }
+    
+    /** WRITER */
+    WriteI8(value) {
+        this.buffer[this.at++] = value;
+        return this;
+    }
+    
+    WriteFloat32(value) {
+        f32[0] = value;
+        this.buffer.set(u8, this.at);
+        this.at += 4;
+        return this;
+    }
+    
+    WriteCString(value) {
+        this.buffer.set(this.TextEncoder.encode(value), this.at);
+        this.at += value.length;
+        this.buffer[this.at++] = 0;
+        return this;
+    }
+    
+    Write() {
+        const result = this.buffer.subarray(0, this.at);
+        this.Clear();
+        return result;
+    }
+});
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+Math.TAU = Math.PI * 2;
+Math.randomRange = (min, max) => Math.random() * (max - min) + min;
 
 /** Observe mutations. */
 Object.defineProperties(Config.Characters, {
@@ -167,7 +167,7 @@ Object.defineProperties(Config.Characters, {
             characterName.innerText = Config.Characters.List[value];
             const src = `assets/img/characters/${characterName.innerText}.gif`;
             characterSprite.src = src;
-
+            
             // TODO(Altanis): Change abilities based on character.
             const characterAbilities = Data[characterName.innerText].Abilities;
             abilities.innerHTML = "";
@@ -182,11 +182,11 @@ Object.defineProperties(Config.Characters, {
                 });
                 abilities.appendChild(abilityElement);
             }
-
+            
             Config.Characters.AbilityPointer = 0;
             abilityName.innerText = characterAbilities[Config.Characters.AbilityPointer].name;
             abilityDesc.innerText = characterAbilities[Config.Characters.AbilityPointer].description;
-
+            
             this._cp = value;
         },
     },
@@ -197,7 +197,7 @@ Object.defineProperties(Config.Characters, {
             abilities.children[value]?.classList.add("selected");
             abilityName.innerText = Data[characterName.innerText].Abilities[value].name;
             abilityDesc.innerText = Data[characterName.innerText].Abilities[value].description;
-
+            
             this._ap = value;
         }
     }
@@ -207,20 +207,20 @@ Object.defineProperties(Config.Characters, {
 
 /** Home screen elements */
 const HomeScreen = document.getElementById("homescreen"),
-    Play = document.getElementById("play"),
-    NameInput = document.getElementById("name"),
-    Gamemodes = document.getElementById("gamemodes"),
-    DisconnectScreen = document.getElementById("disconnect");
+Play = document.getElementById("play"),
+NameInput = document.getElementById("name"),
+Gamemodes = document.getElementById("gamemodes"),
+DisconnectScreen = document.getElementById("disconnect");
 
 const characterName = document.getElementById("character-name"),
-    characterSprite = document.getElementById("character-sprite");
+characterSprite = document.getElementById("character-sprite");
 
 const arrowLeft = document.getElementById("arrow-left"),
-    arrowRight = document.getElementById("arrow-right");
+arrowRight = document.getElementById("arrow-right");
 
 const abilityName = document.getElementById("ability-name"),
-    abilityDesc = document.getElementById("ability-desc"),
-    abilities = document.getElementById("ability");
+abilityDesc = document.getElementById("ability-desc"),
+abilities = document.getElementById("ability");
 
 /** Image Caching */
 const ImageCache = new Map();
@@ -244,31 +244,59 @@ const AudioManager = class {
     constructor() {
         this.audio = new Audio();
     }
-
+    
     play(name) {
         this.audio.src = `assets/audio/${name}.mp3`;
         this.audio.play();
     }
 };
 
+const Player = {
+    /** The ID of the player */
+    id: 0,
+    /** The name of the player */
+    name: "Knight",
+    /** The position of the player */
+    position: null,
+    /** The angle at which the player is facing at (from -Math.PI to Math.PI) */
+    angle: 0,
+}
+
+Object.defineProperties(Player, {
+    /** Character index */
+    character: {
+        get() { return Config.Characters.CharacterPointer },
+        set() { throw new Error("why is this being set?") },
+    },
+    /** Ability index */
+    ability: {
+        get() { return Config.Characters.CharacterPointer },
+        set() { throw new Error("why is this being set?") },
+    },
+})
+
 const WebSocketManager = class {
     constructor(url) {
         this.url = url; // The URL to connect to.
         this.socket = new WebSocket(url); // The WebSocket connection.
+        this.socket.binaryType = "arraybuffer";
         this.migrations = 0; // The amount of migrations to a new server. Resets when a connection is successfully established.
-
+        
         this.handle();
     }
-
+    
     migrate(url) {
         if (++this.migrations > 3) return console.log("Failed to reconnect to the server. Please refresh.");
-
+        
         this.url = url;
         this.socket.close(4999, "Migrating to a new server.");
+        
         this.socket = new WebSocket(url);
+        this.socket.binaryType = "arraybuffer";
+        
         this.handle();
     }
-
+    
     handle() {
         this.socket.addEventListener("open", () => {
             console.log("Connected to server!");
@@ -277,7 +305,7 @@ const WebSocketManager = class {
         
         this.socket.addEventListener("close", event => {
             if (event.code === 4999) return; // Migrating to a new server.
-
+            
             if ([3001, 3003, 3006].includes(event.code)) return this.migrate(this.url);
             console.log(Config.WebSocket.CloseEvents[event.code] || "An unknown error has occurred. Please refresh.");
             
@@ -291,8 +319,50 @@ const WebSocketManager = class {
         this.socket.addEventListener("error", event => {
             console.log("An error has occured during the connection:", event);
         });
+        
+        this.socket.addEventListener("message", ({ data }) => {
+            data = new Uint8Array(data);
+            console.log(data);
+            SwiftStream.Set(data);
+            this.parse();
+        });
     }
-
+    
+    parse() {
+        const header = SwiftStream.ReadI8();
+        switch (header) {
+            case 0x00: { // UPDATE HEADER
+                if (SwiftStream.ReadI8() === 0x00) { // PLAYER UPDATE
+                    const id = SwiftStream.ReadI8(); // Player ID
+                    let length = SwiftStream.ReadI8(); // Length of fields
+                    
+                    console.log(length);
+                    
+                    for (; length--;) {
+                        const field = SwiftStream.ReadI8();
+                        switch (field) {
+                            case 0x00: { // POSITION
+                                const x = SwiftStream.ReadFloat32();
+                                const y = SwiftStream.ReadFloat32();
+                                
+                                console.log(`Entity ${id} is located at (${x}, ${y})`);
+                                if (!Player.position) { // Start Game
+                                    HomeScreen.style.display = "none";
+                                    Config.CurrentPhase = 1;
+                                }
+                                Player.position = { x, y };
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                break;
+            }
+            default: console.log(header);
+        }
+    }
+    
     /** Sends a packet to the server informing that the client wants to spawn. */
     play() {    
         this.socket.send(SwiftStream.WriteI8(0x00).WriteCString("Knight").WriteI8(Config.Characters.CharacterPointer).WriteI8(Config.Characters.AbilityPointer).Write());
@@ -308,38 +378,38 @@ const Game = {
         ctx.arc(x, y, radius, 0, Math.TAU);
         ctx.fill();
     },
-
+    
     Setup() {
         /**
-         * Sets up the game. Ran once before the requestAnimationFrame loop.
-         */
-
+        * Sets up the game. Ran once before the requestAnimationFrame loop.
+        */
+        
         /** Sets up the character modal. */
         Config.Characters.CharacterPointer = 0;
-
+        
         /** Adds a listener to each gamemode, selects them when clicked. 
-         * TODO(Altanis|Feature): Connect to a new WebSocket when a gamemode is selected.
-         */
+        * TODO(Altanis|Feature): Connect to a new WebSocket when a gamemode is selected.
+        */
         for (let i = Gamemodes.children.length; i--;) {
             const child = Gamemodes.children[i];
             if (child.classList.contains("disabled")) continue;
-
+            
             child.addEventListener("click", function () {
                 Config.Gamemodes.Pointer = i;
                 for (const sibling of this.parentElement.children) sibling.classList.remove("selected");
             });
         }
-
+        
         /** Adds a listener to each arrow, incrementing/decrementing the pointer to each character. */
         arrowLeft.addEventListener("click", function () {
             Config.Characters.CharacterPointer = ((Config.Characters.CharacterPointer - 1) + Config.Characters.List.length) % Config.Characters.List.length;
         });
-
+        
         arrowRight.addEventListener("click", function () {
             console.log(Config.Characters.CharacterPointer);
             Config.Characters.CharacterPointer = (Config.Characters.CharacterPointer + 1) % Config.Characters.List.length;
         });
-
+        
         /** Clicks play on enter. */
         document.addEventListener("keydown", function (event) {
             if (event.key === "Enter" && document.activeElement === NameInput) Play.click();
@@ -349,20 +419,20 @@ const Game = {
             SocketManager.play();
         });
     },
-
+    
     HomeScreen() {
         /**
-         * This section draws the home screen animation. It resembles space while moving quick in it.
-         * To make the effect that space is moving, we need to:
-            * 1. Draw a black background
-            * 2. Draw big stars with varying radii
-            * 3. Increase their radii by small amounts to simulate moving close to them
-            * 4. Generate new stars when the old ones become big
-         */
-
+        * This section draws the home screen animation. It resembles space while moving quick in it.
+        * To make the effect that space is moving, we need to:
+        * 1. Draw a black background
+        * 2. Draw big stars with varying radii
+        * 3. Increase their radii by small amounts to simulate moving close to them
+        * 4. Generate new stars when the old ones become big
+        */
+        
         ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+        
         ctx.fillStyle = "#FFFFFF";
         if (Config.HomeScreen.stars.length !== Config.HomeScreen.starCount) {
             for (let i = Config.HomeScreen.starCount - Config.HomeScreen.stars.length; --i;) {
@@ -373,7 +443,7 @@ const Game = {
                 });
             }
         }
-
+        
         for (let i = Config.HomeScreen.stars.length; i--;) {
             const star = Config.HomeScreen.stars[i];
             Game.RenderCircle(star.x, star.y, star.radius);
@@ -382,14 +452,36 @@ const Game = {
                 Config.HomeScreen.stars.splice(i, 1);
             }
         }
+    },
+    
+    Arena() {
+        /**
+        * This section draws the arena. It resembles the space every entity is in.
+        */
+        
+        /** Render background. */
+        // RENDER OUTBOUNDS:
+        console.log(Player.position.x, Player.position.y);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(0, 0, canvas.width, Player.position.y - Config.Arena.arenaBounds / 2);
+        ctx.fillRect(0, Player.position.y + Config.Arena.arenaBounds / 2, canvas.width, canvas.height - (Player.position.y + Config.Arena.arenaBounds / 2));
+        ctx.fillRect(0, Player.position.y - Config.Arena.arenaBounds / 2, Player.position.x - Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds);
+        ctx.fillRect(Player.position.x + Config.Arena.arenaBounds / 2, Player.position.y - Config.Arena.arenaBounds / 2, canvas.width - (Player.position.x + Config.Arena.arenaBounds / 2), Config.Arena.arenaBounds);      
+        
+        // RENDER INBOUNDS:
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.fillRect(Player.position.x - Config.Arena.arenaBounds / 2, Player.position.y - Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds, Config.Arena.arenaBounds);
     }
 }
 
 Game.Setup();
 
 function UpdateGame() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
     switch (Config.CurrentPhase) {
         case 0: Game.HomeScreen(); break;
+        case 1: Game.Arena(); break;
     }
     requestAnimationFrame(UpdateGame);
 }
