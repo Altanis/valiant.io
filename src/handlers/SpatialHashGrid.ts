@@ -1,5 +1,5 @@
 /** 
- * Stores entity positions in a grid and checks for collisions.
+ * Stores entity positions in a grid and checks for collisions efficiently.
  * Credits to @PaulJohnson11 on Repl.it for his implementation of a Spatial Hashgrid.
 */
 

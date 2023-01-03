@@ -1,4 +1,4 @@
-/** BUFFERS: Used to convert between different byte-lengths. */
+/** BUFFERS: Used to convert between different byte lengths. */
 const conversion = new ArrayBuffer(4);
 const u8 = new Uint8Array(conversion);
 const f32 = new Float32Array(conversion);

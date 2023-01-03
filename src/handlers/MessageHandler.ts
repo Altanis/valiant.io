@@ -13,7 +13,7 @@ export default class MessageHandler {
         this.server = server;
     }
 
-    // [0, string(name), i8(characterIdx), i8(abilityIdx))]
+    // [0, string(name), i8(characterIdx), i8(abilityIdx)]
     Spawn(player: PlayerHandler) {
         const name = player.SwiftStream.ReadUTF8String()?.trim();
         const characterIndex = player.SwiftStream.ReadI8();

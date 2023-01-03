@@ -38,7 +38,7 @@ export default class PlayerHandler {
     public velocity: Vector | null = null;
     /** 
      * The angle at which the player is facing.
-     * Measured in radians, range [-Math.PI, Math.PI].
+     * Measured in radians, with range of [-Math.PI, Math.PI].
     */
     public angle: number = 0;
     /** The amount of data to be sent to the client. [width, height] */

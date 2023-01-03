@@ -39,7 +39,7 @@ export default class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
-    /** Gets the normalized vector. */
+    /** Normalizes the vector (transforms it to a unit vector). */
     public normalize(): Vector {
         const magnitude = this.magnitude;
         this.x /= magnitude || 0; 
