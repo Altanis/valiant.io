@@ -23,6 +23,7 @@ const Config = {
     Characters: {
         List: ["Knight", "Priest", "Assassin"],
         _cp: 0,
+        MagicFrameRate: 8 // 8 frames in each GIF to render
     },
     Arena: {
         /** The dimensions of the arena. */
@@ -165,7 +166,7 @@ Object.defineProperties(Config.Characters, {
         get() { return this._cp },
         set(value) {
             characterName.innerText = Config.Characters.List[value];
-            const src = `assets/img/characters/${characterName.innerText}.gif`;
+            const src = `assets/img/characters/gifs/${characterName.innerText}.gif`;
             characterSprite.src = src;
             
             // TODO(Altanis): Change abilities based on character.
@@ -463,6 +464,24 @@ const Game = {
             }
         }
     },
+
+    RenderPlayer(character) {
+        let cache = ImageCache.get(character);
+
+        for (let i = Config.Characters.MagicFrameRate; i--;) {
+            if (!cache) {
+                const img = new Image();
+                img.src = `assets/img/characters/frames/${character}${i + 1}.png`;
+                img.onload = () => {
+                    let existing = ImageCache.get(character) || [];
+                    existing.push(img);
+                    ImageCache.set(character, existing);
+                }
+            }
+
+            ctx.drawImage(cache[i], 0, 0, 32, 32, Player.position.x - 16, Player.position.y - 16, 32, 32);
+        }
+    },
     
     Arena() {
         /**
@@ -487,6 +506,10 @@ const Game = {
         const yOffset = (canvas.height - Player.position.y) / 2;
 
         ctx.fillRect(xOffset, yOffset, Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds / 2);
+
+
+        /** This section renders the player. */
+        Game.RenderPlayer("Knight");
      }
 }
 
