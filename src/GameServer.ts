@@ -1,4 +1,5 @@
 import { Server } from 'ws';
+import HTTP from "http";
 
 import { MaximumConnections } from './Const/Config';
 import { CloseEvent } from './Const/Enums';
@@ -9,7 +10,7 @@ import SpatialHashGrid from './Handlers/SpatialHashGrid';
 
 export default class GameServer {
     /** The WebSocket server where clients connect to. */
-    private wss: Server;
+    public wss: Server;
     /** The players in the game. */
     public players = new Set<PlayerHandler>();
     /** The list of banned players. */
@@ -23,8 +24,8 @@ export default class GameServer {
     /** The hashgrid for the arena. */
     public SpatialHashGrid = new SpatialHashGrid();
 
-    constructor(port = 8080) {
-        this.wss = new Server({ port });
+    constructor(port: HTTP.Server | number = 8080) {
+        this.wss = typeof port === "number" ? new Server({ port }) : new Server({ server: port });
         this.handle();
 
         setInterval(() => this.tick(), 1000 / 25);

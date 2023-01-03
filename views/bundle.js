@@ -23,7 +23,6 @@ const Config = {
     Characters: {
         List: ["Knight", "Priest", "Assassin"],
         _cp: 0,
-        MagicFrameRate: 8 // 8 frames in each GIF to render
     },
     Arena: {
         /** The dimensions of the arena. */
@@ -465,22 +464,14 @@ const Game = {
         }
     },
 
-    RenderPlayer(character) {
-        let cache = ImageCache.get(character);
-
-        for (let i = Config.Characters.MagicFrameRate; i--;) {
-            if (!cache) {
-                const img = new Image();
-                img.src = `assets/img/characters/frames/${character}${i + 1}.png`;
-                img.onload = () => {
-                    let existing = ImageCache.get(character) || [];
-                    existing.push(img);
-                    ImageCache.set(character, existing);
-                }
-            }
-
-            ctx.drawImage(cache[i], 0, 0, 32, 32, Player.position.x - 16, Player.position.y - 16, 32, 32);
+    RenderPlayer(image) {
+        image.frameIdx = Math.floor((Date.now() - image.startTime) / image.delay);
+        if (image.frameIdx >= image.frames.length) {
+            image.frameIdx = 0;
+            image.startTime = Date.now();
         }
+
+        ctx.drawImage(image, image.frameIdx * image.width / image.frames, 0, image.width / image.frames, image.height, 0, 0, canvas.width, canvas.height);
     },
     
     Arena() {
@@ -509,7 +500,38 @@ const Game = {
 
 
         /** This section renders the player. */
-        Game.RenderPlayer("Knight");
+        const character = "Knight";
+
+        let cache = ImageCache.get(character);
+        if (!cache) {
+            /** Cache the image, and make it suitable for animation. */
+            const image = new Image();
+            image.src = getBase64(`assets/img/characters/gifs/${character}.gif`);
+            image.addEventListener("load", function() {
+                ImageCache.set(character, image);
+
+                const buffer = document.createElement("canvas").getContext("2d");
+                buffer.canvas.width = image.width;
+                buffer.canvas.height = image.height;
+                buffer.drawImage(image, 0, 0);
+                const imageData = buffer.getImageData(0, 0, buffer.canvas.width, buffer.canvas.height);
+
+                image.frames = 0;
+                image.delay = 0;
+
+                for (let i = 0; i < imageData.data.length; i += 4) {
+                    const alpha = imageData.data[i + 3];
+                    if (alpha === 0) image.frames++;
+                    else if (alpha > 0) image.delay += alpha;
+                }
+
+                console.log("Parsed image, frames:", image.frames, "delay:", image.delay);
+
+                image.startTime = Date.now();
+                image.frameIdx = 0;
+                RenderPlayer(image);
+            });
+        } else Game.RenderPlayer(cache);
      }
 }
 
