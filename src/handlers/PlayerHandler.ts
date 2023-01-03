@@ -105,10 +105,6 @@ export default class PlayerHandler {
             this.update.forEach(property => {
                 switch (property) {
                     case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
-                    case "resolution": {
-                        console.log(this.resolution);
-                        this.SwiftStream.WriteI8(Fields.Resolution).WriteFloat32(this.resolution[0]).WriteFloat32(this.resolution[1]); break;
-                    }
                 }
             });
         }

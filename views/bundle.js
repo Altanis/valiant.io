@@ -262,8 +262,6 @@ const Player = {
     position: null,
     /** The angle at which the player is facing at (from -Math.PI to Math.PI) */
     angle: 0,
-    /** The resolution the player can view. */
-    resolution: { width: 0, height: 0 }
 }
 
 Object.defineProperties(Player, {
@@ -306,6 +304,7 @@ const WebSocketManager = class {
             console.log("Connected to server!");
             this.migrations = 0;
             HomeScreen.style.display = "block";
+            canvas.style.display = "block";
             DisconnectScreen.style.display = "none";
         });
         
@@ -318,6 +317,7 @@ const WebSocketManager = class {
             /** Inform client a connection was not able to be sustained. */
             if (!Config.DisplayDisconnect) return;
             HomeScreen.style.display = "none";
+            canvas.style.display = "none";
             document.getElementById("disconnect-message").innerText = Config.WebSocket.CloseEvents[event.code] || "An unknown error has occurred. Please refresh.";
             DisconnectScreen.style.display = "block";
         });
@@ -362,13 +362,6 @@ const WebSocketManager = class {
                                 Player.id = id;
                                 Player.position = { x, y };
                                 break;
-                            }
-                            case 0x01: { // RESOLUTION
-                                const width = SwiftStream.ReadFloat32();
-                                const height = SwiftStream.ReadFloat32();
-
-                                console.log(`Entity ${id} has a resolution of ${width}x${height}`);
-                                Player.resolution = { width, height };
                             }
                         }
                     }
@@ -476,37 +469,24 @@ const Game = {
         * This section draws the arena. It resembles the space every entity is in.
         */
         
-        /** Render background. */
+        /**  
+         * 1. Renders outbound as entire canvas.
+         * 2. Calculates the x and y offsets for the player to view relative to their position.
+              * At (0, 0), the x and y offsets of the arena should be half of their respective dimensions (height/width). 
+         * 3. Apply inbounds, dimensions are half of the arena bounds.
+        */
+
+        // RENDER OUTBOUNDS:
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // RENDER INBOUNDS:
         ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // RENDER OUTBOUNDS:
-        const xPos = Player.position.x;
-        const width = Player.resolution.width;
-        const yPos = Player.position.y;
-        const height = Player.resolution.height;
+        const xOffset = (canvas.width - Player.position.x) / 2;
+        const yOffset = (canvas.height - Player.position.y) / 2;
 
-        // Ensure the outbounds are visible to the player.
-        if (xPos < width || yPos < height) {
-            /**
-             * 1. Translate resolution to Canvas: for example, normalize proportion 1920x1080 to 666x375
-             * 2. Determine the width and heights of the rectangles to draw.
-             * 3. Draw the rectangles. These will be placed over the inbounds.
-             */
-            const scales = [
-                (canvas.width / 2) / width,
-                (canvas.height / 2) / height
-            ]; // Can now draw proportionally to the canvas by multiplying these factors.
-
-            const xHeight = (Player.resolution.width - Player.position.x) / 2;
-            const yWidth = (Player.resolution.height - Player.position.y) / 2;
-
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillRect(0, 0, canvas.width, xHeight * scales[0]);
-            ctx.fillRect(0, 0, yWidth * scales[1], canvas.height);
-        }
+        ctx.fillRect(xOffset, yOffset, Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds / 2);
      }
 }
 

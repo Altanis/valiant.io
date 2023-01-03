@@ -36,11 +36,9 @@ export default class MessageHandler {
         player.abilityIndex = abilityIndex;
 
         player.velocity = new Vector(0, 0);
-        player.position = new Vector(0, 0);
-        //player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
+        player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
 
         player.alive = true;
         player.update.add("position");
-        player.update.add("resolution");
     }
  };
