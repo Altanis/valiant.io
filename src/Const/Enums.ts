@@ -17,6 +17,8 @@ export enum ClientBound {
 export enum Fields {
     /** The position of the entity. */
     Position = 0x00,
+    /** The width and height the player can view (normalized in terms of 5000). */
+    Resolution = 0x01,
 }
 
 export enum ServerBound {

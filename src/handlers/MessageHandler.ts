@@ -41,5 +41,6 @@ export default class MessageHandler {
 
         player.alive = true;
         player.update.add("position");
+        player.update.add("resolution");
     }
  };

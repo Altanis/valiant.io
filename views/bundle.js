@@ -26,7 +26,7 @@ const Config = {
     },
     Arena: {
         /** The dimensions of the arena. */
-        arenaBounds: 1500,
+        arenaBounds: 5000,
     },
     Audio: {
         List: ["ffa"],
@@ -34,7 +34,7 @@ const Config = {
     },
     
     DisplayDisconnect: false,
-    CurrentPhase: 0 // [0: Homescreen, 1: Portal, 2: Arena, 3: Death]
+    CurrentPhase: 0 // [0: Homescreen, 1: Arena, 2: Death]
 };
 
 const Data = {
@@ -256,10 +256,14 @@ const Player = {
     id: 0,
     /** The name of the player */
     name: "Knight",
+    /** The ID of the player. */
+    id: null,
     /** The position of the player */
     position: null,
     /** The angle at which the player is facing at (from -Math.PI to Math.PI) */
     angle: 0,
+    /** The resolution the player can view. */
+    resolution: { width: 0, height: 0 }
 }
 
 Object.defineProperties(Player, {
@@ -301,6 +305,8 @@ const WebSocketManager = class {
         this.socket.addEventListener("open", () => {
             console.log("Connected to server!");
             this.migrations = 0;
+            HomeScreen.style.display = "block";
+            DisconnectScreen.style.display = "none";
         });
         
         this.socket.addEventListener("close", event => {
@@ -318,6 +324,7 @@ const WebSocketManager = class {
         
         this.socket.addEventListener("error", event => {
             console.log("An error has occured during the connection:", event);
+            this.migrate(this.url);
         });
         
         this.socket.addEventListener("message", ({ data }) => {
@@ -346,12 +353,22 @@ const WebSocketManager = class {
                                 const y = SwiftStream.ReadFloat32();
                                 
                                 console.log(`Entity ${id} is located at (${x}, ${y})`);
+                                
                                 if (!Player.position) { // Start Game
                                     HomeScreen.style.display = "none";
                                     Config.CurrentPhase = 1;
                                 }
+
+                                Player.id = id;
                                 Player.position = { x, y };
                                 break;
+                            }
+                            case 0x01: { // RESOLUTION
+                                const width = SwiftStream.ReadFloat32();
+                                const height = SwiftStream.ReadFloat32();
+
+                                console.log(`Entity ${id} has a resolution of ${width}x${height}`);
+                                Player.resolution = { width, height };
                             }
                         }
                     }
@@ -460,18 +477,37 @@ const Game = {
         */
         
         /** Render background. */
-        // RENDER OUTBOUNDS:
-        console.log(Player.position.x, Player.position.y);
-        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-        ctx.fillRect(0, 0, canvas.width, Player.position.y - Config.Arena.arenaBounds / 2);
-        ctx.fillRect(0, Player.position.y + Config.Arena.arenaBounds / 2, canvas.width, canvas.height - (Player.position.y + Config.Arena.arenaBounds / 2));
-        ctx.fillRect(0, Player.position.y - Config.Arena.arenaBounds / 2, Player.position.x - Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds);
-        ctx.fillRect(Player.position.x + Config.Arena.arenaBounds / 2, Player.position.y - Config.Arena.arenaBounds / 2, canvas.width - (Player.position.x + Config.Arena.arenaBounds / 2), Config.Arena.arenaBounds);      
-        
+
         // RENDER INBOUNDS:
-        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-        ctx.fillRect(Player.position.x - Config.Arena.arenaBounds / 2, Player.position.y - Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds, Config.Arena.arenaBounds);
-    }
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // RENDER OUTBOUNDS:
+        const xPos = Player.position.x;
+        const width = Player.resolution.width;
+        const yPos = Player.position.y;
+        const height = Player.resolution.height;
+
+        // Ensure the outbounds are visible to the player.
+        if (xPos < width || yPos < height) {
+            /**
+             * 1. Translate resolution to Canvas: for example, normalize proportion 1920x1080 to 666x375
+             * 2. Determine the width and heights of the rectangles to draw.
+             * 3. Draw the rectangles. These will be placed over the inbounds.
+             */
+            const scales = [
+                (canvas.width / 2) / width,
+                (canvas.height / 2) / height
+            ]; // Can now draw proportionally to the canvas by multiplying these factors.
+
+            const xHeight = (Player.resolution.width - Player.position.x) / 2;
+            const yWidth = (Player.resolution.height - Player.position.y) / 2;
+
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillRect(0, 0, canvas.width, xHeight * scales[0]);
+            ctx.fillRect(0, 0, yWidth * scales[1], canvas.height);
+        }
+     }
 }
 
 Game.Setup();

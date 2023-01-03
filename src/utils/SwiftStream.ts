@@ -46,11 +46,9 @@ export default class SwiftStream {
     }
 
     WriteFloat32(value: number) {
-        console.log(value);
         f32[0] = value;
         this.buffer.set(u8, this.at);
         this.at += 4;
-        console.log(this.buffer);
         return this;
     }
 

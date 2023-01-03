@@ -12,14 +12,17 @@ class Box {
     w: number;
     /** The height of the box. */
     h: number;
+    /** The entity ID this box belongs to. */
+    entityId: number | null;
     /** The query ID of the box. */
     queryId: number | undefined;
 
-    constructor(x: number, y: number, w: number, h: number) {
+    constructor(x: number, y: number, w: number, h: number, id: number | null) {
         this.x = x;
         this.y = y;
         this.w = w;
         this.h = h;
+        this.entityId = id;
     }
 
     collidesWith(box: Box) {
@@ -45,10 +48,10 @@ export default class SpatialHashGrid {
      * @param w The width of the entity.
      * @param h The height of the entity.
      */
-    insert(x: number, y: number, w: number, h: number) {
+    insert(x: number, y: number, w: number, h: number, id: number) {
         this.entities++;
 
-        const box = new Box(x, y, w, h);
+        const box = new Box(x, y, w, h, id);
 
         const startX = box.x >> this.cellSize;
         const startY = box.y >> this.cellSize;
@@ -72,8 +75,8 @@ export default class SpatialHashGrid {
      * @param w The width of the entity.
      * @param h The height of the entity.
      */
-    query(x: number, y: number, w: number, h: number) {
-        const box = new Box(x, y, w, h);
+    query(x: number, y: number, w: number, h: number, id: number) {
+        const box = new Box(x, y, w, h, id);
 
         const startX = box.x >> this.cellSize;
         const startY = box.y >> this.cellSize;
@@ -95,7 +98,7 @@ export default class SpatialHashGrid {
                 for (let i = 0; i < cell.length; i++) {
                     const box: Box = cell[i];
 
-                    if (box.queryId !== queryId) {
+                    if (box.queryId !== queryId && box.entityId !== id) {
                         box.queryId = queryId;
                         found.push(box);
                     }

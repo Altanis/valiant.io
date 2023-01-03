@@ -41,6 +41,8 @@ export default class PlayerHandler {
      * Measured in radians, range [-Math.PI, Math.PI].
     */
     public angle: number = 0;
+    /** The amount of data to be sent to the client. [width, height] */
+    public resolution: [number, number] = [(5000 / 7.5) | 0, (5000 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
         this.server = server;
@@ -103,12 +105,21 @@ export default class PlayerHandler {
             this.update.forEach(property => {
                 switch (property) {
                     case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
+                    case "resolution": {
+                        console.log(this.resolution);
+                        this.SwiftStream.WriteI8(Fields.Resolution).WriteFloat32(this.resolution[0]).WriteFloat32(this.resolution[1]); break;
+                    }
                 }
             });
         }
 
         /** TODO(Altanis): Inform client of surroundings. */
-        // Note to self: Signify a world update by WriteI8(0x01).
+        const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.resolution[0], this.resolution[1], this.id);
+        if (surroundings.length) {
+            console.log(surroundings);
+            this.SwiftStream.WriteI8(0x01).WriteI8(surroundings.length);
+            for (const surrounding of surroundings) { };
+        }
 
         this.update.clear();
         const buffer = this.SwiftStream.Write();
@@ -128,7 +139,7 @@ export default class PlayerHandler {
             this.velocity!.x = this.velocity!.y = 0;
 
             /** Reinsert into the hashgrid with updated position. Player is 50x50 in dimension. */
-            this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, 50, 50);
+            this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, 50, 50, this.id);
 
             /** Send update to player. */
             this.SendUpdate();
