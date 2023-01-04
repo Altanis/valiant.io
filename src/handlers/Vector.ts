@@ -11,7 +11,22 @@ export default class Vector {
     }
 
     /** Adds by a vector. */
-    public add(vector: Vector): Vector {
+    public add(vector: Vector, strict = false): Vector {
+        if (strict) {
+            let x = this.x + vector.x;
+            let y = this.y + vector.y;
+
+            if (x > 5000) this.x = 5000;
+            else if (x < 0) this.x = 0;
+            else this.x = x;
+
+            if (y > 5000) this.y = 5000;
+            else if (y < 0) this.y = 0;
+            else this.y = y;
+
+            return this;
+        }
+
         this.x += vector.x;
         this.y += vector.y;
 
@@ -19,7 +34,22 @@ export default class Vector {
     }
 
     /** Subtracts by a vector. */
-    public subtract(vector: Vector): Vector {
+    public subtract(vector: Vector, strict = false): Vector {
+        if (strict) {
+            let x = this.x - vector.x;
+            let y = this.y - vector.y;
+
+            if (x > 5000) this.x = 5000;
+            else if (x < 0) this.x = 0;
+            else this.x = x;
+
+            if (y > 5000) this.y = 5000;
+            else if (y < 0) this.y = 0;
+            else this.y = y;
+
+            return this;
+        }
+        
         this.x -= vector.x;
         this.y -= vector.y;
 

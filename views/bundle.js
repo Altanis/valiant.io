@@ -23,6 +23,8 @@ const Config = {
     Characters: {
         List: ["Knight", "Priest", "Assassin"],
         _cp: 0,
+        MagicFrames: 8,
+        MagicDelay: 4, // 15 frames per second
     },
     Arena: {
         /** The dimensions of the arena. */
@@ -34,7 +36,10 @@ const Config = {
     },
     
     DisplayDisconnect: false,
-    CurrentPhase: 0 // [0: Homescreen, 1: Arena, 2: Death]
+    CurrentPhase: 0, // [0: Homescreen, 1: Arena, 2: Death]
+
+    // MAGIC FUNCTION!
+    lerp: (a, b, m) => a + (b - a) * m,
 };
 
 const Data = {
@@ -140,6 +145,7 @@ const SwiftStream = new (class {
     
     Write() {
         const result = this.buffer.subarray(0, this.at);
+        console.log(result);
         this.Clear();
         return result;
     }
@@ -251,18 +257,16 @@ const AudioManager = class {
     }
 };
 
-const Player = {
-    /** The ID of the player */
-    id: 0,
-    /** The name of the player */
-    name: "Knight",
-    /** The ID of the player. */
-    id: null,
-    /** The position of the player */
-    position: null,
-    /** The angle at which the player is facing at (from -Math.PI to Math.PI) */
-    angle: 0,
+const Player = class {
+    constructor() {
+        this.id = null;
+        this.name = "Knight";
+        this.position = null;
+        this.angle = 0;
+    }
 }
+
+const player = new Player();
 
 Object.defineProperties(Player, {
     /** Character index */
@@ -354,13 +358,20 @@ const WebSocketManager = class {
                                 
                                 console.log(`Entity ${id} is located at (${x}, ${y})`);
                                 
-                                if (!Player.position) { // Start Game
+                                if (!player.position) { // Start Game
                                     HomeScreen.style.display = "none";
                                     Config.CurrentPhase = 1;
+                                    player.position = { x, y };
+                                } else {
+                                    let t = 0;
+                                    const i = setInterval(() => {
+                                        if (t >= 1) return clearInterval(i);
+                                        t += 0.1;
+                                        player.position = { x: Config.lerp(player.position.x, x, t), y: Config.lerp(player.position.y, y, t) };
+                                    }, 1000 / 60);
                                 }
 
-                                Player.id = id;
-                                Player.position = { x, y };
+                                player.id = id;
                                 break;
                             }
                         }
@@ -371,6 +382,8 @@ const WebSocketManager = class {
             }
             default: console.log(header);
         }
+
+        SwiftStream.Clear();
     }
     
     /** Sends a packet to the server informing that the client wants to spawn. */
@@ -416,14 +429,9 @@ const Game = {
         });
         
         arrowRight.addEventListener("click", function () {
-            console.log(Config.Characters.CharacterPointer);
             Config.Characters.CharacterPointer = (Config.Characters.CharacterPointer + 1) % Config.Characters.List.length;
         });
         
-        /** Clicks play on enter. */
-        document.addEventListener("keydown", function (event) {
-            if (event.key === "Enter" && document.activeElement === NameInput) Play.click();
-        });
         /** Adds a listener to the Play button to start the game. */
         Play.addEventListener("click", function () {
             SocketManager.play();
@@ -464,17 +472,18 @@ const Game = {
         }
     },
 
-    RenderPlayer() {
-        /*ctx.drawImage(frames.buffer, 0, 0);
-        image.frameIdx = Math.floor((Date.now() - image.startTime) / image.delay);
-        if (image.frameIdx >= image.frames.length) {
-            image.frameIdx = 0;
-            image.startTime = Date.now();
+    RenderPlayer(cache) {
+        if (!cache) return;
+
+        if (++cache[0] >= Config.Characters.MagicDelay) {
+            cache[1] = ++cache[1] % Config.Characters.MagicFrames;
+            cache[0] = 0;
         }
 
-        ctx.drawImage(image, image.frameIdx * image.width / image.frames, 0, image.width / image.frames, image.height, 0, 0, canvas.width, canvas.height);*/
+        if (!cache[2][cache[1]]) return;
+        ctx.drawImage(cache[2][cache[1]], (canvas.width - 150) / 2, (canvas.height - 150) / 2, 150, 150);
     },
-    
+
     Arena() {
         /**
         * This section draws the arena. It resembles the space every entity is in.
@@ -494,18 +503,70 @@ const Game = {
         // RENDER INBOUNDS:
         ctx.fillStyle = "#000000";
 
-        const xOffset = (canvas.width - Player.position.x) / 2;
-        const yOffset = (canvas.height - Player.position.y) / 2;
+        const xOffset = (canvas.width - player.position.x) / 2;
+        const yOffset = (canvas.height - player.position.y) / 2;
 
-        ctx.fillRect(xOffset, yOffset, Config.Arena.arenaBounds / 2, Config.Arena.arenaBounds / 2);
+        ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 300) / 2, (Config.Arena.arenaBounds + 300) / 2);
 
 
         /** This section renders the player. */
         const character = "Knight";
+
         const cache = ImageCache.get(character);
+        if (!cache) {
+            ImageCache.set(character, [0, 0, []]);
+            for (let i = Config.Characters.MagicFrames; i--;) {
+                const image = new Image();
+                image.src = `img/characters/frames/${character}/${character}${i + 1}.png`;
+                image.addEventListener("load", function() {
+                    ImageCache.get(character)[2].push(image);
+                });
+            }
+        }
+
+        Game.RenderPlayer(cache);
+
+ /* // set the fill style to red
+  ctx.fillStyle = 'red';
+  // begin a new path
+  ctx.beginPath();
+  // draw a circle to represent the head of the Among Us character
+  ctx.arc(100, 100, 50, 0, 2 * Math.PI);
+  // fill the circle with the current fill style (red)
+  ctx.fill();
+
+  // draw the visor using a rectangle
+  ctx.fillStyle = 'gray';
+  ctx.fillRect(75, 70, 50, 20);
+
+  // draw the backpack using another rectangle
+  ctx.fillRect(80, 120, 40, 40);
+
+  // draw the legs using two lines
+  ctx.beginPath();
+  ctx.moveTo(90, 140);
+  ctx.lineTo(90, 200);
+  ctx.moveTo(110, 140);
+  ctx.lineTo(110, 200);
+  ctx.stroke();*/
+        /*const cache = ImageCache.get(player.id);
 
         // TODO(ALTANIS): Abandon GIFs, futile.
+        if (!cache) {
+            const image = new Image(125, 125);
+            image.src = `assets/img/characters/gifs/${character}.gif`;
+            
+            // center image
+            image.style.position = "absolute";
+            image.style.left = "50%";
+            image.style.top = "50%";
+            image.style.transform = "translate(-50%, -50%)";
 
+            document.body.appendChild(image);
+            ImageCache.set(player.id, image);
+        }
+
+        cache.style.transform = "translate(-50%, -50%) rotate()";*/
 
         // if (!cache) {
             /** Cache the image, and make it suitable for animation. */
@@ -539,6 +600,39 @@ const Game = {
         // } else Game.RenderPlayer(cache);
      }
 }
+
+/*document.addEventListener("mousemove", function(event) {
+    const rad = Math.atan2(event.clientY - canvas.height / 2, event.clientX - canvas.width / 2);
+    console.log(rad, "rad");
+    const cache = ImageCache.get(player.id);
+    if (cache) cache.style.transform = `translate(-50%, -50%) rotate(${rad}rad)`;
+});*/
+
+// 1 = up, 2 = right, 3 = down, 4 = left
+
+const ATTACH_MAPS = new Map([
+    /** Movement keys. */
+    [38, 1],
+    [87, 1],
+    [39, 2],
+    [68, 2],
+    [40, 3],
+    [83, 3],
+    [37, 4],
+    [65, 4],
+]);
+
+document.addEventListener("keydown", function (event) {
+    /** Play game. */
+    if (event.key === "Enter" && document.activeElement === NameInput && Play.style.display === "block") Play.click();
+
+    /** Movement keys. */
+    const attach = ATTACH_MAPS.get(event.which || event.keyCode);
+    if (attach) {
+        SocketManager.socket.send(SwiftStream.WriteI8(0x01).WriteI8(attach).Write());
+        event.preventDefault();
+    }
+});
 
 Game.Setup();
 

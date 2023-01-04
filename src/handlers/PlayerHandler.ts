@@ -42,7 +42,9 @@ export default class PlayerHandler {
     */
     public angle: number = 0;
     /** The amount of data to be sent to the client. [width, height] */
-    public resolution: [number, number] = [(5000 / 7.5) | 0, (5000 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
+    public resolution = [(5000 / 7.5) | 0, (5000 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
+    /** The dimensions of the player. */
+    public dimensions = [150, 150];
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
         this.server = server;
@@ -65,8 +67,11 @@ export default class PlayerHandler {
             if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
 
             switch (header) {
-                case ServerBound.Spawn: return this.server.MessageHandler.Spawn(this);
+                case ServerBound.Spawn: this.server.MessageHandler.Spawn(this); break;
+                case ServerBound.Movement: this.server.MessageHandler.Move(this); break;
             }
+
+            this.SwiftStream.Clear();
         });
     }
 
@@ -90,7 +95,6 @@ export default class PlayerHandler {
 
     /** Sends creation data of the player. */
     public SendUpdate() {
-        this.SwiftStream.Clear();
         this.SwiftStream.WriteI8(ClientBound.Update);
 
         /** Checks if the client requires an update. */
@@ -123,6 +127,7 @@ export default class PlayerHandler {
     }
 
     public close(reason: number) {
+        console.trace(reason);
         this.socket.close(reason);
         this.server.players.delete(this);
     }
@@ -131,11 +136,11 @@ export default class PlayerHandler {
     public tick() {
         if (this.alive) {
             /** Move position by player's velocity, reset player velocity. */
-            this.position!.add(this.velocity!);
+            this.position!.add(this.velocity!, true);
             this.velocity!.x = this.velocity!.y = 0;
 
-            /** Reinsert into the hashgrid with updated position. Player is 50x50 in dimension. */
-            this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, 50, 50, this.id);
+            /** Reinsert into the hashgrid with updated position. */
+            this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
 
             /** Send update to player. */
             this.SendUpdate();

@@ -10,6 +10,7 @@ export enum CloseEvent {
 };
 
 export enum ClientBound {
+    /** Tells the client of it's surroundings. */
     Update = 0x00
 };
 
@@ -17,11 +18,21 @@ export enum ClientBound {
 export enum Fields {
     /** The position of the entity. */
     Position = 0x00,
-}
+};
+
+/** Movement codes. */
+export enum Movement {
+    Up = 0x01,
+    Right = 0x02,
+    Down = 0x03,
+    Left = 0x04
+};
 
 export enum ServerBound {
     /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */
-    Spawn = 0x00
+    Spawn = 0x00,
+    /** Client tells the server they want to move. [i8(Movement)] */
+    Movement = 0x01
 };
 
 export const Characters: CharacterDefinition[] = [

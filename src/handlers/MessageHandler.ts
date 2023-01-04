@@ -1,4 +1,4 @@
-import { CloseEvent, Characters } from '../Const/Enums';
+import { CloseEvent, Characters, Movement } from '../Const/Enums';
 
 import PlayerHandler from './PlayerHandler';
 import GameServer from '../GameServer';
@@ -39,6 +39,26 @@ export default class MessageHandler {
         player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
 
         player.alive = true;
+        player.update.add("position");
+    }
+
+    // [1, i8(Movement)]
+    Move(player: PlayerHandler): void {
+        if (
+            !player.alive
+            || !player.velocity
+        ) return player.close(CloseEvent.InvalidProtocol);
+        const movement = player.SwiftStream.ReadI8();
+        if (!movement) return player.close(CloseEvent.InvalidProtocol);
+
+        switch (movement) {
+            case Movement.Up: player.velocity!.y = -5.323; break;
+            case Movement.Right: player.velocity!.x = 5.323; break;
+            case Movement.Down: player.velocity!.y = 5.323; break;
+            case Movement.Left: player.velocity!.x = -5.323; break;
+            default: return player.close(CloseEvent.InvalidProtocol);
+        }
+
         player.update.add("position");
     }
  };
