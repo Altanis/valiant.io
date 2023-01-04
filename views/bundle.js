@@ -464,14 +464,15 @@ const Game = {
         }
     },
 
-    RenderPlayer(image) {
+    RenderPlayer() {
+        /*ctx.drawImage(frames.buffer, 0, 0);
         image.frameIdx = Math.floor((Date.now() - image.startTime) / image.delay);
         if (image.frameIdx >= image.frames.length) {
             image.frameIdx = 0;
             image.startTime = Date.now();
         }
 
-        ctx.drawImage(image, image.frameIdx * image.width / image.frames, 0, image.width / image.frames, image.height, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, image.frameIdx * image.width / image.frames, 0, image.width / image.frames, image.height, 0, 0, canvas.width, canvas.height);*/
     },
     
     Arena() {
@@ -501,12 +502,16 @@ const Game = {
 
         /** This section renders the player. */
         const character = "Knight";
+        const cache = ImageCache.get(character);
 
-        let cache = ImageCache.get(character);
-        if (!cache) {
+        // TODO(ALTANIS): Abandon GIFs, futile.
+
+
+        // if (!cache) {
             /** Cache the image, and make it suitable for animation. */
-            const image = new Image();
-            image.src = getBase64(`assets/img/characters/gifs/${character}.gif`);
+
+            /*const image = new Image();
+            image.src = `assets/img/characters/gifs/${character}.gif`;
             image.addEventListener("load", function() {
                 ImageCache.set(character, image);
 
@@ -529,9 +534,9 @@ const Game = {
 
                 image.startTime = Date.now();
                 image.frameIdx = 0;
-                RenderPlayer(image);
-            });
-        } else Game.RenderPlayer(cache);
+                Game.RenderPlayer(image);
+            });*/
+        // } else Game.RenderPlayer(cache);
      }
 }
 
