@@ -259,8 +259,8 @@ const Player = class {
         this.id = null;
         this.name = "Knight";
         this.position = {
-            old: { x: null, y: null, ts: null },
-            current: { x: null, y: null, ts: null },
+            old: { x: null, y: null },
+            current: { x: null, y: null },
         };
         this.angle = 0;
     }
@@ -360,7 +360,7 @@ const WebSocketManager = class {
                                 }
                                 
                                 player.position.old = player.position.current;
-                                player.position.current = { x, y, ts: Date.now() };
+                                player.position.current = { x, y };
 
                                 player.id = id;
                                 break;
