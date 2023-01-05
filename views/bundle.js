@@ -29,6 +29,8 @@ const Config = {
     Arena: {
         /** The dimensions of the arena. */
         arenaBounds: 5000,
+        /** The spacing for the grid system. */
+        gridSize: 50,
     },
     Audio: {
         List: ["ffa"],
@@ -149,6 +151,7 @@ const SwiftStream = new (class {
 });
 
 const canvas = document.getElementById("canvas");
+/** @type {CanvasRenderingContext2D} */
 const ctx = canvas.getContext("2d");
 
 function resize() {
@@ -500,7 +503,7 @@ const Game = {
         ctx.shadowColor = "#2F8999";
         ctx.fillStyle = "rgb(5,28,31)";
 
-        /** RENDER PLAYER BASED OFF COORDS (using lerp) */
+        // LERP COORDS:
         let pos;
         const frame = Date.now() - (1000 / 60);
         if (frame < player.position.old.ts) pos = player.position.old;
@@ -520,6 +523,16 @@ const Game = {
 
         ctx.shadowBlur = 0;
 
+        // RENDER GRID:
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < Config.Arena.arenaBounds; i += Config.Arena.gridSize) {
+            ctx.moveTo(xOffset + i, yOffset);
+            ctx.lineTo(xOffset + i, yOffset + Config.Arena.arenaBounds);
+            ctx.moveTo(xOffset, yOffset + i);
+            ctx.lineTo(xOffset + Config.Arena.arenaBounds, yOffset + i);
+        }
+        ctx.stroke();
 
         /** This section renders the player. */
         const character = "Knight";
@@ -542,7 +555,6 @@ const Game = {
         if (ACTIVE_KEYS.size) {
             const buffer = SwiftStream.WriteI8(0x01);
             ACTIVE_KEYS.forEach(dir => buffer.WriteI8(dir));
-            console.log(buffer);
             SocketManager.socket.send(buffer.Write());
         }
 
@@ -601,7 +613,6 @@ document.addEventListener("keyup", function (event) {
 });
 
 document.addEventListener("mousemove", function (event) {
-    console.log("triggered.");
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
