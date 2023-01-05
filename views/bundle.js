@@ -488,11 +488,11 @@ const Game = {
         */
 
         // RENDER OUTBOUNDS:
-        ctx.fillStyle = "#FFFFFF";
+        ctx.fillStyle = "rgba(199, 0, 0, 0.3)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // RENDER INBOUNDS:
-        ctx.fillStyle = "#000000";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
 
         /** RENDER PLAYER BASED OFF COORDS (using lerp) */
         let pos;
@@ -537,8 +537,10 @@ const Game = {
             SocketManager.socket.send(buffer.Write());
         }
 
-        player.angle = Math.atan2(player.mouseY - (canvas.height / 2), player.mouseX - (canvas.width / 2));
-        console.log("player angle", player.angle);
+        if (player.mouse) {
+            player.angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            console.log("player angle", player.angle);
+        }
     }
 }
 
@@ -586,7 +588,8 @@ document.addEventListener("keyup", function (event) {
     }
 });
 
-document.addEventListener("keyup", function (event) {
+document.addEventListener("mousemove", function (event) {
+    console.log("triggered.");
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
