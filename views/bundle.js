@@ -464,6 +464,7 @@ const Game = {
     },
 
     RenderPlayer(cache) {
+        /** TODO(Altanis): Check direction/angle, set it to `player.directon`. Reflect it over y axis properly. */
         if (!cache) return;
 
         if (++cache[0] >= Config.Characters.MagicDelay) {
@@ -488,11 +489,16 @@ const Game = {
         */
 
         // RENDER OUTBOUNDS:
-        ctx.fillStyle = "rgba(199, 0, 0, 0.3)";
+        ctx.fillStyle = "rgba(12, 50, 54, 1)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         // RENDER INBOUNDS:
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.strokeStyle = "#2F8999";
+        ctx.lineWidth = 10;
+        ctx.shadowBlur = 15;
+
+        ctx.shadowColor = "#2F8999";
+        ctx.fillStyle = "rgb(5,28,31)";
 
         /** RENDER PLAYER BASED OFF COORDS (using lerp) */
         let pos;
@@ -501,15 +507,18 @@ const Game = {
         else if (frame > player.position.current.ts) pos = player.position.current;
         else {
             pos = {
-                x: player.position.old.x + (player.position.current.x - player.position.old.x) * (window.starlight || 0.5) /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/,
-                y: player.position.old.y + (player.position.current.y - player.position.old.y) * (window.starlight || 0.5) /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/
+                x: player.position.old.x + (player.position.current.x - player.position.old.x) * 0.5 /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/,
+                y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5 /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/
             };
         }
 
         const xOffset = (canvas.width - pos.x) / 2;
         const yOffset = (canvas.height - pos.y) / 2;
 
-        ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 300) / 2, (Config.Arena.arenaBounds + 300) / 2);
+        ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
+        ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
+
+        ctx.shadowBlur = 0;
 
 
         /** This section renders the player. */
@@ -538,8 +547,11 @@ const Game = {
         }
 
         if (player.mouse) {
+            let old = player.angle;
             player.angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            console.log("player angle", player.angle);
+            if (old !== player.angle) {
+                SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(player.angle).Write());
+            }
         }
     }
 }

@@ -69,6 +69,7 @@ export default class PlayerHandler {
             switch (header) {
                 case ServerBound.Spawn: this.server.MessageHandler.Spawn(this); break;
                 case ServerBound.Movement: this.server.MessageHandler.Move(this); break;
+                case ServerBound.Angle: this.server.MessageHandler.Angle(this); break;
             }
 
             this.SwiftStream.Clear();

@@ -107,4 +107,9 @@ export default class Vector {
     public clone(): Vector {
         return new Vector(this.x, this.y);
     }
+
+    /** Creates a new vector with a specific distance away from the current vector. */
+    public moveByAngle(distance: number, angle: number): Vector {
+        return new Vector(this.x + distance * Math.cos(angle), this.y + distance * Math.sin(angle));
+    }
 }

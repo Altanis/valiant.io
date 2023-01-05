@@ -32,7 +32,9 @@ export enum ServerBound {
     /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */
     Spawn = 0x00,
     /** Client tells the server they want to move. [i8(Movement)] */
-    Movement = 0x01
+    Movement = 0x01,
+    /** The angle the player is facing, in radians. [f32(angle)] */
+    Angle = 0x02
 };
 
 export const Characters: CharacterDefinition[] = [
