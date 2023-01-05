@@ -16,6 +16,7 @@ export default class SwiftStream {
 
     Set(buffer: Uint8Array) {
         this.buffer = buffer;
+        this.at = 0;
     }
 
     Clear() {

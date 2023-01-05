@@ -37,9 +37,6 @@ const Config = {
     
     DisplayDisconnect: false,
     CurrentPhase: 0, // [0: Homescreen, 1: Arena, 2: Death]
-
-    // MAGIC FUNCTION!
-    lerp: (a, b, m) => a + (b - a) * m,
 };
 
 const Data = {
@@ -100,6 +97,7 @@ const SwiftStream = new (class {
     
     Set(buffer) {
         this.buffer = buffer;
+        this.at = 0;
     }
     
     Clear() {
@@ -145,7 +143,6 @@ const SwiftStream = new (class {
     
     Write() {
         const result = this.buffer.subarray(0, this.at);
-        console.log(result);
         this.Clear();
         return result;
     }
@@ -261,7 +258,10 @@ const Player = class {
     constructor() {
         this.id = null;
         this.name = "Knight";
-        this.position = null;
+        this.position = {
+            old: { x: null, y: null, ts: null },
+            current: { x: null, y: null, ts: null },
+        };
         this.angle = 0;
     }
 }
@@ -347,29 +347,20 @@ const WebSocketManager = class {
                     const id = SwiftStream.ReadI8(); // Player ID
                     let length = SwiftStream.ReadI8(); // Length of fields
                     
-                    console.log(length);
-                    
                     for (; length--;) {
                         const field = SwiftStream.ReadI8();
                         switch (field) {
                             case 0x00: { // POSITION
                                 const x = SwiftStream.ReadFloat32();
                                 const y = SwiftStream.ReadFloat32();
-                                
-                                console.log(`Entity ${id} is located at (${x}, ${y})`);
-                                
-                                if (!player.position) { // Start Game
+                                                                
+                                if (player.position.old.x === null) { // Start Game
                                     HomeScreen.style.display = "none";
                                     Config.CurrentPhase = 1;
-                                    player.position = { x, y };
-                                } else {
-                                    let t = 0;
-                                    const i = setInterval(() => {
-                                        if (t >= 1) return clearInterval(i);
-                                        t += 0.1;
-                                        player.position = { x: Config.lerp(player.position.x, x, t), y: Config.lerp(player.position.y, y, t) };
-                                    }, 1000 / 60);
                                 }
+                                
+                                player.position.old = player.position.current;
+                                player.position.current = { x, y, ts: Date.now() };
 
                                 player.id = id;
                                 break;
@@ -503,8 +494,20 @@ const Game = {
         // RENDER INBOUNDS:
         ctx.fillStyle = "#000000";
 
-        const xOffset = (canvas.width - player.position.x) / 2;
-        const yOffset = (canvas.height - player.position.y) / 2;
+        /** RENDER PLAYER BASED OFF COORDS (using lerp) */
+        let pos;
+        const frame = Date.now() - (1000 / 60);
+        if (frame < player.position.old.ts) pos = player.position.old;
+        else if (frame > player.position.current.ts) pos = player.position.current;
+        else {
+            pos = {
+                x: player.position.old.x + (player.position.current.x - player.position.old.x) * (window.starlight || 0.5) /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/,
+                y: player.position.old.y + (player.position.current.y - player.position.old.y) * (window.starlight || 0.5) /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/
+            };
+        }
+
+        const xOffset = (canvas.width - pos.x) / 2;
+        const yOffset = (canvas.height - pos.y) / 2;
 
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 300) / 2, (Config.Arena.arenaBounds + 300) / 2);
 
@@ -526,79 +529,17 @@ const Game = {
 
         Game.RenderPlayer(cache);
 
- /* // set the fill style to red
-  ctx.fillStyle = 'red';
-  // begin a new path
-  ctx.beginPath();
-  // draw a circle to represent the head of the Among Us character
-  ctx.arc(100, 100, 50, 0, 2 * Math.PI);
-  // fill the circle with the current fill style (red)
-  ctx.fill();
-
-  // draw the visor using a rectangle
-  ctx.fillStyle = 'gray';
-  ctx.fillRect(75, 70, 50, 20);
-
-  // draw the backpack using another rectangle
-  ctx.fillRect(80, 120, 40, 40);
-
-  // draw the legs using two lines
-  ctx.beginPath();
-  ctx.moveTo(90, 140);
-  ctx.lineTo(90, 200);
-  ctx.moveTo(110, 140);
-  ctx.lineTo(110, 200);
-  ctx.stroke();*/
-        /*const cache = ImageCache.get(player.id);
-
-        // TODO(ALTANIS): Abandon GIFs, futile.
-        if (!cache) {
-            const image = new Image(125, 125);
-            image.src = `assets/img/characters/gifs/${character}.gif`;
-            
-            // center image
-            image.style.position = "absolute";
-            image.style.left = "50%";
-            image.style.top = "50%";
-            image.style.transform = "translate(-50%, -50%)";
-
-            document.body.appendChild(image);
-            ImageCache.set(player.id, image);
+        /** This section calculates and sends the angle and movement directions. */
+        if (ACTIVE_KEYS.size) {
+            const buffer = SwiftStream.WriteI8(0x01);
+            ACTIVE_KEYS.forEach(dir => buffer.WriteI8(dir));
+            console.log(buffer);
+            SocketManager.socket.send(buffer.Write());
         }
 
-        cache.style.transform = "translate(-50%, -50%) rotate()";*/
-
-        // if (!cache) {
-            /** Cache the image, and make it suitable for animation. */
-
-            /*const image = new Image();
-            image.src = `assets/img/characters/gifs/${character}.gif`;
-            image.addEventListener("load", function() {
-                ImageCache.set(character, image);
-
-                const buffer = document.createElement("canvas").getContext("2d");
-                buffer.canvas.width = image.width;
-                buffer.canvas.height = image.height;
-                buffer.drawImage(image, 0, 0);
-                const imageData = buffer.getImageData(0, 0, buffer.canvas.width, buffer.canvas.height);
-
-                image.frames = 0;
-                image.delay = 0;
-
-                for (let i = 0; i < imageData.data.length; i += 4) {
-                    const alpha = imageData.data[i + 3];
-                    if (alpha === 0) image.frames++;
-                    else if (alpha > 0) image.delay += alpha;
-                }
-
-                console.log("Parsed image, frames:", image.frames, "delay:", image.delay);
-
-                image.startTime = Date.now();
-                image.frameIdx = 0;
-                Game.RenderPlayer(image);
-            });*/
-        // } else Game.RenderPlayer(cache);
-     }
+        player.angle = Math.atan2(player.mouseY - (canvas.height / 2), player.mouseX - (canvas.width / 2));
+        console.log("player angle", player.angle);
+    }
 }
 
 /*document.addEventListener("mousemove", function(event) {
@@ -622,6 +563,8 @@ const ATTACH_MAPS = new Map([
     [65, 4],
 ]);
 
+const ACTIVE_KEYS = new Set();
+
 document.addEventListener("keydown", function (event) {
     /** Play game. */
     if (event.key === "Enter" && document.activeElement === NameInput && Play.style.display === "block") Play.click();
@@ -629,9 +572,22 @@ document.addEventListener("keydown", function (event) {
     /** Movement keys. */
     const attach = ATTACH_MAPS.get(event.which || event.keyCode);
     if (attach) {
-        SocketManager.socket.send(SwiftStream.WriteI8(0x01).WriteI8(attach).Write());
+        ACTIVE_KEYS.add(attach);
         event.preventDefault();
     }
+});
+
+document.addEventListener("keyup", function (event) {
+    /** Movement keys. */
+    const attach = ATTACH_MAPS.get(event.which || event.keyCode);
+    if (attach) {
+        ACTIVE_KEYS.delete(attach);
+        event.preventDefault();
+    }
+});
+
+document.addEventListener("keyup", function (event) {
+    player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
 Game.Setup();
