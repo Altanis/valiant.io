@@ -80,4 +80,9 @@ export default class MessageHandler {
 
         player.angle = angle;
     }
+
+    // [3]
+    Attack(player: PlayerHandler): void {
+        if (!player.alive || !player.weapon || !player.angle) return player.close(CloseEvent.InvalidProtocol);
+    }
  };

@@ -36,6 +36,8 @@ export default class PlayerHandler {
     public position: Vector | null = null;
     /** The velocity of the player. */
     public velocity: Vector | null = null;
+    /** The weapon the player is hoding. */
+    public weapon: 
     /** 
      * The angle at which the player is facing.
      * Measured in radians, with range of [-Math.PI, Math.PI].
@@ -70,6 +72,7 @@ export default class PlayerHandler {
                 case ServerBound.Spawn: this.server.MessageHandler.Spawn(this); break;
                 case ServerBound.Movement: this.server.MessageHandler.Move(this); break;
                 case ServerBound.Angle: this.server.MessageHandler.Angle(this); break;
+                case ServerBound.Attack: this.server.MessageHandler.Attack(this); break;
             }
 
             this.SwiftStream.Clear();
@@ -110,6 +113,7 @@ export default class PlayerHandler {
             this.update.forEach(property => {
                 switch (property) {
                     case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
+                    case "angle": this.SwiftStream.WriteI8(Fields.Angle).WriteFloat32(this.angle); break;
                 }
             });
         }
