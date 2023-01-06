@@ -281,7 +281,11 @@ const Player = class {
             old: { x: null, y: null, ts: null },
             current: { x: null, y: null, ts: null },
         };
-        this.angle = 0;
+        this.angle = {
+            old: { measure: null, ts: null },
+            current: { measure: null, ts: null },
+        };
+        this.attacking = true;
     }
 }
 
@@ -384,6 +388,11 @@ const WebSocketManager = class {
                                 player.id = id;
                                 break;
                             }
+                            case 0x01: { // ANGLE
+                                const angle = SwiftStream.ReadFloat32();
+                                player.angle.old = player.angle.current;
+                                player.angle.current = { measure: angle, ts: Date.now() };
+                            }
                         }
                     }
                 }
@@ -422,30 +431,43 @@ const Game = {
         */
         
         /** Render the grid. */
-        if (!Config.Options.hideGrid) {
+        /*if (!Config.Options.hideGrid) {
             gridCanvas = document.createElement('canvas');
-            gridCanvas.width = Config.Arena.arenaBounds;
-            gridCanvas.height = Config.Arena.arenaBounds;
+            gridCanvas.width = 1920;
+            gridCanvas.height = 1080;
             gridCtx = gridCanvas.getContext('2d');
+
+            let rows = gridCanvas.width / Config.Arena.gridSize;
+            let columns = gridCanvas.height / Config.Arena.gridSize;
+            
+            console.log(rows, columns);
             
             // Draw the grid lines onto the offscreen canvas
-            gridCtx.shadowBlur = 1;
-            gridCtx.shadowColor = gridCtx.strokeStyle = "#2F8999";
+            gridCtx.strokeStyle = "#2F8999";
             gridCtx.globalAlpha = 0.5;
-            gridCtx.lineWidth = 1;
+            gridCtx.lineWidth = 100;
             gridCtx.beginPath();
 
-            let before = performance.now();
-            for (let i = 0; i < Config.Arena.arenaBounds; i += Config.Arena.gridSize) {
-                gridCtx.strokeRect(i, 0, Config.Arena.gridSize, Config.Arena.arenaBounds);
-                gridCtx.strokeRect(0, i, Config.Arena.arenaBounds, Config.Arena.gridSize);
+
+           /* let before = performance.now();
+            for (let i = 0; i < rows; i++) {
+                gridCtx.strokeRect(i * Config.Arena.gridSize, 0, 1, gridCanvas.width);
+            }
+
+            for (let i = 0; i < columns; i++) {
+                gridCtx.strokeRect(0, i * Config.Arena.gridSize, gridCanvas.height, 1);
+            }*/
+
+                /*for (let i = 0; i < gridCanvas.height; i += Config.Arena.gridSize) {
+                gridCtx.strokeRect(i, 0, Config.Arena.gridSize, gridCanvas.width);
+                gridCtx.strokeRect(0, i, gridCanvas.height, Config.Arena.gridSize);
                 let after = performance.now();
                 console.log(after - before, "milliseconds");
                 before = performance.now();
             }
             
             gridCtx.stroke();
-        };
+        };*/
         
         /** Sets up the character modal. */
         Config.Characters.CharacterPointer = 0;
@@ -531,7 +553,8 @@ const Game = {
         }
     },
     
-    RenderPlayer(cache, weapon) {
+    RenderPlayer(angle, cache, weapon) {
+        console.log(angle);
         // RENDER PLAYER:
         if (!cache) return;
         
@@ -543,7 +566,8 @@ const Game = {
         if (!cache[2][cache[1]]) return;
         ctx.save();         
 
-        let scaleX = player.direction;        
+        // 1.5 < angle < -1.5
+        let scaleX = (Math.PI / 2 < angle || -Math.PI / 2 > angle) ? -1 : 1;        
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
         ctx.scale(scaleX, 1);
         
@@ -555,9 +579,9 @@ const Game = {
         if (!weapon) return;
 
         ctx.save();
-        ctx.translate((canvas.width - 50) / 2 + 25, (canvas.height - 50) / 2 + 25);
-        ctx.scale(scaleX, 1);
-        ctx.drawImage(weapon, -25, -25, 50, 50);
+        ctx.translate((canvas.width) / 2, (canvas.height + 50) / 2);
+        ctx.rotate(angle);
+        ctx.drawImage(weapon, 0, 0, 100, 20);
         ctx.restore();
     
         /*if (!cache[2][cache[1]]) return;
@@ -593,14 +617,11 @@ const Game = {
         
         // RENDER INBOUNDS:  
         ctx.strokeStyle = "#2F8999";
-        ctx.lineWidth = 10;
-        ctx.shadowBlur = 15;
-        
-        ctx.shadowColor = "#2F8999";
+        ctx.lineWidth = 10;        
         ctx.fillStyle = "rgb(5,28,31)";
         
         // LERP COORDS:
-        let pos;
+        let pos, angle;
         const frame = Date.now() - (1000 / 60);
         if (frame < player.position.old.ts) pos = player.position.old;
         else if (frame > player.position.current.ts) pos = player.position.current;
@@ -610,20 +631,18 @@ const Game = {
                 y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5 /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/
             };
         }
+
+        if (frame < player.angle.old.ts) angle = player.angle.old.measure;
+        else if (frame > player.angle.current.ts) angle = player.angle.current.measure;
+        else {
+            angle = player.angle.old.measure + (player.angle.current.measure - player.angle.old.measure) * ((frame - player.angle.old.ts) / (player.angle.current.ts - player.angle.old.ts));
+        }
         
         const xOffset = (canvas.width - pos.x) / 2;
         const yOffset = (canvas.height - pos.y) / 2;
         
-        ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
-        
         ctx.globalAlpha = 1;
-        ctx.shadowBlur = 0;
-        
-        // RENDER GRID:
-        if (!Config.Options.hideGrid) {
-            ctx.drawImage(gridCanvas, xOffset, yOffset);
-        }
 
         /** This section renders the player. */
         const character = "Knight";
@@ -650,7 +669,7 @@ const Game = {
             });
         }
         
-        Game.RenderPlayer(cache, weaponCache);
+        Game.RenderPlayer(angle, cache, weaponCache);
         
         /** This section calculates and sends the angle and movement directions. */
         if (ACTIVE_KEYS.size) {
@@ -660,11 +679,14 @@ const Game = {
         }
         
         if (player.mouse) {
-            let old = player.angle;
-            player.angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            if (old !== player.angle) {
-                SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(player.angle).Write());
-            }
+            let old = player.angle.old.measure;
+            const measure = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            if (old === measure) return;
+                
+            SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
+            
+            player.angle.old = player.angle.current;
+            player.angle.current = { measure, ts: Date.now() };
         }
     }
 }
@@ -700,8 +722,6 @@ document.addEventListener("keydown", function (event) {
     const attach = ATTACH_MAPS.get(event.which || event.keyCode);
     if (attach) {
         ACTIVE_KEYS.add(attach);
-        if (attach === 2) player.direction = 1;
-        else if (attach === 4) player.direction = -1;
         event.preventDefault();
     }
 });
@@ -717,6 +737,10 @@ document.addEventListener("keyup", function (event) {
 
 document.addEventListener("mousemove", function (event) {
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
+});
+
+canvas.addEventListener("click", function(event) {
+    console.log("hi");
 });
 
 Game.Setup();
