@@ -42,7 +42,7 @@ export default class PlayerHandler {
     */
     public angle: number = 0;
     /** The amount of data to be sent to the client. [width, height] */
-    public resolution = [(5000 / 7.5) | 0, (5000 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
+    public resolution = [(14400 / 7.5) | 0, (14400 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
     /** The dimensions of the player. */
     public dimensions = [150, 150];
 

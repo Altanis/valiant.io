@@ -20,7 +20,7 @@ export default class GameServer {
 
     /** Arena information. */
     /** The length and width of the arena. */
-    public arenaBounds = 5000;
+    public arenaBounds = 14400;
     /** The hashgrid for the arena. */
     public SpatialHashGrid = new SpatialHashGrid();
 

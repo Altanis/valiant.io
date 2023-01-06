@@ -16,11 +16,11 @@ export default class Vector {
             let x = this.x + vector.x;
             let y = this.y + vector.y;
 
-            if (x > 5000) this.x = 5000;
+            if (x > 14400) this.x = 14400;
             else if (x < 0) this.x = 0;
             else this.x = x;
 
-            if (y > 5000) this.y = 5000;
+            if (y > 14400) this.y = 14400;
             else if (y < 0) this.y = 0;
             else this.y = y;
 
@@ -39,11 +39,11 @@ export default class Vector {
             let x = this.x - vector.x;
             let y = this.y - vector.y;
 
-            if (x > 5000) this.x = 5000;
+            if (x > 14400) this.x = 14400;
             else if (x < 0) this.x = 0;
             else this.x = x;
 
-            if (y > 5000) this.y = 5000;
+            if (y > 14400) this.y = 14400;
             else if (y < 0) this.y = 0;
             else this.y = y;
 

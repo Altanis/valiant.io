@@ -57,6 +57,30 @@ canvas {
     animation-name: FadeIn;
 }
 
+#settingsModal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 5px solid #C8464B;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    background-color: #201E23;
+    box-shadow: 0 0 20px #C8464B;
+    border-radius: 20px;
+    height: auto;
+    width: 50%;
+    overflow: visible;
+    z-index: 2;
+
+    /* ANIMATION */
+    animation-duration: 1s;
+    animation-fill-mode: both;
+    animation-name: FadeIn; 
+}
+
 #play {
     position: absolute;
     left: 50%;
@@ -109,6 +133,7 @@ canvas {
     border: 5px solid #4654C8;
     border-radius: 5px;
     margin: 20px;    
+    cursor: pointer;
 
     /* ANIMATION */
     animation-duration: 1.5s;
@@ -142,7 +167,8 @@ canvas {
     -webkit-text-stroke: 3px #48C846;
     border: 5px solid #48C846;
     border-radius: 5px;
-    margin: 20px;    
+    margin: 20px;  
+    cursor: pointer;
 
     /* ANIMATION */
     animation-duration: 2s;
@@ -177,6 +203,7 @@ canvas {
     border: 5px solid #9A46C8;
     border-radius: 5px;
     margin: 20px;
+    cursor: pointer;
 
     /* ANIMATION */
     animation-duration: 2.5s;
@@ -312,12 +339,38 @@ transform: translate(-50%, -50%);
     -webkit-text-stroke: 1px #999999;
     border: 5px solid #999999;
     border-radius: 5px;
+    cursor: pointer;
 
     /* ANIMATION */
     animation-duration: 0.5s;
     animation-fill-mode: both;
     animation-name: FadeInPlay;
 }
+
+#back {
+    position: absolute;
+    bottom: -50%;
+    left: 50%;
+    height: auto;
+    width: 75%;
+
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 48px;
+    background: #EFEFEF;
+    color: white;
+    -webkit-text-stroke: 1px #999999;
+    border: 5px solid #999999;
+    border-radius: 5px;
+    cursor: pointer;
+
+    /* ANIMATION */
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+    animation-name: FadeInPlay;
+}
+
 
 @keyframes FadeIn {
     from {

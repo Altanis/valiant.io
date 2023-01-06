@@ -28,9 +28,9 @@ const Config = {
     },
     Arena: {
         /** The dimensions of the arena. */
-        arenaBounds: 5000,
+        arenaBounds: 14400,
         /** The spacing for the grid system. */
-        gridSize: 50,
+        gridSize: 100,
     },
     Audio: {
         List: ["ffa"],
@@ -39,6 +39,9 @@ const Config = {
     
     DisplayDisconnect: false,
     CurrentPhase: 0, // [0: Homescreen, 1: Arena, 2: Death]
+    Options: {
+        hideGrid: false,
+    }
 };
 
 const Data = {
@@ -150,18 +153,6 @@ const SwiftStream = new (class {
     }
 });
 
-const canvas = document.getElementById("canvas");
-/** @type {CanvasRenderingContext2D} */
-const ctx = canvas.getContext("2d");
-
-function resize() {
-    canvas.width = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
-}
-
-window.addEventListener("resize", resize);
-resize();
-
 Math.TAU = Math.PI * 2;
 Math.randomRange = (min, max) => Math.random() * (max - min) + min;
 
@@ -213,10 +204,16 @@ Object.defineProperties(Config.Characters, {
 
 /** Home screen elements */
 const HomeScreen = document.getElementById("homescreen"),
-Play = document.getElementById("play"),
-NameInput = document.getElementById("name"),
-Gamemodes = document.getElementById("gamemodes"),
-DisconnectScreen = document.getElementById("disconnect");
+    SettingsModal = document.getElementById("settingsModal"),
+    Play = document.getElementById("play"),
+    NameInput = document.getElementById("name"),
+    Gamemodes = document.getElementById("gamemodes"),
+    DisconnectScreen = document.getElementById("disconnect"),
+    Settings = document.getElementById("settings"),
+    Back = document.getElementById("back");
+
+/** Settings options */
+const hideGrid = document.getElementById("hideGrid");
 
 const characterName = document.getElementById("character-name"),
 characterSprite = document.getElementById("character-sprite");
@@ -244,7 +241,23 @@ const Storage = {
     has(key) {
         return localStorage.hasOwnProperty(key);
     }
+};
+
+hideGrid.checked = Config.Options.hideGrid = Storage.get("hideGrid") === "true";
+
+const canvas = document.getElementById("canvas");
+/** @type {CanvasRenderingContext2D} */
+const ctx = canvas.getContext("2d");
+
+let gridCanvas, gridCtx;
+
+function resize() {
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
 }
+
+window.addEventListener("resize", resize);
+resize();
 
 const AudioManager = class {
     constructor() {
@@ -356,7 +369,7 @@ const WebSocketManager = class {
                             case 0x00: { // POSITION
                                 const x = SwiftStream.ReadFloat32();
                                 const y = SwiftStream.ReadFloat32();
-                                                                
+                                
                                 if (player.position.old.x === null) { // Start Game
                                     HomeScreen.style.display = "none";
                                     Config.CurrentPhase = 1;
@@ -364,7 +377,7 @@ const WebSocketManager = class {
                                 
                                 player.position.old = player.position.current;
                                 player.position.current = { x, y, ts: Date.now() };
-
+                                
                                 player.id = id;
                                 break;
                             }
@@ -376,7 +389,7 @@ const WebSocketManager = class {
             }
             default: console.log(header);
         }
-
+        
         SwiftStream.Clear();
     }
     
@@ -401,6 +414,28 @@ const Game = {
         * Sets up the game. Ran once before the requestAnimationFrame loop.
         */
         
+        /** Render the grid. */
+        if (!Config.Options.hideGrid) {
+            gridCanvas = document.createElement('canvas');
+            gridCanvas.width = Config.Arena.arenaBounds;
+            gridCanvas.height = Config.Arena.arenaBounds;
+            gridCtx = gridCanvas.getContext('2d');
+            
+            // Draw the grid lines onto the offscreen canvas
+            gridCtx.shadowBlur = 1;
+            gridCtx.shadowColor = gridCtx.strokeStyle = "#2F8999";
+            gridCtx.globalAlpha = 0.5;
+            gridCtx.lineWidth = 1;
+            gridCtx.beginPath();
+            for (let i = 0; i < Config.Arena.arenaBounds; i += Config.Arena.gridSize) {
+                gridCtx.moveTo(i, 0);
+                gridCtx.lineTo(i, Config.Arena.arenaBounds);
+                gridCtx.moveTo(0, i);
+                gridCtx.lineTo(Config.Arena.arenaBounds, i);
+            }
+            gridCtx.stroke();
+        };
+        
         /** Sets up the character modal. */
         Config.Characters.CharacterPointer = 0;
         
@@ -410,10 +445,12 @@ const Game = {
         for (let i = Gamemodes.children.length; i--;) {
             const child = Gamemodes.children[i];
             if (child.classList.contains("disabled")) continue;
-            
+            if (Config.Gamemodes.Pointer === i) child.classList.add("selected");
+
             child.addEventListener("click", function () {
                 Config.Gamemodes.Pointer = i;
                 for (const sibling of this.parentElement.children) sibling.classList.remove("selected");
+                this.classList.add("selected");
             });
         }
         
@@ -429,6 +466,23 @@ const Game = {
         /** Adds a listener to the Play button to start the game. */
         Play.addEventListener("click", function () {
             SocketManager.play();
+        });
+
+        /** Adds a listener to the Settings button to open the Settings modal. */
+        Settings.addEventListener("click", function () {
+            SettingsModal.style.display = "flex";
+            HomeScreen.style.display = "none";
+        });
+
+        Back.addEventListener("click", function () {
+            SettingsModal.style.display = "none";
+            HomeScreen.style.display = "block";
+        });
+
+        /** Adds listeners to all options. */
+        hideGrid.addEventListener("click", function () {
+            Storage.set("hideGrid", hideGrid.checked = Config.Options.hideGrid = !Config.Options.hideGrid);
+            
         });
     },
     
@@ -465,44 +519,65 @@ const Game = {
             }
         }
     },
-
+    
     RenderPlayer(cache) {
         /** TODO(Altanis): Check direction/angle, set it to `player.directon`. Reflect it over y axis properly. */
         if (!cache) return;
-
+        
         if (++cache[0] >= Config.Characters.MagicDelay) {
             cache[1] = ++cache[1] % Config.Characters.MagicFrames;
             cache[0] = 0;
         }
 
         if (!cache[2][cache[1]]) return;
-        ctx.drawImage(cache[2][cache[1]], (canvas.width - 150) / 2, (canvas.height - 150) / 2, 150, 150);
-    },
+        ctx.save();         
 
+        let scaleX = player.direction;        
+        ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
+        ctx.scale(scaleX, 1);
+        
+        ctx.drawImage(cache[2][cache[1]], -75, -75, 150, 150);
+        ctx.restore();
+
+        /*if (!cache[2][cache[1]]) return;
+        ctx.drawImage(cache[2][cache[1]], (canvas.width - 150) / 2, (canvas.height - 150) / 2, 150, 150);*/
+        // TODO(Altanis): Render name.
+        /*ctx.font = "30px Ubuntu, Orbitron";
+        ctx.fillStyle = "#FFFFFF";
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "center";
+        ctx.lineWidth = 8;
+        
+        const xOffset = player.position.current.x - ((canvas.width - player.position.current.x) / 2);
+        const yOffset = player.position.current.y - ((canvas.height - player.position.current.y) / 2) - 150 - 34;
+        
+        ctx.fillText("altanis", xOffset, yOffset);*/
+    },
+    
     Arena() {
         /**
         * This section draws the arena. It resembles the space every entity is in.
         */
         
         /**  
-         * 1. Renders outbound as entire canvas.
-         * 2. Calculates the x and y offsets for the player to view relative to their position.
-              * At (0, 0), the x and y offsets of the arena should be half of their respective dimensions (height/width). 
-         * 3. Apply inbounds, dimensions are half of the arena bounds.
+        * 1. Renders outbound as entire canvas.
+        * 2. Calculates the x and y offsets for the player to view relative to their position.
+        * At (0, 0), the x and y offsets of the arena should be half of their respective dimensions (height/width). 
+        * 3. Apply inbounds, dimensions are half of the arena bounds.
         */
-
+        
         // RENDER OUTBOUNDS:
         ctx.fillStyle = "rgba(12, 50, 54, 1)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // RENDER INBOUNDS:
+        
+        // RENDER INBOUNDS:  
         ctx.strokeStyle = "#2F8999";
         ctx.lineWidth = 10;
         ctx.shadowBlur = 15;
-
+        
         ctx.shadowColor = "#2F8999";
         ctx.fillStyle = "rgb(5,28,31)";
-
+        
         // LERP COORDS:
         let pos;
         const frame = Date.now() - (1000 / 60);
@@ -514,29 +589,24 @@ const Game = {
                 y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5 /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/
             };
         }
-
+        
         const xOffset = (canvas.width - pos.x) / 2;
         const yOffset = (canvas.height - pos.y) / 2;
-
+        
         ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
-
+        
+        ctx.globalAlpha = 1;
         ctx.shadowBlur = 0;
-
+        
         // RENDER GRID:
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        for (let i = 0; i < Config.Arena.arenaBounds; i += Config.Arena.gridSize) {
-            ctx.moveTo(xOffset + i, yOffset);
-            ctx.lineTo(xOffset + i, yOffset + Config.Arena.arenaBounds);
-            ctx.moveTo(xOffset, yOffset + i);
-            ctx.lineTo(xOffset + Config.Arena.arenaBounds, yOffset + i);
+        if (!Config.Options.hideGrid) {
+            ctx.drawImage(gridCanvas, xOffset, yOffset);
         }
-        ctx.stroke();
 
         /** This section renders the player. */
         const character = "Knight";
-
+        
         const cache = ImageCache.get(character);
         if (!cache) {
             ImageCache.set(character, [0, 0, []]);
@@ -548,16 +618,16 @@ const Game = {
                 });
             }
         }
-
+        
         Game.RenderPlayer(cache);
-
+        
         /** This section calculates and sends the angle and movement directions. */
         if (ACTIVE_KEYS.size) {
             const buffer = SwiftStream.WriteI8(0x01);
             ACTIVE_KEYS.forEach(dir => buffer.WriteI8(dir));
             SocketManager.socket.send(buffer.Write());
         }
-
+        
         if (player.mouse) {
             let old = player.angle;
             player.angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
@@ -594,11 +664,13 @@ const ACTIVE_KEYS = new Set();
 document.addEventListener("keydown", function (event) {
     /** Play game. */
     if (event.key === "Enter" && document.activeElement === NameInput && Play.style.display === "block") Play.click();
-
+    
     /** Movement keys. */
     const attach = ATTACH_MAPS.get(event.which || event.keyCode);
     if (attach) {
         ACTIVE_KEYS.add(attach);
+        if (attach === 2) player.direction = 1;
+        else if (attach === 4) player.direction = -1;
         event.preventDefault();
     }
 });
