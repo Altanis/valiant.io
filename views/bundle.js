@@ -1,3 +1,4 @@
+console.time();
 const Config = {
     WebSocket: {
         CloseEvents: {
@@ -200,8 +201,10 @@ Object.defineProperties(Config.Characters, {
     }
 });
 
-/** DOM ELEMENTS */
+console.timeEnd();
 
+/** DOM ELEMENTS */
+console.time();
 /** Home screen elements */
 const HomeScreen = document.getElementById("homescreen"),
     SettingsModal = document.getElementById("settingsModal"),
@@ -402,6 +405,10 @@ const WebSocketManager = class {
 const SocketManager = new WebSocketManager("ws://localhost:8080");
 const audio = new AudioManager();
 
+console.timeEnd();
+
+console.time();
+
 const Game = {
     RenderCircle(x, y, radius) {
         ctx.beginPath();
@@ -427,12 +434,16 @@ const Game = {
             gridCtx.globalAlpha = 0.5;
             gridCtx.lineWidth = 1;
             gridCtx.beginPath();
+
+            let before = performance.now();
             for (let i = 0; i < Config.Arena.arenaBounds; i += Config.Arena.gridSize) {
-                gridCtx.moveTo(i, 0);
-                gridCtx.lineTo(i, Config.Arena.arenaBounds);
-                gridCtx.moveTo(0, i);
-                gridCtx.lineTo(Config.Arena.arenaBounds, i);
+                gridCtx.strokeRect(i, 0, Config.Arena.gridSize, Config.Arena.arenaBounds);
+                gridCtx.strokeRect(0, i, Config.Arena.arenaBounds, Config.Arena.gridSize);
+                let after = performance.now();
+                console.log(after - before, "milliseconds");
+                before = performance.now();
             }
+            
             gridCtx.stroke();
         };
         
@@ -520,8 +531,8 @@ const Game = {
         }
     },
     
-    RenderPlayer(cache) {
-        /** TODO(Altanis): Check direction/angle, set it to `player.directon`. Reflect it over y axis properly. */
+    RenderPlayer(cache, weapon) {
+        // RENDER PLAYER:
         if (!cache) return;
         
         if (++cache[0] >= Config.Characters.MagicDelay) {
@@ -539,6 +550,16 @@ const Game = {
         ctx.drawImage(cache[2][cache[1]], -75, -75, 150, 150);
         ctx.restore();
 
+        // RENDER WEAPON:
+        // Render weapon next to player
+        if (!weapon) return;
+
+        ctx.save();
+        ctx.translate((canvas.width - 50) / 2 + 25, (canvas.height - 50) / 2 + 25);
+        ctx.scale(scaleX, 1);
+        ctx.drawImage(weapon, -25, -25, 50, 50);
+        ctx.restore();
+    
         /*if (!cache[2][cache[1]]) return;
         ctx.drawImage(cache[2][cache[1]], (canvas.width - 150) / 2, (canvas.height - 150) / 2, 150, 150);*/
         // TODO(Altanis): Render name.
@@ -606,6 +627,7 @@ const Game = {
 
         /** This section renders the player. */
         const character = "Knight";
+        const weapon = "Katana";
         
         const cache = ImageCache.get(character);
         if (!cache) {
@@ -618,8 +640,17 @@ const Game = {
                 });
             }
         }
+
+        const weaponCache = ImageCache.get(weapon);
+        if (!weaponCache) {
+            const image = new Image();
+            image.src = `img/weapons/${weapon}.png`;
+            image.addEventListener("load", function () {
+                ImageCache.set(weapon, image);
+            });
+        }
         
-        Game.RenderPlayer(cache);
+        Game.RenderPlayer(cache, weaponCache);
         
         /** This section calculates and sends the angle and movement directions. */
         if (ACTIVE_KEYS.size) {
@@ -701,3 +732,5 @@ function UpdateGame() {
 }
 
 UpdateGame();
+
+console.timeEnd();
