@@ -1,5 +1,8 @@
 import CharacterDefinition from "./Game/Definitions/CharacterDefinition";
+import { WeaponDefinition } from "./Game/Definitions/WeaponDefinition";
+
 import { Knight } from "./Game/Characters";
+import { Sword } from "./Game/Weapons";
 
 export enum CloseEvent {
     TooManyConnections  = 3000,
@@ -18,6 +21,8 @@ export enum ClientBound {
 export enum Fields {
     /** The position of the entity. */
     Position = 0x00,
+    /** The angle of the entity. */
+    Angle = 0x01
 };
 
 /** Movement codes. */
@@ -34,9 +39,15 @@ export enum ServerBound {
     /** Client tells the server they want to move. [i8(Movement)] */
     Movement = 0x01,
     /** The angle the player is facing, in radians. [f32(angle)] */
-    Angle = 0x02
+    Angle = 0x02,
+    /** Client tells the server they want to attack. */
+    Attack = 0x03
 };
 
 export const Characters: CharacterDefinition[] = [
     Knight
+];
+
+export const Weapons = WeaponDefinition[] = [
+    Sword
 ];

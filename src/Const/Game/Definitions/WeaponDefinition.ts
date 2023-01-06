@@ -12,6 +12,8 @@ export interface WeaponDefinition {
     rarity: RarityType;
     /** The base damage of the weapon. */
     damage: number;
-    /** The range of attack. */
+    /** The range of attack.
+     * Melee: Weapon goes down 1 radian, and attacks whatever is within <range>.
+     */
     range: number;
 }
