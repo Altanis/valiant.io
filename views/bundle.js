@@ -429,46 +429,7 @@ const Game = {
         /**
         * Sets up the game. Ran once before the requestAnimationFrame loop.
         */
-        
-        /** Render the grid. */
-        /*if (!Config.Options.hideGrid) {
-            gridCanvas = document.createElement('canvas');
-            gridCanvas.width = 1920;
-            gridCanvas.height = 1080;
-            gridCtx = gridCanvas.getContext('2d');
 
-            let rows = gridCanvas.width / Config.Arena.gridSize;
-            let columns = gridCanvas.height / Config.Arena.gridSize;
-            
-            console.log(rows, columns);
-            
-            // Draw the grid lines onto the offscreen canvas
-            gridCtx.strokeStyle = "#2F8999";
-            gridCtx.globalAlpha = 0.5;
-            gridCtx.lineWidth = 100;
-            gridCtx.beginPath();
-
-
-           /* let before = performance.now();
-            for (let i = 0; i < rows; i++) {
-                gridCtx.strokeRect(i * Config.Arena.gridSize, 0, 1, gridCanvas.width);
-            }
-
-            for (let i = 0; i < columns; i++) {
-                gridCtx.strokeRect(0, i * Config.Arena.gridSize, gridCanvas.height, 1);
-            }*/
-
-                /*for (let i = 0; i < gridCanvas.height; i += Config.Arena.gridSize) {
-                gridCtx.strokeRect(i, 0, Config.Arena.gridSize, gridCanvas.width);
-                gridCtx.strokeRect(0, i, gridCanvas.height, Config.Arena.gridSize);
-                let after = performance.now();
-                console.log(after - before, "milliseconds");
-                before = performance.now();
-            }
-            
-            gridCtx.stroke();
-        };*/
-        
         /** Sets up the character modal. */
         Config.Characters.CharacterPointer = 0;
         
@@ -642,7 +603,6 @@ const Game = {
         const yOffset = (canvas.height - pos.y) / 2;
         
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
-        ctx.globalAlpha = 1;
 
         /** This section renders the player. */
         const character = "Knight";

@@ -48,6 +48,6 @@ export const Characters: CharacterDefinition[] = [
     Knight
 ];
 
-export const Weapons = WeaponDefinition[] = [
+export const Weapons: WeaponDefinition[] = [
     Sword
 ];

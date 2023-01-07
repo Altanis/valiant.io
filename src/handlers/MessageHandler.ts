@@ -4,6 +4,7 @@ import PlayerHandler from './PlayerHandler';
 import GameServer from '../GameServer';
 import Vector from './Vector';
 import { randInt } from '../Utils/Functions';
+import { Sword } from '../Const/Game/Weapons';
 
 export default class MessageHandler {
     /** The manager of the WebSocket Server. */
@@ -34,6 +35,7 @@ export default class MessageHandler {
         player.name = name;
         player.character = Characters[characterIndex];
         player.abilityIndex = abilityIndex;
+        player.weapon = Sword;
 
         player.velocity = new Vector(0, 0);
         player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));

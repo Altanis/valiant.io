@@ -4,6 +4,7 @@ import { IncomingMessage } from "http";
 import { ConnectionsPerIP } from '../Const/Config';
 import { CloseEvent, ClientBound, ServerBound, Fields } from '../Const/Enums';
 import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
+import { WeaponDefinition } from '../Const/Game/Definitions/WeaponDefinition';
 
 import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
@@ -37,12 +38,24 @@ export default class PlayerHandler {
     /** The velocity of the player. */
     public velocity: Vector | null = null;
     /** The weapon the player is hoding. */
-    public weapon: 
+    public weapon: WeaponDefinition | null = null;
     /** 
      * The angle at which the player is facing.
      * Measured in radians, with range of [-Math.PI, Math.PI].
     */
     public angle: number = 0;
+    /** The angular velocity of the player (Δr/Δt). */
+    public angularVelocity: number = 0;
+    /** Attack information for the player. */
+    public attack: {
+        /** Whether or not the player is currently attacking. */
+        attacking: boolean;
+        /** What direction a (specifically melee) weapon is going in. -1 means down, 1 means up.  */
+        direction: number;
+    } = {
+            attacking: true,
+            direction: 1
+        };
     /** The amount of data to be sent to the client. [width, height] */
     public resolution = [(14400 / 7.5) | 0, (14400 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
     /** The dimensions of the player. */
@@ -132,6 +145,7 @@ export default class PlayerHandler {
     }
 
     public close(reason: number) {
+        // TODO(Altanis): Add to ban list.
         console.trace(reason);
         this.socket.close(reason);
         this.server.players.delete(this);
@@ -143,6 +157,10 @@ export default class PlayerHandler {
             /** Move position by player's velocity, reset player velocity. */
             this.position!.add(this.velocity!, true);
             this.velocity!.x = this.velocity!.y = 0;
+
+            /** Update player angle, trigger weapon if attacking. */
+            this.attack.attacking && this.weapon?.trigger(this);
+            this.angle += this.angularVelocity, this.angularVelocity = 0, this.update.add("angle");
 
             /** Reinsert into the hashgrid with updated position. */
             this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);

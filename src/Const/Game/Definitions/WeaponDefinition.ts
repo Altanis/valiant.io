@@ -1,3 +1,5 @@
+import PlayerHandler from "../../../Handlers/PlayerHandler";
+
 export type WeaponType = "laser" | "melee" | "projectile";
 export type RarityType = "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";
 
@@ -16,4 +18,11 @@ export interface WeaponDefinition {
      * Melee: Weapon goes down 1 radian, and attacks whatever is within <range>.
      */
     range: number;
+    /**
+     * The speed of the attack.
+     * Melee: How fast it moves up/down (in radians per tick, or 40ms).
+     */
+    speed: number;
+    /** The function ran when triggered. */
+    trigger(player: PlayerHandler): void;
 }
