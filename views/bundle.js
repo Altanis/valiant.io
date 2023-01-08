@@ -285,7 +285,7 @@ const Player = class {
             old: { measure: null, ts: null },
             current: { measure: null, ts: null },
         };
-        this.attacking = true;
+        this.attacking = false;
     }
 }
 
@@ -390,6 +390,9 @@ const WebSocketManager = class {
                             }
                             case 0x01: { // ANGLE
                                 const angle = SwiftStream.ReadFloat32();
+                                const done = SwiftStream.ReadI8();
+
+                                player.attacking = done === 255;
                                 player.angle.old = player.angle.current;
                                 player.angle.current = { measure: angle, ts: Date.now() };
                             }
@@ -528,7 +531,7 @@ const Game = {
         ctx.save();         
 
         // 1.5 < angle < -1.5
-        let scaleX = (Math.PI / 2 < angle || -Math.PI / 2 > angle) ? -1 : 1;        
+        let scaleX = (Math.PI / 2 < angle && -Math.PI / 2 > angle) ? -1 : 1;        
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
         ctx.scale(scaleX, 1);
         
@@ -629,6 +632,7 @@ const Game = {
             });
         }
         
+        console.log(angle);
         Game.RenderPlayer(angle, cache, weaponCache);
         
         /** This section calculates and sends the angle and movement directions. */
@@ -638,7 +642,7 @@ const Game = {
             SocketManager.socket.send(buffer.Write());
         }
         
-        if (player.mouse) {
+        if (player.mouse && !player.attacking) {
             let old = player.angle.old.measure;
             const measure = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
             if (old === measure) return;
@@ -699,8 +703,9 @@ document.addEventListener("mousemove", function (event) {
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
-canvas.addEventListener("click", function(event) {
-    console.log("hi");
+canvas.addEventListener("click", function (event) {
+    if (Config.CurrentPhase === 1)
+        SocketManager.socket.send(SwiftStream.WriteI8(0x03).Write());
 });
 
 Game.Setup();

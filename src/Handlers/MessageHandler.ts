@@ -80,11 +80,14 @@ export default class MessageHandler {
             || angle < -Math.PI
         ) return player.close(CloseEvent.InvalidProtocol);
 
-        player.angle = angle;
+        if (player.attack.attacking) return;
+        player.angle = angle > Math.PI ? angle + Math.PI * 2 : angle;
     }
 
     // [3]
     Attack(player: PlayerHandler): void {
         if (!player.alive || !player.weapon || !player.angle) return player.close(CloseEvent.InvalidProtocol);
+        console.log("we're beautiful girls!");
+        player.attack.attacking = true;
     }
  };

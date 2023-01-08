@@ -10,20 +10,30 @@ export const Sword: WeaponDefinition = {
     range: 3,
     speed: 0.1,
     trigger(player: PlayerHandler) {
-        const { attacking, direction } = player.attack;
-
         /** Check for initial attack. */
-        if (!attacking) {
+        if (!player.attack.attacking) {
             player.attack.attacking = true;
-            /** Calculate whether or not to go up or down. */
-            player.attack.direction = Math.abs(player.angle - Math.PI / 2) < Math.abs(player.angle + Math.PI / 2) ? 1 : -1;
+
+            player.attack.oldAngle = player.angle;
+            player.attack.direction = Math.random() > 0.5 ? 1 : -1;
+            player.attack.nearestMP = player.angle + player.attack.direction * Math.PI / 4;
         }
 
-        /** Add to angular momentum. */
-        console.log("we'll be found deep underground.");
-        if ((player.angle >= Math.PI / 2 && player.angle < Math.PI) || (player.angle <= -Math.PI / 2 && player.angle > -Math.PI))
-            player.attack.direction *= -1;
-        player.angularVelocity += direction * this.speed;
-        console.log(player.angularVelocity);
+        /** Traverse until reaching nearest midpoint. */
+        player.angularVelocity += player.attack.direction! * this.speed;
+        /** Check if the player has reached midpoint. */
+        if (player.attack.direction! < 0 ? player.angle < player.attack.nearestMP! : player.angle > player.attack.nearestMP!) {
+            if (++player.attack.cycles < 2) {
+                player.attack.direction = -player.attack.direction!;
+                player.attack.nearestMP = player.attack.oldAngle! + player.attack.direction! * Math.PI / 4;
+            } else if (player.attack.cycles === 2) {
+                player.attack.direction = -player.attack.direction!;
+                player.attack.nearestMP = player.attack.oldAngle!;
+            } else if (player.attack.cycles > 2) {
+                player.attack.attacking = false;
+                player.angle = player.attack.oldAngle!;
+                player.attack.done = true;
+            }
+        }
     }
 };
