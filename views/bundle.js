@@ -677,7 +677,8 @@ const Game = {
 
         if (player.attack.attacking) {
             player.angle.old = player.angle.current;
-            let angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.increment / (Math.PI / 2));
             
             console.log(player.angle.current.increment);
             player.angle.current.increment += weapon.speed;
@@ -690,7 +691,7 @@ const Game = {
             angle += player.attack.direction * weapon.speed;
             player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
         }
-        
+
         /*if (player.attack.attacking) {
             player.angle.old = player.angle.current;
             let angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
