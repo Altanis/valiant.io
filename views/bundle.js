@@ -550,9 +550,9 @@ const Game = {
 
         if (!cache[2][cache[1]]) return;
         ctx.save();         
-
-        // 1.5 < angle < -1.5
-        let scaleX = (Math.PI / 2 < angle && -Math.PI / 2 > angle) ? -1 : 1;        
+        
+        // check if angle is on the left or right side
+        const scaleX = (angle > Math.PI / 2 && angle < Math.PI * 3 / 2) || (angle > -Math.PI && angle < -Math.PI / 2) ? -1 : 1;
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
         ctx.scale(scaleX, 1);
         
