@@ -392,7 +392,9 @@ const WebSocketManager = class {
                                 const angle = SwiftStream.ReadFloat32();
                                 const done = SwiftStream.ReadI8();
 
-                                player.attacking = done === 255;
+                                console.log(done);
+
+                                player.attacking = done === 1;
                                 player.angle.old = player.angle.current;
                                 player.angle.current = { measure: angle, ts: Date.now() };
                             }
@@ -518,7 +520,6 @@ const Game = {
     },
     
     RenderPlayer(angle, cache, weapon) {
-        console.log(angle);
         // RENDER PLAYER:
         if (!cache) return;
         
@@ -632,7 +633,6 @@ const Game = {
             });
         }
         
-        console.log(angle);
         Game.RenderPlayer(angle, cache, weaponCache);
         
         /** This section calculates and sends the angle and movement directions. */
@@ -703,8 +703,8 @@ document.addEventListener("mousemove", function (event) {
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
-canvas.addEventListener("click", function (event) {
-    if (Config.CurrentPhase === 1)
+canvas.addEventListener("click", function() {
+    if (Config.CurrentPhase === 1 && !player.attacking)
         SocketManager.socket.send(SwiftStream.WriteI8(0x03).Write());
 });
 

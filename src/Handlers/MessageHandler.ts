@@ -75,19 +75,18 @@ export default class MessageHandler {
         const angle = player.SwiftStream.ReadFloat32(); // measured in radians
         if (
             !player.alive
-            || !angle
-            || angle > Math.PI
-            || angle < -Math.PI
+            || isNaN(angle)
+            || angle > 3.15
+            || angle < -3.15
         ) return player.close(CloseEvent.InvalidProtocol);
 
         if (player.attack.attacking) return;
-        player.angle = angle > Math.PI ? angle + Math.PI * 2 : angle;
+        player.angle = (angle < 0 && angle >= -3.15) ? angle + Math.PI * 2 : angle;
     }
 
     // [3]
     Attack(player: PlayerHandler): void {
-        if (!player.alive || !player.weapon || !player.angle) return player.close(CloseEvent.InvalidProtocol);
-        console.log("we're beautiful girls!");
+        if (!player.alive || !player.weapon) return player.close(CloseEvent.InvalidProtocol);
         player.attack.attacking = true;
     }
  };

@@ -139,7 +139,10 @@ export default class PlayerHandler {
                     case "angle": this.SwiftStream.WriteI8(Fields.Angle).WriteFloat32(this.angle > Math.PI ? this.angle - Math.PI * 2 : this.angle); break;
                 }
 
-                if (property === "angle") this.SwiftStream.WriteI8(this.attack.done ? 0xFF : 0x01);
+                if (property === "angle") {
+                    this.SwiftStream.WriteI8(this.attack.done ? 0xFF : 0x01);
+                    if (this.attack.done) this.attack = { attacking: false, cycles: 0 };
+                }
             });
         }
 
@@ -174,7 +177,8 @@ export default class PlayerHandler {
             if (this.attack.attacking) {
                 this.weapon?.trigger(this);
             
-                this.angle += this.angularVelocity || 0;
+                console.log(this.angularVelocity);
+                this.angle += this.angularVelocity;
                 this.angle %= Math.PI * 2, this.angle = Math.abs(this.angle);
                 this.angularVelocity = 0;
                 console.log(this.angle);
