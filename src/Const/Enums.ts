@@ -21,8 +21,8 @@ export enum ClientBound {
 export enum Fields {
     /** The position of the entity. */
     Position = 0x00,
-    /** The angle of the entity. */
-    Angle = 0x01
+    /** If the entity is attacking. */
+    Attacking = 0x01
 };
 
 /** Movement codes. */

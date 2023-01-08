@@ -46,26 +46,12 @@ export default class PlayerHandler {
     public angle: number = Math.PI;
     /** The angular velocity of the player (Δr/Δt). */
     public angularVelocity: number = 0;
+    
     /** Attack information for the player. */
-    public attack: {
-        /** Whether or not the player is currently attacking. */
-        attacking: boolean;
-        /** Tell the client the attack is done. */
-        done?: boolean;
+    
+    public attacking = false;
+    public autoAttack = false;
 
-        // M E L E E
-        /** What direction a (specifically melee) weapon is going in. -1 means down, 1 means up. -2 and 2 mean the same thing, but the right side of the circle. */
-        direction? : number;
-        /** The nearest multiple of PI / 2 radians. */
-        nearestMP?: number;
-        /** The angle the player was facing when they started attacking. */
-        oldAngle?: number;
-        /** The amount of cycles done. 2 cycles signify that the attack is done. */
-        cycles: number;
-    } = {
-            attacking: false,
-            cycles: 0
-        };
     /** The amount of data to be sent to the client. [width, height] */
     public resolution = [(14400 / 7.5) | 0, (14400 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
     /** The dimensions of the player. */
@@ -136,12 +122,8 @@ export default class PlayerHandler {
             this.update.forEach(property => {
                 switch (property) {
                     case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
-                    case "angle": this.SwiftStream.WriteI8(Fields.Angle).WriteFloat32(this.angle > Math.PI ? this.angle - Math.PI * 2 : this.angle); break;
-                }
-
-                if (property === "angle") {
-                    this.SwiftStream.WriteI8(this.attack.done ? 0xFF : 0x01);
-                    if (this.attack.done) this.attack = { attacking: false, cycles: 0 };
+                    /** @ts-ignore */
+                    case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(this.attacking); break;
                 }
             });
         }
@@ -174,15 +156,12 @@ export default class PlayerHandler {
             this.velocity!.x = this.velocity!.y = 0;
 
             /** Update player angle, trigger weapon if attacking. */
-            if (this.attack.attacking) {
+            if (this.attacking) {
                 this.weapon?.trigger(this);
             
-                console.log(this.angularVelocity);
                 this.angle += this.angularVelocity;
                 this.angle %= Math.PI * 2, this.angle = Math.abs(this.angle);
                 this.angularVelocity = 0;
-                console.log(this.angle);
-                this.update.add("angle");
             }
 
             /** Reinsert into the hashgrid with updated position. */

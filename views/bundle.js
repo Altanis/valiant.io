@@ -46,42 +46,58 @@ const Config = {
 };
 
 const Data = {
-    Knight: {
-        Abilities: [
-            {
-                name: "Dual Wield",
-                description: "Attack with double the power.",
-                src: "assets/img/abilities/dual_wield.png"
-            },
-            {
-                name: "Charge",
-                description: "Bash into a foe with your shield.",
-                src: "assets/img/abilities/charge.png"
-            }
-        ]
+    /** PLAYERS */
+    Characters: {
+        Knight: {
+            Abilities: [
+                {
+                    name: "Dual Wield",
+                    description: "Attack with double the power.",
+                    src: "assets/img/abilities/dual_wield.png"
+                },
+                {
+                    name: "Charge",
+                    description: "Bash into a foe with your shield.",
+                    src: "assets/img/abilities/charge.png"
+                }
+            ]
+        },
+        Priest: {
+            Abilities: [
+                {
+                    name: "Castor",
+                    description: "Attack with double the power.",
+                    src: "assets/img/abilities/dual_wield.png"
+                },
+            ]
+        },
+        Assassin: {
+            Abilities: [
+                {
+                    name: "Dual Wield",
+                    description: "Attack with double the power.",
+                    src: "assets/img/abilities/dual_wield.png"
+                },
+                {
+                    name: "Charge",
+                    description: "Bash into a foe with your shield.",
+                    src: "assets/img/abilities/charge.png"
+                },
+            ]
+        },
     },
-    Priest: {
-        Abilities: [
-            {
-                name: "Castor",
-                description: "Attack with double the power.",
-                src: "assets/img/abilities/dual_wield.png"
-            },
-        ]
-    },
-    Assassin: {
-        Abilities: [
-            {
-                name: "Dual Wield",
-                description: "Attack with double the power.",
-                src: "assets/img/abilities/dual_wield.png"
-            },
-            {
-                name: "Charge",
-                description: "Bash into a foe with your shield.",
-                src: "assets/img/abilities/charge.png"
-            },
-        ]
+
+    /** WEAPONS */
+    Weapons: {
+        Sword: {
+            name: "Sword",
+            type: "melee",
+            rarity: "common",
+            damage: 10,
+            range: 3,
+            speed: 0.1,
+            src: "assets/img/weapons/Sword.png"
+        }
     }
 };
 
@@ -167,7 +183,7 @@ Object.defineProperties(Config.Characters, {
             characterSprite.src = src;
             
             // TODO(Altanis): Change abilities based on character.
-            const characterAbilities = Data[characterName.innerText].Abilities;
+            const characterAbilities = Data.Characters[characterName.innerText].Abilities;
             abilities.innerHTML = "";
             for (const ability of characterAbilities) {
                 const abilityElement = document.createElement("img");
@@ -193,13 +209,21 @@ Object.defineProperties(Config.Characters, {
         set(value) {
             abilities.children[Config.Characters.AbilityPointer]?.classList.remove("selected");
             abilities.children[value]?.classList.add("selected");
-            abilityName.innerText = Data[characterName.innerText].Abilities[value].name;
-            abilityDesc.innerText = Data[characterName.innerText].Abilities[value].description;
+            abilityName.innerText = Data.Characters[characterName.innerText].Abilities[value].name;
+            abilityDesc.innerText = Data.Characters[characterName.innerText].Abilities[value].description;
             
             this._ap = value;
         }
     }
 });
+
+function lerpAngle(a, b, t) {
+    if (b < 0 && a > 0) b += Math.TAU;
+    if (a < 0 && b > 0) a += Math.TAU;
+
+    const d = b - a;
+    return a + ((d + Math.PI) % (2 * Math.PI) - Math.PI) * t;
+}
 
 console.timeEnd();
 
@@ -282,10 +306,13 @@ const Player = class {
             current: { x: null, y: null, ts: null },
         };
         this.angle = {
-            old: { measure: null, ts: null },
-            current: { measure: null, ts: null },
+            old: { measure: null, ts: null, increment: 0 },
+            current: { measure: null, ts: null, increment: 0 },
         };
-        this.attacking = false;
+        this.attack = {
+            attacking: false,
+            direction: 1
+        }
     }
 }
 
@@ -388,15 +415,8 @@ const WebSocketManager = class {
                                 player.id = id;
                                 break;
                             }
-                            case 0x01: { // ANGLE
-                                const angle = SwiftStream.ReadFloat32();
-                                const done = SwiftStream.ReadI8();
-
-                                console.log(done);
-
-                                player.attacking = done === 1;
-                                player.angle.old = player.angle.current;
-                                player.angle.current = { measure: angle, ts: Date.now() };
+                            case 0x01: { // ATTACKING
+                                player.attack.attacking = SwiftStream.ReadI8() === 0x01;
                             }
                         }
                     }
@@ -600,17 +620,19 @@ const Game = {
         if (frame < player.angle.old.ts) angle = player.angle.old.measure;
         else if (frame > player.angle.current.ts) angle = player.angle.current.measure;
         else {
-            angle = player.angle.old.measure + (player.angle.current.measure - player.angle.old.measure) * ((frame - player.angle.old.ts) / (player.angle.current.ts - player.angle.old.ts));
+            angle = lerpAngle(player.angle.old.measure, player.angle.current.measure, (frame - player.angle.old.ts) / (player.angle.current.ts - player.angle.old.ts));
         }
         
         const xOffset = (canvas.width - pos.x) / 2;
         const yOffset = (canvas.height - pos.y) / 2;
         
+        ctx.strokeStyle = "#2F8999";
+        ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
 
         /** This section renders the player. */
         const character = "Knight";
-        const weapon = "Katana";
+        const weapon = Data.Weapons["Sword"];
         
         const cache = ImageCache.get(character);
         if (!cache) {
@@ -624,12 +646,12 @@ const Game = {
             }
         }
 
-        const weaponCache = ImageCache.get(weapon);
+        const weaponCache = ImageCache.get(weapon.name);
         if (!weaponCache) {
             const image = new Image();
-            image.src = `img/weapons/${weapon}.png`;
+            image.src = weapon.src;
             image.addEventListener("load", function () {
-                ImageCache.set(weapon, image);
+                ImageCache.set(weapon.name, image);
             });
         }
         
@@ -642,27 +664,50 @@ const Game = {
             SocketManager.socket.send(buffer.Write());
         }
         
-        if (player.mouse && !player.attacking) {
+        if (player.mouse) {
             let old = player.angle.old.measure;
             const measure = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            if (old === measure) return;
-                
-            SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
+            if (old !== measure) {
+                SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
             
-            player.angle.old = player.angle.current;
-            player.angle.current = { measure, ts: Date.now() };
+                player.angle.old = player.angle.current;
+                player.angle.current = { measure, ts: Date.now(), increment: player.angle.current.increment };
+            }
         }
+
+        if (player.attack.attacking) {
+            player.angle.old = player.angle.current;
+            let angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            
+            console.log(player.angle.current.increment);
+            player.angle.current.increment += weapon.speed;
+            if (player.angle.current.increment >= Math.PI / 2) {
+                console.log("rot rev");
+                player.attack.direction = -player.attack.direction;
+                player.angle.current.increment = 0;
+            }
+
+            angle += player.attack.direction * weapon.speed;
+            player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
+        }
+        
+        /*if (player.attack.attacking) {
+            player.angle.old = player.angle.current;
+            let angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+        
+            player.angle.current.increment += weapon.speed;
+            console.log(player.angle.current.increment);
+            if (player.angle.current.increment >= Math.PI / 2) {
+                console.log("rot!");
+                player.attack.direction = -player.attack.direction;
+                player.angle.current.increment = 0;
+            }
+        
+            angle += player.attack.direction * weapon.speed;
+            player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
+        }*/
     }
 }
-
-/*document.addEventListener("mousemove", function(event) {
-    const rad = Math.atan2(event.clientY - canvas.height / 2, event.clientX - canvas.width / 2);
-    console.log(rad, "rad");
-    const cache = ImageCache.get(player.id);
-    if (cache) cache.style.transform = `translate(-50%, -50%) rotate(${rad}rad)`;
-});*/
-
-// 1 = up, 2 = right, 3 = down, 4 = left
 
 const ATTACH_MAPS = new Map([
     /** Movement keys. */
@@ -703,9 +748,15 @@ document.addEventListener("mousemove", function (event) {
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
-canvas.addEventListener("click", function() {
-    if (Config.CurrentPhase === 1 && !player.attacking)
-        SocketManager.socket.send(SwiftStream.WriteI8(0x03).Write());
+canvas.addEventListener("mousedown", function() {
+    if (Config.CurrentPhase === 1)
+        SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(0x01).Write());
+});
+
+canvas.addEventListener("mouseup", function () {
+    console.log(player.attacking);
+    if (Config.CurrentPhase === 1)
+        SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(0x00).Write());
 });
 
 Game.Setup();

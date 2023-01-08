@@ -80,13 +80,14 @@ export default class MessageHandler {
             || angle < -3.15
         ) return player.close(CloseEvent.InvalidProtocol);
 
-        if (player.attack.attacking) return;
         player.angle = (angle < 0 && angle >= -3.15) ? angle + Math.PI * 2 : angle;
     }
 
     // [3]
     Attack(player: PlayerHandler): void {
         if (!player.alive || !player.weapon) return player.close(CloseEvent.InvalidProtocol);
-        player.attack.attacking = true;
+        player.attacking = player.SwiftStream.ReadI8() === 0x01;
+        console.log(player.attacking);
+        player.update.add("attacking");
     }
  };
