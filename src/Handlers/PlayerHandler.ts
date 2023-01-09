@@ -130,6 +130,8 @@ export default class PlayerHandler {
             });
         }
 
+        console.log(this.attacking, this.cooldown);
+
         /** TODO(Altanis): Inform client of surroundings. */
         const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.resolution[0], this.resolution[1], this.id);
         if (surroundings.length) {
@@ -155,6 +157,11 @@ export default class PlayerHandler {
         if (this.cooldown > 0) this.cooldown--;
         if (this.alive) {
             /** Move position by player's velocity, reset player velocity. */
+            if (this.velocity!.x && this.velocity!.y && this.character) {
+                this.velocity!.x *= 1 / this.character.speed;
+                this.velocity!.y *= 1 / this.character.speed;
+            }
+
             this.position!.add(this.velocity!, true);
             this.velocity!.x = this.velocity!.y = 0;
 

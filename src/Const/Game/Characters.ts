@@ -5,6 +5,7 @@ import { DualWield } from "./Abilities";
 export const Knight: CharacterDefinition = {
     name: "Knight",
     id: 0x00,
+    speed: 15,
     stats: {
         maxHealth: 7,
         maxArmor: 6,

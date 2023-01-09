@@ -310,6 +310,7 @@ const Player = class {
             current: { measure: null, ts: null, increment: 0 },
         };
         this.attack = {
+            state: false,
             attacking: false,
             direction: 1
         }
@@ -664,8 +665,12 @@ const Game = {
             ACTIVE_KEYS.forEach(dir => buffer.WriteI8(dir));
             SocketManager.socket.send(buffer.Write());
         }
+
+        if (player.attack.state !== player.attack.attacking) {
+            SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(player.attack.state).Write());
+        }
         
-        if (player.mouse) {
+        if (player.mouse && !player.attack.attacking) {
             let old = player.angle.old.measure;
             const measure = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
             if (old !== measure) {
@@ -684,7 +689,6 @@ const Game = {
             console.log(player.angle.current.increment);
             player.angle.current.increment += weapon.speed;
             if (player.angle.current.increment >= Math.PI / 2) {
-                console.log("rot rev");
                 player.attack.direction = -player.attack.direction;
                 player.angle.current.increment = 0;
             }
@@ -692,22 +696,6 @@ const Game = {
             angle += player.attack.direction * weapon.speed;
             player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
         }
-
-        /*if (player.attack.attacking) {
-            player.angle.old = player.angle.current;
-            let angle = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-        
-            player.angle.current.increment += weapon.speed;
-            console.log(player.angle.current.increment);
-            if (player.angle.current.increment >= Math.PI / 2) {
-                console.log("rot!");
-                player.attack.direction = -player.attack.direction;
-                player.angle.current.increment = 0;
-            }
-        
-            angle += player.attack.direction * weapon.speed;
-            player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
-        }*/
     }
 }
 
@@ -750,15 +738,14 @@ document.addEventListener("mousemove", function (event) {
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
 
-canvas.addEventListener("mousedown", function() {
-    if (Config.CurrentPhase === 1)
-        SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(0x01).Write());
+canvas.addEventListener("mousedown", function(event) {
+    if (Config.CurrentPhase === 1) player.attack.state = true;
+    event.preventDefault();
 });
 
-canvas.addEventListener("mouseup", function () {
-    console.log(player.attacking);
-    if (Config.CurrentPhase === 1)
-        SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(0x00).Write());
+canvas.addEventListener("mouseup", function(event) {
+    if (Config.CurrentPhase === 1) player.attack.state = false;
+    event.preventDefault();
 });
 
 Game.Setup();

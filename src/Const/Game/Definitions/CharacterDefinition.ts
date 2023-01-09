@@ -16,6 +16,8 @@ export default interface CharacterDefinition {
         /** The maximum speed of the character. */
         maxSpeed: number;
     };
+    /** The speed of the player. */
+    speed: number;
     /** The abilities of the character. */
     abilities: AbilityDefinition[];
 }
