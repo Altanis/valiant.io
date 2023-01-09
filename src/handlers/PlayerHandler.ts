@@ -157,9 +157,11 @@ export default class PlayerHandler {
         if (this.cooldown > 0) this.cooldown--;
         if (this.alive) {
             /** Move position by player's velocity, reset player velocity. */
-            if (this.velocity!.x && this.velocity!.y && this.character) {
-                this.velocity!.x *= 1 / this.character.speed;
-                this.velocity!.y *= 1 / this.character.speed;
+
+            /** Ensure diagonal speed is consistent. */
+            const distance = Math.sqrt(this.velocity!.x ** 2 + this.velocity!.y ** 2);
+            if (distance && this.character) {
+                this.velocity!.scale(this.character!.speed / distance);
             }
 
             this.position!.add(this.velocity!, true);
