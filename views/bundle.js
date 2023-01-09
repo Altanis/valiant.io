@@ -95,7 +95,7 @@ const Data = {
             rarity: "common",
             damage: 10,
             range: 3,
-            speed: 0.1,
+            speed: 0.025,
             src: "assets/img/weapons/Sword.png"
         }
     }
@@ -684,16 +684,15 @@ const Game = {
         if (player.attack.attacking) {
             player.angle.old = player.angle.current;
             let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.increment / (Math.PI / 2));
+            let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.increment % Math.PI / 2);
             
-            console.log(player.angle.current.increment);
             player.angle.current.increment += weapon.speed;
             if (player.angle.current.increment >= Math.PI / 2) {
                 player.attack.direction = -player.attack.direction;
-                player.angle.current.increment = 0;
             }
 
             angle += player.attack.direction * weapon.speed;
+            console.log(angle, player.angle.current.increment % Math.PI / 2)
             player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
         }
     }
