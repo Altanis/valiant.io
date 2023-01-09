@@ -86,8 +86,9 @@ export default class MessageHandler {
     // [3]
     Attack(player: PlayerHandler): void {
         if (!player.alive || !player.weapon) return player.close(CloseEvent.InvalidProtocol);
-        player.attacking = player.SwiftStream.ReadI8() === 0x01;
-        console.log(player.attacking);
+        const isAtk = player.SwiftStream.ReadI8() === 0x01;
+
+        player.attacking = isAtk;
         player.update.add("attacking");
     }
  };

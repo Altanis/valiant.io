@@ -417,6 +417,7 @@ const WebSocketManager = class {
                             }
                             case 0x01: { // ATTACKING
                                 player.attack.attacking = SwiftStream.ReadI8() === 0x01;
+                                break;
                             }
                         }
                     }

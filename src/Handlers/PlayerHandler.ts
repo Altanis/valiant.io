@@ -39,6 +39,8 @@ export default class PlayerHandler {
     public velocity: Vector | null = null;
     /** The weapon the player is hoding. */
     public weapon: WeaponDefinition | null = null;
+    /** The amount of ticks needed to be passed before another attack. */
+    public cooldown: number = 0;
     /** 
      * The angle at which the player is facing.
      * Measured in radians, with range of [-Math.PI, Math.PI].
@@ -107,7 +109,7 @@ export default class PlayerHandler {
     }
 
     /** Sends creation data of the player. */
-    public SendUpdate() {
+    public SendUpdate() {        
         this.SwiftStream.WriteI8(ClientBound.Update);
 
         /** Checks if the client requires an update. */
@@ -123,7 +125,7 @@ export default class PlayerHandler {
                 switch (property) {
                     case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
                     /** @ts-ignore */
-                    case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(this.attacking); break;
+                    case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(this.attacking && !this.cooldown); break;
                 }
             });
         }
@@ -150,25 +152,22 @@ export default class PlayerHandler {
 
     /** Tick-loop called by main game loop. */
     public tick() {
+        if (this.cooldown > 0) this.cooldown--;
         if (this.alive) {
             /** Move position by player's velocity, reset player velocity. */
             this.position!.add(this.velocity!, true);
             this.velocity!.x = this.velocity!.y = 0;
-
-            /** Update player angle, trigger weapon if attacking. */
-            if (this.attacking) {
-                this.weapon?.trigger(this);
-            
-                this.angle += this.angularVelocity;
-                this.angle %= Math.PI * 2, this.angle = Math.abs(this.angle);
-                this.angularVelocity = 0;
-            }
 
             /** Reinsert into the hashgrid with updated position. */
             this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
 
             /** Send update to player. */
             this.SendUpdate();
+
+            /** Tsrigger weapon if attacking. */
+            if (this.attacking && this.cooldown === 0) {
+                this.weapon?.trigger(this);
+            }
         }
     }
 };

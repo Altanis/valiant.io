@@ -9,7 +9,11 @@ export const Sword: WeaponDefinition = {
     damage: 10,
     range: 3,
     speed: 0.1,
+    cooldown: 25, // TODO(Altanis): Time this to perfection (make this how long it takes to finish one rot).
     trigger(player: PlayerHandler) {
+        player.cooldown += this.cooldown;
+        player.update.add("attacking");
+
         /** Check for initial attack. */
         /*if (!player.attack.cycles) {
             player.attack.cycles++;
