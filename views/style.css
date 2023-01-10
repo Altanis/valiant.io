@@ -8,7 +8,7 @@
     overflow: hidden;
 }
 
-canvas {
+#canvas {
     background-color: black;
     position: absolute;
     top: 0;
@@ -19,6 +19,45 @@ canvas {
     height: 100%;
     width: 100%;
     z-index: -1;
+}
+
+#mapDisplay {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    display: none;
+    z-index: 1;
+    background: rgba(50, 50, 50, 0.5);
+    border: 5px solid #986895;
+}
+
+/**
+            <p id="gameName">Valiant.io</p>
+            <p id="fps">30 FPS</p>
+            <p id="ping">0ms vultr-miami</p>
+
+            Place these elements above mapDisplay.
+            */
+
+#gameName {
+    position: absolute;
+    bottom: 220px;
+    right: 15px;
+    font-size: 30px;
+}
+
+#fps {
+    position: absolute;
+    bottom: 190px;
+    right: 15px;
+    font-size: 15px;
+}
+
+#ping {
+    position: absolute;
+    bottom: 165px;
+    right: 15px;
+    font-size: 15px;
 }
 
 /* HOMESCREEN */

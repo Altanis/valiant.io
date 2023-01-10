@@ -42,6 +42,10 @@ const Config = {
     CurrentPhase: 0, // [0: Homescreen, 1: Arena, 2: Death]
     Options: {
         hideGrid: false,
+    },
+    FPS: {
+        fpsArr: [],
+        fps: 0,
     }
 };
 
@@ -217,6 +221,10 @@ Object.defineProperties(Config.Characters, {
     }
 });
 
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
 function lerpAngle(a, b, t) {
     console.log(a, b, t);
     if (b < 0 && a > 0) b += Math.TAU;
@@ -244,14 +252,19 @@ const HomeScreen = document.getElementById("homescreen"),
 const hideGrid = document.getElementById("hideGrid");
 
 const characterName = document.getElementById("character-name"),
-characterSprite = document.getElementById("character-sprite");
+    characterSprite = document.getElementById("character-sprite");
 
 const arrowLeft = document.getElementById("arrow-left"),
-arrowRight = document.getElementById("arrow-right");
+    arrowRight = document.getElementById("arrow-right");
 
 const abilityName = document.getElementById("ability-name"),
-abilityDesc = document.getElementById("ability-desc"),
-abilities = document.getElementById("ability");
+    abilityDesc = document.getElementById("ability-desc"),
+    abilities = document.getElementById("ability");
+
+/** Game eleemnts */
+/** Game utils */
+const fps = document.getElementById("fps"),
+    ping = document.getElementById("ping");
 
 /** Image Caching */
 const ImageCache = new Map();
@@ -276,6 +289,10 @@ hideGrid.checked = Config.Options.hideGrid = Storage.get("hideGrid") === "true";
 const canvas = document.getElementById("canvas");
 /** @type {CanvasRenderingContext2D} */
 const ctx = canvas.getContext("2d");
+
+const mapCanvas = document.getElementById("mapDisplay");
+/** @type {CanvasRenderingContext2D} */
+const mapCtx = mapCanvas.getContext("2d");
 
 let gridCanvas, gridCtx;
 
@@ -447,10 +464,10 @@ console.timeEnd();
 console.time();
 
 const Game = {
-    RenderCircle(x, y, radius) {
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.TAU);
-        ctx.fill();
+    RenderCircle(x, y, radius, context = ctx) {
+        context.beginPath();
+        context.arc(x, y, radius, 0, Math.TAU);
+        context.fill();
     },
     
     Setup() {
@@ -488,6 +505,8 @@ const Game = {
         /** Adds a listener to the Play button to start the game. */
         Play.addEventListener("click", function () {
             SocketManager.play();
+            mapCanvas.style.display = "block";
+            console.log(mapCanvas.style.display)
         });
 
         /** Adds a listener to the Settings button to open the Settings modal. */
@@ -587,7 +606,7 @@ const Game = {
         ctx.fillText("altanis", xOffset, yOffset);*/
     },
     
-    Arena() {
+    Arena(delta) {
         /**
         * This section draws the arena. It resembles the space every entity is in.
         */
@@ -633,6 +652,19 @@ const Game = {
         ctx.strokeStyle = "#2F8999";
         ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
+
+        // RENDER MINIMAP:
+        mapCtx.fillStyle = "#FFFFFF";
+
+        const minimapX = pos.x * mapCanvas.width / Config.Arena.arenaBounds;
+        const minimapY = pos.y * mapCanvas.height / Config.Arena.arenaBounds;
+
+        Game.RenderCircle(minimapX, minimapY, 2, mapCtx);
+
+        // CALCULATE FPS:
+        if (Config.FPS.fpsArr.length > 10) Config.FPS.fpsArr.shift();
+        Config.FPS.fpsArr.push(1000 / delta);
+        fps.innerText = `${Config.FPS.fps = (Config.FPS.fpsArr.reduce((a, b) => a + b) / Config.FPS.fpsArr.length).toFixed(1)} FPS`;
 
         /** This section renders the player. */
         const character = "Knight";
@@ -768,12 +800,17 @@ canvas.addEventListener("mouseup", function(event) {
 
 Game.Setup();
 
+let delta, lastUpdate;
 function UpdateGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
     
+    delta = Date.now() - (lastUpdate || 0);
+    lastUpdate = Date.now();
+
     switch (Config.CurrentPhase) {
         case 0: Game.HomeScreen(); break;
-        case 1: Game.Arena(); break;
+        case 1: Game.Arena(delta); break;
     }
     requestAnimationFrame(UpdateGame);
 }
