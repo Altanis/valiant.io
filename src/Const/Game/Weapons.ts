@@ -8,7 +8,7 @@ export const Sword: WeaponDefinition = {
     rarity: "common",
     damage: 10,
     range: 3,
-    speed: 0.025,
+    speed: 25,
     cooldown: 20, // TODO(Altanis): Time this to perfection (make this how long it takes to finish one rot).
     trigger(player: PlayerHandler) {
         // player.cooldown += this.cooldown;

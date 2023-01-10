@@ -95,7 +95,7 @@ const Data = {
             rarity: "common",
             damage: 10,
             range: 3,
-            speed: 0.025,
+            speed: 25,
             src: "assets/img/weapons/Sword.png"
         }
     }
@@ -218,6 +218,7 @@ Object.defineProperties(Config.Characters, {
 });
 
 function lerpAngle(a, b, t) {
+    console.log(a, b, t);
     if (b < 0 && a > 0) b += Math.TAU;
     if (a < 0 && b > 0) a += Math.TAU;
 
@@ -306,8 +307,8 @@ const Player = class {
             current: { x: null, y: null, ts: null },
         };
         this.angle = {
-            old: { measure: null, ts: null, increment: 0 },
-            current: { measure: null, ts: null, increment: 0 },
+            old: { measure: null, ts: null, lerpFactor: 0, direction: 1 },
+            current: { measure: null, ts: null, lerpFactor: 0, direction: 1 },
         };
         this.attack = {
             state: false,
@@ -622,6 +623,7 @@ const Game = {
         if (frame < player.angle.old.ts) angle = player.angle.old.measure;
         else if (frame > player.angle.current.ts) angle = player.angle.current.measure;
         else {
+            console.log(player.angle, player.angle?.old, player.angle.old?.measure);
             angle = lerpAngle(player.angle.old.measure, player.angle.current.measure, (frame - player.angle.old.ts) / (player.angle.current.ts - player.angle.old.ts));
         }
         
@@ -670,6 +672,7 @@ const Game = {
             SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(player.attack.state).Write());
         }
         
+        // TODO(Altanis): Optimize object redefinitions.
         if (player.mouse && !player.attack.attacking) {
             let old = player.angle.old.measure;
             const measure = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
@@ -677,11 +680,27 @@ const Game = {
                 SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
             
                 player.angle.old = player.angle.current;
-                player.angle.current = { measure, ts: Date.now(), increment: player.angle.current.increment };
+                player.angle.current = { measure, ts: Date.now(), lerpFactor: player.angle.current.lerpFactor, direction: player.angle.current.direction };
             }
         }
 
         if (player.attack.attacking) {
+            player.angle.old = player.angle.current;
+            let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.lerpFactor);
+
+            player.angle.current.lerpFactor += 1.5 * (weapon.speed / 1000) * player.angle.current.direction;
+            if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) player.angle.current.direction *= -1;
+
+            player.angle.current = {
+                measure: angle,
+                ts: Date.now(),
+                lerpFactor: player.angle.current.lerpFactor,
+                direction: player.angle.current.direction
+            };
+        }
+
+        /*if (player.attack.attacking) {
             player.angle.old = player.angle.current;
             let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
             let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.increment % Math.PI / 2);
@@ -694,7 +713,7 @@ const Game = {
             angle += player.attack.direction * weapon.speed;
             console.log(angle, player.angle.current.increment % Math.PI / 2)
             player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
-        }
+        }*/
     }
 }
 
