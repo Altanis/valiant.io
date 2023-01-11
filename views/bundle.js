@@ -98,8 +98,8 @@ const Data = {
             type: "melee",
             rarity: "common",
             damage: 10,
-            range: 3,
-            speed: 25,
+            range: Math.PI / 4,
+            speed: 50,
             src: "assets/img/weapons/Sword.png"
         }
     }
@@ -225,8 +225,9 @@ function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
+let last;
+
 function lerpAngle(a, b, t) {
-    console.log(a, b, t);
     if (b < 0 && a > 0) b += Math.TAU;
     if (a < 0 && b > 0) a += Math.TAU;
 
@@ -324,13 +325,14 @@ const Player = class {
             current: { x: null, y: null, ts: null },
         };
         this.angle = {
-            old: { measure: null, ts: null, lerpFactor: 0, direction: 1 },
-            current: { measure: null, ts: null, lerpFactor: 0, direction: 1 },
+            old: { measure: null, ts: null, lerpFactor: 0, direction: -1, cycles: 0 },
+            current: { measure: null, ts: null, lerpFactor: 0, direction: -1, cycles: 0 },
         };
         this.attack = {
             state: false,
             attacking: false,
-            direction: 1
+            direction: 1,
+            changeState: false
         }
     }
 }
@@ -435,7 +437,8 @@ const WebSocketManager = class {
                                 break;
                             }
                             case 0x01: { // ATTACKING
-                                player.attack.attacking = SwiftStream.ReadI8() === 0x01;
+                                player.attack.changeState = SwiftStream.ReadI8() === 0x01;
+                                if (!player.attack.attacking && player.attack.changeState) player.attack.attacking = true;
                                 break;
                             }
                         }
@@ -712,25 +715,33 @@ const Game = {
                 SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
             
                 player.angle.old = player.angle.current;
-                player.angle.current = { measure, ts: Date.now(), lerpFactor: player.angle.current.lerpFactor, direction: player.angle.current.direction };
+                player.angle.current = { measure, ts: Date.now(), lerpFactor: player.angle.current.lerpFactor, direction: player.angle.current.direction, cycles: player.angle.current.cycles };
             }
         }
 
         if (player.attack.attacking) {
             player.angle.old = player.angle.current;
             let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.lerpFactor);
+            let angle = lerpAngle(mPos + weapon.range, mPos - weapon.range, player.angle.current.lerpFactor);
 
             player.angle.current.lerpFactor += 1.5 * (weapon.speed / 1000) * player.angle.current.direction;
-            if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) player.angle.current.direction *= -1;
+            if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) {
+                player.angle.current.direction *= -1;
+                console.log(player.angle.current.cycles);
+                if (++player.angle.current.cycles % 2 === 0 && player.attack.changeState) {
+                    console.log("yo!")
+                    player.attack.attacking = !player.attack.attacking;
+                }
+            }
 
             player.angle.current = {
                 measure: angle,
                 ts: Date.now(),
                 lerpFactor: player.angle.current.lerpFactor,
-                direction: player.angle.current.direction
+                direction: player.angle.current.direction,
+                cycles: player.angle.current.cycles
             };
-        }
+        } else player.angle.current.lerpFactor = 0.5;
 
         /*if (player.attack.attacking) {
             player.angle.old = player.angle.current;
