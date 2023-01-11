@@ -126,6 +126,7 @@ export default class PlayerHandler {
                     case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
                     /** @ts-ignore */
                     case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(this.attacking && !this.cooldown); break;
+                    case "weapon": this.SwiftStream.WriteI8(Fields.Weapons).WriteI8(this.weapon!.id); break;
                 }
             });
         }
@@ -154,7 +155,10 @@ export default class PlayerHandler {
 
     /** Tick-loop called by main game loop. */
     public tick() {
-        if (this.cooldown > 0) this.cooldown--;
+        if (this.cooldown > 0) {
+            if (--this.cooldown === 0) this.attacking = false;
+        }
+
         if (this.alive) {
             /** Move position by player's velocity, reset player velocity. */
 

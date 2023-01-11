@@ -45,6 +45,30 @@
     <canvas id="canvas"></canvas>
     <canvas id="mapDisplay" height="150" width="150"></canvas>
     <div id="game">
+        <div id="stats">
+            <div class="stat-container">
+                <img src="img/icons/health.png" style="margin-right: 10px;" width="50" height="50">
+                <div class="progress-bar">
+                    <div id="health" style="background: rgb(253, 59, 59);"></div>
+                    <span class="progress-bar-text">6/6</span>
+                </div>
+            </div>
+            <div class="stat-container">
+                <!-- TODO(Altanis): Shield image is not visible. -->
+                <img src="img/icons/shield.png" style="margin-right: 10px;" width="50" height="50">
+                <div class="progress-bar">
+                    <div id="shield" style="background: rgb(92, 92, 92);"></div>
+                    <span class="progress-bar-text">???</span>
+                </div>
+            </div>
+            <div class="stat-container">
+                <img src="img/icons/energy.png" style="margin-right: 10px;" width="50" height="50">
+                <div class="progress-bar">
+                    <div id="energy" style="background: rgb(115, 0, 255);"></div>
+                    <span class="progress-bar-text">???</span>
+                </div>
+            </div>
+        </div>
         <div id="utils">
             <p id="gameName">Valiant.io</p>
             <p id="fps">-- FPS</p>

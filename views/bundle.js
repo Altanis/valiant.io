@@ -92,17 +92,17 @@ const Data = {
     },
 
     /** WEAPONS */
-    Weapons: {
-        Sword: {
-            name: "Sword",
+    Weapons: [
+        {
+            name: "Rusty Blade",
             type: "melee",
             rarity: "common",
             damage: 10,
             range: Math.PI / 4,
-            speed: 50,
-            src: "assets/img/weapons/Sword.png"
+            speed: 30,
+            src: "assets/img/weapons/rusty_blade.png"
         }
-    }
+    ]
 };
 
 /** BUFFERS: Used to convert between different byte-lengths. */
@@ -186,7 +186,6 @@ Object.defineProperties(Config.Characters, {
             const src = `assets/img/characters/gifs/${characterName.innerText}.gif`;
             characterSprite.src = src;
             
-            // TODO(Altanis): Change abilities based on character.
             const characterAbilities = Data.Characters[characterName.innerText].Abilities;
             abilities.innerHTML = "";
             for (const ability of characterAbilities) {
@@ -333,7 +332,8 @@ const Player = class {
             attacking: false,
             direction: 1,
             changeState: false
-        }
+        };
+        this.weapon = null;
     }
 }
 
@@ -441,6 +441,10 @@ const WebSocketManager = class {
                                 if (!player.attack.attacking && player.attack.changeState) player.attack.attacking = true;
                                 break;
                             }
+                            case 0x02: { // WEAPON
+                                player.weapon = Data.Weapons[SwiftStream.ReadI8()];
+                                if (!player.weapon) throw new Error("Could not find weapon.");
+                            }
                         }
                     }
                 }
@@ -509,7 +513,6 @@ const Game = {
         Play.addEventListener("click", function () {
             SocketManager.play();
             mapCanvas.style.display = "block";
-            console.log(mapCanvas.style.display)
         });
 
         /** Adds a listener to the Settings button to open the Settings modal. */
@@ -577,7 +580,7 @@ const Game = {
         ctx.save();         
         
         // check if angle is on the left or right side
-        const scaleX = (angle > Math.PI / 2 && angle < Math.PI * 3 / 2) || (angle > -Math.PI && angle < -Math.PI / 2) ? -1 : 1;
+        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1;
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
         ctx.scale(scaleX, 1);
         
@@ -645,7 +648,6 @@ const Game = {
         if (frame < player.angle.old.ts) angle = player.angle.old.measure;
         else if (frame > player.angle.current.ts) angle = player.angle.current.measure;
         else {
-            console.log(player.angle, player.angle?.old, player.angle.old?.measure);
             angle = lerpAngle(player.angle.old.measure, player.angle.current.measure, (frame - player.angle.old.ts) / (player.angle.current.ts - player.angle.old.ts));
         }
         
@@ -671,7 +673,7 @@ const Game = {
 
         /** This section renders the player. */
         const character = "Knight";
-        const weapon = Data.Weapons["Sword"];
+        const weapon = player.weapon;
         
         const cache = ImageCache.get(character);
         if (!cache) {
@@ -727,11 +729,8 @@ const Game = {
             player.angle.current.lerpFactor += 1.5 * (weapon.speed / 1000) * player.angle.current.direction;
             if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) {
                 player.angle.current.direction *= -1;
-                console.log(player.angle.current.cycles);
-                if (++player.angle.current.cycles % 2 === 0 && player.attack.changeState) {
-                    console.log("yo!")
-                    player.attack.attacking = !player.attack.attacking;
-                }
+                if (++player.angle.current.cycles % 2 === 0)
+                    player.attack.attacking = player.attack.changeState;
             }
 
             player.angle.current = {

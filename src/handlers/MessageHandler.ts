@@ -42,6 +42,7 @@ export default class MessageHandler {
 
         player.alive = true;
         player.update.add("position");
+        player.update.add("weapon");
     }
 
     // [1, i8(Movement)]
@@ -55,8 +56,6 @@ export default class MessageHandler {
         while (player.SwiftStream.at < player.SwiftStream.buffer.length)
             movementKeys.push(player.SwiftStream.ReadI8());
                 
-        // TODO(Altanis): Make this versatile. Remember, the force is with you!
-        // Formulas: F = ma, a = dv/dt, v = dx/dt
         for (const movement of movementKeys) {
             switch (movement) {
                 case Movement.Up: player.velocity!.y = -player.character!.speed; break;
