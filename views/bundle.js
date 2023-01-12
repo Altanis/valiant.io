@@ -231,7 +231,7 @@ function lerp(a, b, t) {
 
 let last;
 
-function lerpAngle(a, b, t) {
+function lerpAngle(a, b, t) { // TODO(Altanis): At PI and 0, this malfunctions...
     if (b < 0 && a > 0) b += Math.TAU;
     if (a < 0 && b > 0) a += Math.TAU;
 
@@ -603,7 +603,7 @@ const Game = {
         ctx.save();         
         
         // check if angle is on the left or right side
-        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1;
+        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
         ctx.scale(scaleX, 1);
         
