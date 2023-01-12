@@ -8,13 +8,11 @@ export default interface CharacterDefinition {
     /** The stats of the character. */
     stats: {
         /** The maximum health of the character. */
-        maxHealth: number;
+        health: number;
         /** The maximum amount of armor able to be damaged before losing health. */
-        maxArmor: number;
-        /** The maximum manna of the character. */
-        maxManna: number;
-        /** The maximum speed of the character. */
-        maxSpeed: number;
+        armor: number;
+        /** The maximum energy of the character. */
+        energy: number;
     };
     /** The speed of the player. */
     speed: number;

@@ -7,10 +7,9 @@ export const Knight: CharacterDefinition = {
     id: 0x00,
     speed: 15,
     stats: {
-        maxHealth: 7,
-        maxArmor: 6,
-        maxManna: 100,
-        maxSpeed: 100
+        health: 7,
+        armor: 6,
+        energy: 250,
     },
     abilities: [DualWield]
 }

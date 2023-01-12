@@ -64,7 +64,12 @@ const Data = {
                     description: "Bash into a foe with your shield.",
                     src: "assets/img/abilities/charge.png"
                 }
-            ]
+            ],
+            Stats: {
+                Health: 7,
+                Armor: 6,
+                Energy: 250,
+            }
         },
         Priest: {
             Abilities: [
@@ -262,8 +267,20 @@ const abilityName = document.getElementById("ability-name"),
     abilities = document.getElementById("ability");
 
 /** Game eleemnts */
-/** Game utils */
-const fps = document.getElementById("fps"),
+/** Game utils */   
+const stats = document.getElementById("stats");
+
+const healthBar = document.getElementById("health"),
+    armorBar = document.getElementById("armor"),
+    energyBar = document.getElementById("energy");
+
+let el = [];
+document.querySelectorAll(".progress-bar").forEach((p, i) => el[i] = p.children[1]);
+console.log(el);
+let [healthText, armorText, energyText] = el;
+
+const utils = document.getElementById("utils"),
+    fps = document.getElementById("fps"),
     ping = document.getElementById("ping");
 
 /** Image Caching */
@@ -316,9 +333,9 @@ const AudioManager = class {
 };
 
 const Player = class {
-    constructor() {
+    constructor(name) {
         this.id = null;
-        this.name = "Knight";
+        this.character = Data.Characters[name];
         this.position = {
             old: { x: null, y: null, ts: null },
             current: { x: null, y: null, ts: null },
@@ -337,7 +354,7 @@ const Player = class {
     }
 }
 
-const player = new Player();
+const player = new Player("Knight");
 
 Object.defineProperties(Player, {
     /** Character index */
@@ -460,6 +477,12 @@ const WebSocketManager = class {
     /** Sends a packet to the server informing that the client wants to spawn. */
     play() {    
         this.socket.send(SwiftStream.WriteI8(0x00).WriteCString("Knight").WriteI8(Config.Characters.CharacterPointer).WriteI8(Config.Characters.AbilityPointer).Write());
+        stats.style.display = "flex";
+        utils.style.display = "block";
+
+        healthText.innerText = `${player.character.Stats.Health}/${player.character.Stats.Health}`;
+        armorText.innerText = `${player.character.Stats.Armor}/${player.character.Stats.Armor}`;
+        energyText.innerText = `${player.character.Stats.Energy}/${player.character.Stats.Energy}`;
     }
 }
 

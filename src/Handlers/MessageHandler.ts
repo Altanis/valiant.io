@@ -37,6 +37,10 @@ export default class MessageHandler {
         player.abilityIndex = abilityIndex;
         player.weapon = Sword;
 
+        player.health = player.character.stats.health;
+        player.armor = player.character.stats.armor;
+        player.energy = player.character.stats.energy;
+
         player.velocity = new Vector(0, 0);
         player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
 

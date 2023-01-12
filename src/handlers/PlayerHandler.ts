@@ -41,6 +41,14 @@ export default class PlayerHandler {
     public weapon: WeaponDefinition | null = null;
     /** The amount of ticks needed to be passed before another attack. */
     public cooldown: number = 0;
+
+    /** The health of the player. */
+    public health: number = 0;
+    /** The armor of the player. */
+    public armor: number = 0;
+    /** The energy of the player. */
+    public energy: number = 0;
+
     /** 
      * The angle at which the player is facing.
      * Measured in radians, with range of [-Math.PI, Math.PI].
