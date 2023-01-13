@@ -229,14 +229,9 @@ function lerp(a, b, t) {
     return a + (b - a) * t;
 }
 
-let last;
-
-function lerpAngle(a, b, t) { // TODO(Altanis): At PI and 0, this malfunctions...
-    if (b < 0 && a > 0) b += Math.TAU;
-    if (a < 0 && b > 0) a += Math.TAU;
-
-    const d = b - a;
-    return a + ((d + Math.PI) % (2 * Math.PI) - Math.PI) * t;
+function lerpAngle(angle1, angle2, t) {
+    const diff = -((angle1 - angle2 + Math.PI * 3) % (Math.TAU) - Math.PI);
+    return angle1 + diff * t;
 }
 
 console.timeEnd();
@@ -603,7 +598,13 @@ const Game = {
         ctx.save();         
         
         // check if angle is on the left or right side
+        if (angle > Math.PI) {
+            console.log(angle);
+            angle = angle - Math.TAU;
+        }
+
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
+        player.attack.attacking && console.log(angle, scaleX);
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
         ctx.scale(scaleX, 1);
         
@@ -747,7 +748,13 @@ const Game = {
         if (player.attack.attacking) {
             player.angle.old = player.angle.current;
             let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            let angle = lerpAngle(mPos + weapon.range, mPos - weapon.range, player.angle.current.lerpFactor);
+            let posRange = mPos + weapon.range;
+            let negRange = mPos - weapon.range;
+
+            if (posRange > Math.PI) posRange -= Math.TAU;
+            if (negRange < -Math.PI) negRange += Math.TAU;
+
+            let angle = lerpAngle(posRange, negRange, player.angle.current.lerpFactor);
 
             player.angle.current.lerpFactor += 1.5 * (weapon.speed / 1000) * player.angle.current.direction;
             if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) {
@@ -820,6 +827,8 @@ document.addEventListener("keyup", function (event) {
 document.addEventListener("mousemove", function (event) {
     player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
 });
+
+canvas.addEventListener('contextmenu', event => event.preventDefault());
 
 canvas.addEventListener("mousedown", function(event) {
     if (Config.CurrentPhase === 1) player.attack.state = true;
