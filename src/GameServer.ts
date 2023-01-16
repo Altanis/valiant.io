@@ -4,9 +4,12 @@ import HTTP from "http";
 import { MaximumConnections } from './Const/Config';
 import { CloseEvent } from './Const/Enums';
 
-import PlayerHandler from './Handlers/PlayerHandler';
-import MessageHandler from './Handlers/MessageHandler';
-import SpatialHashGrid from './Handlers/SpatialHashGrid';
+import MessageHandler from './Managers/MessageHandler';
+import SpatialHashGrid from './Managers/SpatialHashGrid';
+
+import PlayerHandler from './Entities/PlayerHandler';
+import Entity from './Entities/Entity';
+import { Box } from './Entities/Objects';
 
 export default class GameServer {
     /** The WebSocket server where clients connect to. */
@@ -17,6 +20,8 @@ export default class GameServer {
     public banned: string[] = [];
     /** The handler for incoming messages. */
     public MessageHandler = new MessageHandler(this);
+    /** The entities currently in game. */
+    public entities: Entity[] = [];
 
     /** Arena information. */
     /** The length and width of the arena. */
@@ -26,9 +31,16 @@ export default class GameServer {
 
     constructor(port: HTTP.Server | number = 8080) {
         this.wss = typeof port === "number" ? new Server({ port }) : new Server({ server: port });
+        this.renderObjects();
         this.handle();
 
         setInterval(() => this.tick(), 1000 / 25);
+    }
+
+    /** Renders the ingame objects. */
+    private renderObjects(): void {
+        // render one box
+        this.entities.push(new Box(this));
     }
 
     /** Sets up handlers for the WebSocket server. */
@@ -45,6 +57,7 @@ export default class GameServer {
 
             const manager = new PlayerHandler(this, request, socket);
             this.players.add(manager);
+            this.entities[this.entities.length] = manager;
         });
     }
 
@@ -52,8 +65,8 @@ export default class GameServer {
     public tick(): void {
         this.SpatialHashGrid.clear();
         
-        this.players.forEach(player => {
-            player.tick();
+        this.entities.forEach(entity => {
+            entity.tick();
         });   
     }
 }

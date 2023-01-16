@@ -343,9 +343,12 @@ const Player = class {
             state: false,
             attacking: false,
             direction: 1,
-            changeState: false
+            changeState: false,
+            onlyOnce: false,
+            mPos: false,
         };
         this.weapon = null;
+        this.surroundings = []; // { type, x, y }
     }
 }
 
@@ -416,7 +419,6 @@ const WebSocketManager = class {
         
         this.socket.addEventListener("message", ({ data }) => {
             data = new Uint8Array(data);
-            console.log(data);
             SwiftStream.Set(data);
             this.parse();
         });
@@ -426,7 +428,8 @@ const WebSocketManager = class {
         const header = SwiftStream.ReadI8();
         switch (header) {
             case 0x00: { // UPDATE HEADER
-                if (SwiftStream.ReadI8() === 0x00) { // PLAYER UPDATE
+                const updateReq = SwiftStream.ReadI8();
+                if (updateReq === 0x00) { // PLAYER UPDATE
                     const id = SwiftStream.ReadI8(); // Player ID
                     let length = SwiftStream.ReadI8(); // Length of fields
                     
@@ -456,6 +459,31 @@ const WebSocketManager = class {
                             case 0x02: { // WEAPON
                                 player.weapon = Data.Weapons[SwiftStream.ReadI8()];
                                 if (!player.weapon) throw new Error("Could not find weapon.");
+                            }
+                        }
+                    }
+                }
+                
+                const surroudings = updateReq === 0x00 ? SwiftStream.ReadI8() : updateReq;
+                if (surroudings === 0x01) { // surroundings near player
+                    length = SwiftStream.ReadI8() || 0; // Length of surroundings
+                    for (; length--;) {
+                        const entity = SwiftStream.ReadI8();
+                        player.surroundings = [];
+
+                        switch (entity) {
+                            case 0x00: { // PLAYER
+                                break;
+                            }
+                            case 0x01: { // box
+                                const x = SwiftStream.ReadFloat32();
+                                const y = SwiftStream.ReadFloat32();
+
+                                player.surroundings.push({
+                                    type: "Box",
+                                    x,
+                                    y
+                                });
                             }
                         }
                     }
@@ -597,12 +625,7 @@ const Game = {
         if (!cache[2][cache[1]]) return;
         ctx.save();         
         
-        // check if angle is on the left or right side
-        if (angle > Math.PI) {
-            console.log(angle);
-            angle = angle - Math.TAU;
-        }
-
+        angle = ((angle + Math.PI * 3) % Math.TAU - Math.PI);
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
         player.attack.attacking && console.log(angle, scaleX);
         ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
@@ -612,7 +635,7 @@ const Game = {
         ctx.restore();
 
         // RENDER WEAPON:
-        // Render weapon next to player
+        // Render weapon next to player:
         if (!weapon) return;
 
         ctx.save();
@@ -621,6 +644,14 @@ const Game = {
         ctx.drawImage(weapon, 0, 0, 100, 20);
         ctx.restore();
     
+        // Render tracer behind sword:
+        /*if (player.attack.attacking) {
+            ctx.strokeStyle = "blue";
+            console.log(Math.cos(player.angle.current.measure), Math.sin(player.angle.current.measure));
+            ctx.lineTo(Math.cos(player.angle.current.measure), Math.sin(player.angle.current.measure));
+            ctx.stroke();
+        }*/
+
         /*if (!cache[2][cache[1]]) return;
         ctx.drawImage(cache[2][cache[1]], (canvas.width - 150) / 2, (canvas.height - 150) / 2, 150, 150);*/
         // TODO(Altanis): Render name.
@@ -636,6 +667,21 @@ const Game = {
         ctx.fillText("altanis", xOffset, yOffset);*/
     },
     
+    // TODO(Altanis): fix relative pos
+    RenderSurroundings(pos) { 
+        for (const surrounding of player.surroundings) {
+            const { type, x, y } = surrounding;
+
+            const entityX = (x - pos.x) / (Config.Arena.arenaBounds / x) + (canvas.width / 2);
+            const entityY = (y - pos.y) / (Config.Arena.arenaBounds / y) + (canvas.height / 2);
+
+            console.log(entityX, entityY);
+
+            ctx.fillStyle = "white";
+            ctx.fillRect(entityX, entityY, 200, 200);
+        }
+    },
+
     Arena(delta) {
         /**
         * This section draws the arena. It resembles the space every entity is in.
@@ -664,8 +710,8 @@ const Game = {
         else if (frame > player.position.current.ts) pos = player.position.current;
         else {
             pos = {
-                x: player.position.old.x + (player.position.current.x - player.position.old.x) * 0.5 /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/,
-                y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5 /*((frame - player.position.old.ts) / (player.position.current.ts - player.position.old.ts))*/
+                x: player.position.old.x + (player.position.current.x - player.position.old.x) * 0.5,
+                y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5
             };
         }
 
@@ -721,7 +767,8 @@ const Game = {
         }
         
         Game.RenderPlayer(angle, cache, weaponCache);
-        
+        player.surroundings.length && Game.RenderSurroundings(pos);
+
         /** This section calculates and sends the angle and movement directions. */
         if (ACTIVE_KEYS.size) {
             const buffer = SwiftStream.WriteI8(0x01);
@@ -736,7 +783,7 @@ const Game = {
         // TODO(Altanis): Optimize object redefinitions.
         if (player.mouse && !player.attack.attacking) {
             let old = player.angle.old.measure;
-            const measure = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            const measure = player.attack.mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
             if (old !== measure) {
                 SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
             
@@ -747,7 +794,9 @@ const Game = {
 
         if (player.attack.attacking) {
             player.angle.old = player.angle.current;
-            let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+            if (!player.attack.mPos) player.attack.mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
+
+            let mPos = player.attack.mPos;
             let posRange = mPos + weapon.range;
             let negRange = mPos - weapon.range;
 
@@ -756,11 +805,13 @@ const Game = {
 
             let angle = lerpAngle(posRange, negRange, player.angle.current.lerpFactor);
 
-            player.angle.current.lerpFactor += 1.5 * (weapon.speed / 1000) * player.angle.current.direction;
+            player.angle.current.lerpFactor += 5 * (weapon.speed / 1000) * player.angle.current.direction;
             if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) {
                 player.angle.current.direction *= -1;
-                if (++player.angle.current.cycles % 2 === 0)
+                if (++player.angle.current.cycles % 2 === 0) {
                     player.attack.attacking = player.attack.changeState;
+                    if (player.attack.onlyOnce) player.attack.onlyOnce = player.attack.changeState = player.attack.attacking = false;
+                }
             }
 
             player.angle.current = {
@@ -802,10 +853,24 @@ const ATTACH_MAPS = new Map([
 ]);
 
 const ACTIVE_KEYS = new Set();
+ACTIVE_KEYS.lerpFactor = 0;
 
 document.addEventListener("keydown", function (event) {
     /** Play game. */
-    if (event.key === "Enter" && document.activeElement === NameInput && Play.style.display === "block") Play.click();
+    switch (event.code) {
+        case "Enter": {
+            if (document.activeElement === NameInput && Play.style.display === "block") Play.click();
+            break;
+        }
+        // TODO(Altanis): Make space only attack once.
+        case "Space": {
+            if (Config.CurrentPhase === 1) {
+                player.attack.state = true;
+                player.attack.onlyOnce = true;
+            }
+            return;
+        }
+    }
     
     /** Movement keys. */
     const attach = ATTACH_MAPS.get(event.which || event.keyCode);

@@ -2,19 +2,16 @@ import WebSocket from 'ws';
 import { IncomingMessage } from "http";
 
 import { ConnectionsPerIP } from '../Const/Config';
-import { CloseEvent, ClientBound, ServerBound, Fields } from '../Const/Enums';
+import { CloseEvent, ClientBound, ServerBound, Fields, Entities } from '../Const/Enums';
 import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
 import { WeaponDefinition } from '../Const/Game/Definitions/WeaponDefinition';
 
 import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
-import Vector from './Vector';
 
-export default class PlayerHandler {
-    /** The manager of the WebSocket Server. */
-    public server: GameServer;
-    /** The ID of the Player. */
-    public id: number;
+import Entity from './Entity';
+
+export default class PlayerHandler extends Entity {
     /** The WebSocket representing the player. */
     public socket: WebSocket;
     /** The IP of the WebSocket connection. */
@@ -33,10 +30,6 @@ export default class PlayerHandler {
     public name: string = "unknown";
     /** Whether or not the player is alive. */
     public alive: boolean = false;
-    /** The position of the player. */
-    public position: Vector | null = null;
-    /** The velocity of the player. */
-    public velocity: Vector | null = null;
     /** The weapon the player is hoding. */
     public weapon: WeaponDefinition | null = null;
     /** The amount of ticks needed to be passed before another attack. */
@@ -64,12 +57,12 @@ export default class PlayerHandler {
 
     /** The amount of data to be sent to the client. [width, height] */
     public resolution = [(14400 / 7.5) | 0, (14400 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
-    /** The dimensions of the player. */
-    public dimensions = [150, 150];
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
+        super(server, [150, 150], "Player");
+
         this.server = server;
-        this.id = this.server.players.size + 1;
+        this.id = this.server.entities.length;
         this.socket = socket;
 
         this.addHandlers(socket);
@@ -139,14 +132,17 @@ export default class PlayerHandler {
             });
         }
 
-        console.log(this.attacking, this.cooldown);
-
         /** TODO(Altanis): Inform client of surroundings. */
         const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.resolution[0], this.resolution[1], this.id);
         if (surroundings.length) {
-            console.log(surroundings);
             this.SwiftStream.WriteI8(0x01).WriteI8(surroundings.length);
-            for (const surrounding of surroundings) { };
+            for (const surrounding of surroundings) {
+                const entity = this.server.entities[surrounding.entityId!];
+                switch (entity.type) {
+                    case "Player": return;
+                    case "Box": this.SwiftStream.WriteI8(Entities.Box).WriteFloat32(entity.position.x!).WriteFloat32(entity.position.y!); break;
+                }
+            };
         }
 
         this.update.clear();
@@ -176,12 +172,8 @@ export default class PlayerHandler {
                 this.velocity!.scale(this.character!.speed / distance);
             }
 
-            this.position!.add(this.velocity!, true);
-            this.velocity!.x = this.velocity!.y = 0;
-
-            /** Reinsert into the hashgrid with updated position. */
-            this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
-
+            super.tick();
+            
             /** Send update to player. */
             this.SendUpdate();
 

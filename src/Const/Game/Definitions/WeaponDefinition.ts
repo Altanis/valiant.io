@@ -1,4 +1,4 @@
-import PlayerHandler from "../../../Handlers/PlayerHandler";
+import PlayerHandler from "../../../Entities/PlayerHandler";
 
 export type WeaponType = "laser" | "melee" | "projectile";
 export type RarityType = "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic";

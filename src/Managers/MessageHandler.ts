@@ -1,6 +1,6 @@
 import { CloseEvent, Characters, Movement } from '../Const/Enums';
 
-import PlayerHandler from './PlayerHandler';
+import PlayerHandler from '../Entities/PlayerHandler';
 import GameServer from '../GameServer';
 import Vector from './Vector';
 import { randInt } from '../Utils/Functions';
@@ -57,7 +57,7 @@ export default class MessageHandler {
         ) return player.close(CloseEvent.InvalidProtocol);
         
         const movementKeys = [];
-        while (player.SwiftStream.at < player.SwiftStream.buffer.length)
+        while (player.SwiftStream.at < player.SwiftStream.buffer.length && movementKeys.length < 4)
             movementKeys.push(player.SwiftStream.ReadI8());
                 
         for (const movement of movementKeys) {
@@ -86,7 +86,7 @@ export default class MessageHandler {
         player.angle = (angle < 0 && angle >= -3.15) ? angle + Math.PI * 2 : angle;
     }
 
-    // [3]
+    // [3, i8(isAtk)]
     Attack(player: PlayerHandler): void {
         if (!player.alive || !player.weapon) return player.close(CloseEvent.InvalidProtocol);
         const isAtk = player.SwiftStream.ReadI8() === 0x01;

@@ -1,4 +1,4 @@
-import PlayerHandler from "../../Handlers/PlayerHandler";
+import PlayerHandler from "../../Entities/PlayerHandler";
 import { WeaponDefinition } from "./Definitions/WeaponDefinition";
 
 export const Sword: WeaponDefinition = {
