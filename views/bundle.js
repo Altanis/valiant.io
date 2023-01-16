@@ -669,18 +669,23 @@ const Game = {
     
     // TODO(Altanis): fix relative pos
     RenderSurroundings(pos) { 
+        ctx.save();
+        ctx.translate(-pos.x, -pos.y);
+        for (const surrounding of player.surroundings) {
+            const { type, x, y } = surrounding;
+            ctx.fillStyle = "white";
+            ctx.fillRect(x, y, 200, 200);
+        }
+        ctx.restore();
+    },
+    /*RenderSurroundings(pos) {
         for (const surrounding of player.surroundings) {
             const { type, x, y } = surrounding;
 
-            const entityX = (x - pos.x) / (Config.Arena.arenaBounds / x) + (canvas.width / 2);
-            const entityY = (y - pos.y) / (Config.Arena.arenaBounds / y) + (canvas.height / 2);
-
-            console.log(entityX, entityY);
-
             ctx.fillStyle = "white";
-            ctx.fillRect(entityX, entityY, 200, 200);
+            ctx.fillRect(x - pos.x, y - pos.y, 200, 200);
         }
-    },
+    },*/
 
     Arena(delta) {
         /**
@@ -767,7 +772,7 @@ const Game = {
         }
         
         Game.RenderPlayer(angle, cache, weaponCache);
-        player.surroundings.length && Game.RenderSurroundings(pos);
+        player.surroundings.length && Game.RenderSurroundings(pos, xOffset, yOffset);
 
         /** This section calculates and sends the angle and movement directions. */
         if (ACTIVE_KEYS.size) {
