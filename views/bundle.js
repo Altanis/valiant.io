@@ -669,14 +669,12 @@ const Game = {
     
     // TODO(Altanis): fix relative pos
     RenderSurroundings(pos) { 
-        ctx.save();
-        ctx.translate(-pos.x, -pos.y);
         for (const surrounding of player.surroundings) {
             const { type, x, y } = surrounding;
+
             ctx.fillStyle = "white";
-            ctx.fillRect(x, y, 200, 200);
+            ctx.fillRect(x - pos.x, y - pos.y, 200, 200);
         }
-        ctx.restore();
     },
     /*RenderSurroundings(pos) {
         for (const surrounding of player.surroundings) {
