@@ -1,0 +1,1 @@
+/** A representation of a Player entity. */

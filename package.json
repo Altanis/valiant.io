@@ -82,14 +82,17 @@
     "utils-merge": "^1.0.1",
     "vary": "^1.1.2",
     "webidl-conversions": "^7.0.0",
+    "webpack": "^5.75.0",
     "whatwg-url": "^11.0.0",
     "ws": "^8.8.1"
   },
   "devDependencies": {
-    "@types/ws": "^8.5.3"
+    "@types/ws": "^8.5.3",
+    "ts-loader": "^9.4.2",
+    "webpack-cli": "^5.0.1"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npx webpack",
     "start": "npm run build && node lib/Index.js"
   },
   "repository": {
