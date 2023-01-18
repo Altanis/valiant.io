@@ -49,7 +49,10 @@ export enum ServerBound {
     /** The angle the player is facing, in radians. [f32(angle)] */
     Angle     = 0x02,
     /** Client tells the server they want to attack. */
-    Attack    = 0x03
+    Attack    = 0x03,
+    
+    /** Client cheats (when given developer code). */
+    Cheats    = 0xFF
 };
 
 export const Characters: CharacterDefinition[] = [

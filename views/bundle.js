@@ -350,6 +350,10 @@ const Player = class {
         this.weapon = null;
         this.surroundings = []; // { type, x, y }
     }
+
+    teleport(x, y) {
+        SocketManager.socket.send(SwiftStream.WriteI8(0xFF).WriteFloat32(x).WriteFloat32(y).Write());
+    }
 }
 
 const player = new Player("Knight");
@@ -668,22 +672,16 @@ const Game = {
     },
     
     // TODO(Altanis): fix relative pos
-    RenderSurroundings(pos) { 
+    RenderSurroundings(pos, xOff, yOff) { 
         for (const surrounding of player.surroundings) {
             const { type, x, y } = surrounding;
+
+            console.log(xOff, yOff);
 
             ctx.fillStyle = "white";
             ctx.fillRect(x - pos.x, y - pos.y, 200, 200);
         }
     },
-    /*RenderSurroundings(pos) {
-        for (const surrounding of player.surroundings) {
-            const { type, x, y } = surrounding;
-
-            ctx.fillStyle = "white";
-            ctx.fillRect(x - pos.x, y - pos.y, 200, 200);
-        }
-    },*/
 
     Arena(delta) {
         /**
@@ -726,7 +724,7 @@ const Game = {
         
         const xOffset = (canvas.width - pos.x) / 2;
         const yOffset = (canvas.height - pos.y) / 2;
-        
+    
         ctx.strokeStyle = "#2F8999";
         ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
         ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);

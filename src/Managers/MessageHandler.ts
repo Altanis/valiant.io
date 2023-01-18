@@ -42,7 +42,7 @@ export default class MessageHandler {
         player.energy = player.character.stats.energy;
 
         player.velocity = new Vector(0, 0);
-        player.position = new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
+        player.position = new Vector(500, 500); //new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
 
         player.alive = true;
         player.update.add("position");
@@ -93,5 +93,20 @@ export default class MessageHandler {
 
         player.attacking = isAtk;
         player.update.add("attacking");
+    }
+
+
+
+
+    // Time to have a little bit  of fun.. :)
+    Cheat(player: PlayerHandler): void {
+        // [Format #1] Teleportation: [0xFF, f32(x), f32(y)]
+        const x = player.SwiftStream.ReadFloat32();
+        const y = player.SwiftStream.ReadFloat32();
+
+        player.position!.x = x;
+        player.position!.y = y;
+
+        player.update.add("position");
     }
  };

@@ -78,13 +78,15 @@ export default class PlayerHandler extends Entity {
             this.SwiftStream.Set(buffer);
 
             const header = this.SwiftStream.ReadI8();
-            if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
+            // if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
 
             switch (header) {
                 case ServerBound.Spawn: this.server.MessageHandler.Spawn(this); break;
                 case ServerBound.Movement: this.server.MessageHandler.Move(this); break;
                 case ServerBound.Angle: this.server.MessageHandler.Angle(this); break;
                 case ServerBound.Attack: this.server.MessageHandler.Attack(this); break;
+                case ServerBound.Cheats: this.server.MessageHandler.Cheat(this); break;
+                default: this.close(CloseEvent.InvalidProtocol); break;
             }
 
             this.SwiftStream.Clear();
