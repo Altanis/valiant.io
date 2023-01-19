@@ -1,3 +1,5 @@
+import Client from "../Client";
+
 /** Manages DOM elements. */
 export default class ElementManager {
     /** Interactive elements on the homescreen. */
@@ -8,8 +10,13 @@ export default class ElementManager {
     public settings: {
         [key: string]: HTMLElement | { [key: string]: HTMLElement }
     } = {};
-    
-    constructor() {
+    /** The canvas to draw on. */
+    /** @ts-ignore */
+    public canvas: HTMLCanvasElement = document.getElementById("canvas")!;
+    /** The client this class is managing. */
+    public client: Client;
+
+    constructor(client: Client) {
         this.homescreen = {
             /** The div which contains all elements of the homescreen. */
             homescreen: document.getElementById("homescreen")!,
@@ -44,5 +51,28 @@ export default class ElementManager {
             /** The div which contains toggleable settings. */
             settings: document.getElementById("settingsModal")!,
         };
+
+        this.client = client;
+
+        this.setup();
+        this.loop();
+    }
+
+    public setup() {
+        /** Add resize handlers for the canvas. */
+        window.addEventListener("resize", () => {
+            this.canvas.height = window.innerHeight * window.devicePixelRatio;
+            this.canvas.width = window.innerWidth * window.devicePixelRatio;
+        });
+
+        window.dispatchEvent(new Event("resize"));
+
+        /** Create pointers for abilities and characters. */
+        
+    }
+
+    private loop() {
+        this.client.canvas?.render();
+        requestAnimationFrame(this.loop.bind(this));
     }
 }

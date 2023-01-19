@@ -27,24 +27,18 @@ export default class CanvasManager {
         }[],
         radiusIncrement: number
     } = {
-        count: 100,
-        stars: [],
-        radiusIncrement: 0.1
-    }
+            count: 200,
+            stars: [],
+            radiusIncrement: 0.1
+        };
 
-    constructor() {
-        this.startAnimation();
-    }
-
-    private startAnimation() {
+    public render() {
         this.delta = Date.now() - this.delta;
 
         switch (this.phase) {
             case Phases.Homescreen: this.Homescreen(); break;
             case Phases.Arena: this.Arena(this.delta); break;
         }
-
-        requestAnimationFrame(this.startAnimation.bind(this));
     }
 
     /** UTILITIES */
@@ -60,22 +54,21 @@ export default class CanvasManager {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.fillStyle = "#FFFFFF";
-        if (this.stars.stars.length !== this.stars.count) {
-            for (let i = this.stars.count - this.stars.stars.length; --i;) {
-                this.stars.stars.push({
-                    x: randomRange(0, this.canvas.width),
-                    y: randomRange(0, this.canvas.width),
-                    radius: randomRange(0, this.canvas.width),
-                });
-            }
+        for (let i = this.stars.count - this.stars.stars.length; --i;) {
+            this.stars.stars.push({
+                x: randomRange(0, this.canvas.width),
+                y: randomRange(0, this.canvas.width),
+                radius: randomRange(0.1, 1.5),
+            });
+        }
 
-            for (let i = this.stars.stars.length; i--;) {
-                const star = this.stars.stars[i];
-                this.drawCircle(star.x, star.y, star.radius);
-                
-                if (star.radius >= 3) {
-                    this.stars.stars.splice(i, 1);
-                }
+        for (let i = this.stars.stars.length; i--;) {
+            const star = this.stars.stars[i];
+            this.drawCircle(star.x, star.y, star.radius);
+            star.radius += this.stars.radiusIncrement;
+
+            if (star.radius >= 3) {
+                this.stars.stars.splice(i, 1);
             }
         }
     }
