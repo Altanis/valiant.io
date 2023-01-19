@@ -8,7 +8,8 @@ const Characters = [
             armor: 6,
             energy: 250
         },
-        abilities: [0, 1]
+        abilities: [0, 1],
+        src: "Knight.gif"
     }
 ];
 

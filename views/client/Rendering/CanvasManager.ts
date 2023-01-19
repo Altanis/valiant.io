@@ -67,9 +67,7 @@ export default class CanvasManager {
             this.drawCircle(star.x, star.y, star.radius);
             star.radius += this.stars.radiusIncrement;
 
-            if (star.radius >= 3) {
-                this.stars.stars.splice(i, 1);
-            }
+            if (star.radius >= 3) this.stars.stars.splice(i, 1);
         }
     }
 
