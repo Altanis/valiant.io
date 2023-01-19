@@ -82,6 +82,67 @@ exports["default"] = Connection;
 
 /***/ }),
 
+/***/ 668:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Weapons = exports.Abilities = exports.Characters = void 0;
+/** Characters and all their necessary clientside data. */
+const Characters = [
+    /** Knight */
+    {
+        name: "Knight",
+        stats: {
+            health: 7,
+            armor: 6,
+            energy: 250
+        },
+        abilities: [0, 1],
+        src: "Knight.gif"
+    },
+    {
+        name: "Priest",
+        stats: {},
+        abilities: [1],
+        src: "Priest.gif"
+    }
+];
+exports.Characters = Characters;
+/** Abilities, a specific property of characters. */
+const Abilities = [
+    /** Dual Wield */
+    {
+        name: "Dual Wield",
+        description: "Attack with double the power.",
+        src: "dual_wield.png",
+    },
+    /** Charge */
+    {
+        name: "Charge",
+        description: "Bash into a foe with your shield.",
+        src: "charge.png",
+    }
+];
+exports.Abilities = Abilities;
+/** Weapons, objects used to attack. */
+const Weapons = [
+    /** Rusty Blade */
+    {
+        name: "Rusty Blade",
+        type: "melee",
+        rarity: "common",
+        damage: 10,
+        range: Math.PI / 4,
+        speed: 30,
+        src: "rusty_blade.png",
+    }
+];
+exports.Weapons = Weapons;
+
+
+/***/ }),
+
 /***/ 109:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -204,9 +265,8 @@ class CanvasManager {
             const star = this.stars.stars[i];
             this.drawCircle(star.x, star.y, star.radius);
             star.radius += this.stars.radiusIncrement;
-            if (star.radius >= 3) {
+            if (star.radius >= 3)
                 this.stars.stars.splice(i, 1);
-            }
         }
     }
     /** Renders the actual arena when spawned in. */
@@ -218,20 +278,15 @@ exports["default"] = CanvasManager;
 /***/ }),
 
 /***/ 566:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const Definitions_1 = __webpack_require__(668);
 /** Manages DOM elements. */
 class ElementManager {
     constructor(client) {
         /** Interactive elements on the homescreen. */
-        this.homescreen = {};
-        /** Toggleable settings. */
-        this.settings = {};
-        /** The canvas to draw on. */
-        /** @ts-ignore */
-        this.canvas = document.getElementById("canvas");
         this.homescreen = {
             /** The div which contains all elements of the homescreen. */
             homescreen: document.getElementById("homescreen"),
@@ -250,19 +305,27 @@ class ElementManager {
                 /** The left arrow for the character. */
                 arrowLeft: document.getElementById("arrow-left"),
                 /** The right arrow for the character. */
-                arrowRight: document.getElementById("arrow-left"),
+                arrowRight: document.getElementById("arrow-right"),
+                /** The name of the character. */
+                characterName: document.getElementById("character-name"),
+                /** The sprite of the character. */
+                characterSprite: document.getElementById("character-sprite"),
                 /** The name of the ability. */
                 abilityName: document.getElementById("ability-name"),
                 /** The description of the ability. */
                 abilityDesc: document.getElementById("ability-desc"),
                 /** The selector icons of the abilities. */
-                abilitySelector: document.getElementById("ability-name")
+                abilitySelector: document.getElementById("ability")
             }
         };
+        /** Toggleable settings. */
         this.settings = {
             /** The div which contains toggleable settings. */
             settings: document.getElementById("settingsModal"),
         };
+        /** The canvas to draw on. */
+        /** @ts-ignore */
+        this.canvas = document.getElementById("canvas");
         this.client = client;
         this.setup();
         this.loop();
@@ -275,11 +338,45 @@ class ElementManager {
         });
         window.dispatchEvent(new Event("resize"));
         /** Create pointers for abilities and characters. */
+        console.log(this.homescreen.characterSelector.arrowRight);
+        this.homescreen.characterSelector.arrowLeft.addEventListener("click", () => {
+            this.client.player.character = (this.client.player.character - 1 + Definitions_1.Characters.length) % Definitions_1.Characters.length;
+        });
+        this.homescreen.characterSelector.arrowRight.addEventListener("click", () => {
+            this.client.player.character = (this.client.player.character + 1) % Definitions_1.Characters.length;
+        });
     }
     loop() {
-        var _a, _b;
-        console.log(this, this.client, this.client.canvas, (_a = this.client.canvas) === null || _a === void 0 ? void 0 : _a.render);
-        (_b = this.client.canvas) === null || _b === void 0 ? void 0 : _b.render();
+        var _a;
+        /** Update client's canvas. */
+        (_a = this.client.canvas) === null || _a === void 0 ? void 0 : _a.render();
+        /** Check if character has changed. */
+        let intuition;
+        const character = Definitions_1.Characters[this.client.player.character];
+        if (this.homescreen.characterSelector.characterName.innerText !== character.name) {
+            intuition = true;
+            this.homescreen.characterSelector.characterName.innerText = character.name;
+            /** @ts-ignore */
+            this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;
+        }
+        const playerAbility = Definitions_1.Abilities[this.client.player.ability];
+        if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {
+            this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;
+            this.homescreen.characterSelector.abilitySelector.innerHTML = "";
+            character.abilities.map(ability => Definitions_1.Abilities[ability]).forEach((ability, i) => {
+                const image = new Image(50, 50);
+                image.src = `assets/img/abilities/${ability.src}`;
+                image.classList.add("character-ability");
+                if (ability.name === playerAbility.name) {
+                    this.homescreen.characterSelector.abilityDesc.innerText = ability.description;
+                    image.classList.add("selected");
+                }
+                image.addEventListener("click", () => {
+                    this.client.player.ability = character.abilities[i];
+                });
+                this.homescreen.characterSelector.abilitySelector.appendChild(image);
+            });
+        }
         requestAnimationFrame(this.loop.bind(this));
     }
 }

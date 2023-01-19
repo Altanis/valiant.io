@@ -23,7 +23,7 @@ export default class ElementManager {
             /** The left arrow for the character. */
             arrowLeft: document.getElementById("arrow-left")!,
             /** The right arrow for the character. */
-            arrowRight: document.getElementById("arrow-left")!,
+            arrowRight: document.getElementById("arrow-right")!,
 
             /** The name of the character. */
             characterName: document.getElementById("character-name")!,
@@ -68,7 +68,14 @@ export default class ElementManager {
         window.dispatchEvent(new Event("resize"));
 
         /** Create pointers for abilities and characters. */
-        
+        console.log(this.homescreen.characterSelector.arrowRight);
+        this.homescreen.characterSelector.arrowLeft.addEventListener("click", () => {
+            this.client.player.character = (this.client.player.character - 1 + Characters.length) % Characters.length;
+        });
+
+        this.homescreen.characterSelector.arrowRight.addEventListener("click", () => {
+            this.client.player.character = (this.client.player.character + 1) % Characters.length;
+        });
     }
 
     private loop() {
@@ -76,26 +83,36 @@ export default class ElementManager {
         this.client.canvas?.render();
 
         /** Check if character has changed. */
+        let intuition = false;
         const character = Characters[this.client.player.character]!;
         if (this.homescreen.characterSelector.characterName.innerText !== character.name) {
+            intuition = true;
             this.homescreen.characterSelector.characterName.innerText = character.name;
             /** @ts-ignore */
             this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;
+        }
+
+        // TODO(altanis): fix ability selector when switching characters
+        const playerAbility = Abilities[this.client.player.ability]!;
+        if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {
+            this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;
 
             this.homescreen.characterSelector.abilitySelector.innerHTML = "";
             character.abilities.map(ability => Abilities[ability]!).forEach((ability, i) => {
                 const image = new Image(50, 50);
                 image.src = `assets/img/abilities/${ability.src}`; 
                 image.classList.add("character-ability");
-                if (i === 0) image.classList.add("selected");
-
+                if (ability.name === playerAbility.name) {
+                    this.homescreen.characterSelector.abilityDesc.innerText = ability.description;
+                    image.classList.add("selected");
+                }
+    
                 image.addEventListener("click", () => {
-                   // TODO(Altanis): Create selectors. 
+                    this.client.player.ability = character.abilities[i];
                 });
-
+    
                 this.homescreen.characterSelector.abilitySelector.appendChild(image);
             });
-            
         }
 
         requestAnimationFrame(this.loop.bind(this));

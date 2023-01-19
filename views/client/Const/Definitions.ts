@@ -10,6 +10,12 @@ const Characters = [
         },
         abilities: [0, 1],
         src: "Knight.gif"
+    },
+    {
+        name: "Priest",
+        stats: {},
+        abilities: [1],
+        src: "Priest.gif"
     }
 ];
 
@@ -19,13 +25,13 @@ const Abilities = [
     {
         name: "Dual Wield",
         description: "Attack with double the power.",
-        src: "dual_wield.png"
+        src: "dual_wield.png",
     },
     /** Charge */
     {
         name: "Charge",
         description: "Bash into a foe with your shield.",
-        src: "charge.png"
+        src: "charge.png",
     }
 ];
 
@@ -39,7 +45,7 @@ const Weapons = [
         damage: 10,
         range: Math.PI / 4,
         speed: 30,
-        src: "rusty_blade.png"
+        src: "rusty_blade.png",
     }
 ];
 
