@@ -71,10 +71,12 @@ export default class ElementManager {
         console.log(this.homescreen.characterSelector.arrowRight);
         this.homescreen.characterSelector.arrowLeft.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character - 1 + Characters.length) % Characters.length;
+            this.client.player.ability = Characters[this.client.player.character]!.abilities[0];
         });
 
         this.homescreen.characterSelector.arrowRight.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character + 1) % Characters.length;
+            this.client.player.ability = Characters[this.client.player.character]!.abilities[0];
         });
     }
 

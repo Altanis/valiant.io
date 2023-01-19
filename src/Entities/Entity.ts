@@ -1,5 +1,5 @@
 import GameServer from '../GameServer';
-import Vector from '../Managers/Vector';
+import Vector from '../Utils/Vector';
 type EntityType = "Player" | "Box";
 
 /** The base for any entity ingame. */

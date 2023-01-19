@@ -341,9 +341,11 @@ class ElementManager {
         console.log(this.homescreen.characterSelector.arrowRight);
         this.homescreen.characterSelector.arrowLeft.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character - 1 + Definitions_1.Characters.length) % Definitions_1.Characters.length;
+            this.client.player.ability = Definitions_1.Characters[this.client.player.character].abilities[0];
         });
         this.homescreen.characterSelector.arrowRight.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character + 1) % Definitions_1.Characters.length;
+            this.client.player.ability = Definitions_1.Characters[this.client.player.character].abilities[0];
         });
     }
     loop() {
@@ -351,7 +353,7 @@ class ElementManager {
         /** Update client's canvas. */
         (_a = this.client.canvas) === null || _a === void 0 ? void 0 : _a.render();
         /** Check if character has changed. */
-        let intuition;
+        let intuition = false;
         const character = Definitions_1.Characters[this.client.player.character];
         if (this.homescreen.characterSelector.characterName.innerText !== character.name) {
             intuition = true;
@@ -359,6 +361,7 @@ class ElementManager {
             /** @ts-ignore */
             this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;
         }
+        // TODO(altanis): fix ability selector when switching characters
         const playerAbility = Definitions_1.Abilities[this.client.player.ability];
         if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {
             this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;

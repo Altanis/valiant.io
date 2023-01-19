@@ -2,7 +2,7 @@ import { CloseEvent, Characters, Movement } from '../Const/Enums';
 
 import PlayerHandler from '../Entities/PlayerHandler';
 import GameServer from '../GameServer';
-import Vector from './Vector';
+import Vector from '../Utils/Vector';
 import { randInt } from '../Utils/Functions';
 import { Sword } from '../Const/Game/Weapons';
 

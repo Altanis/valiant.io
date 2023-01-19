@@ -1,7 +1,8 @@
 import SwiftStream from "./SwiftStream";
 import Client from '../Client';
 
-import { CloseEvents } from "../Const/Enums";
+import { CloseEvents, ClientBound } from "../Const/Enums";
+import MessageHandler from "./MessageHandler";
 
 /** A representation of the WebSocket connection between the client and the server. */
 export default class Connection extends EventTarget {
@@ -11,6 +12,11 @@ export default class Connection extends EventTarget {
     public client: Client;
     /** The amount of retries attempted. */
     private retries = 0;
+
+    /** The binary encoder/decoder for the connection. */
+    public SwiftStream = new SwiftStream();
+    /** The handler for incoming messages. */
+    public MessageHandler = new MessageHandler(this);
 
     constructor(client: Client, url: string) {
         super();
@@ -48,6 +54,20 @@ export default class Connection extends EventTarget {
             console.log(CloseEvents[event.code] || CloseEvents.Unknown);
         });
 
-        // handle messages later
+        this.socket.addEventListener("message", ({ data }) => {         
+            this.SwiftStream.Set(data = new Uint8Array(data));
+            this.parse();   
+        });
+    }
+
+    private parse() {
+        const SwiftStream = this.SwiftStream;
+        const header = SwiftStream.ReadI8();
+
+        switch (header) {
+            case ClientBound.Update: return this.MessageHandler.Update();
+        }
+
+        this.SwiftStream.Clear();
     }
 }

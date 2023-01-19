@@ -1,5 +1,5 @@
 import GameServer from '../GameServer';
-import Vector from '../Managers/Vector';
+import Vector from '../Utils/Vector';
 import Entity from './Entity';
 
 /** A Box, an entity which blocks the player. Yields energy upon breakage. */

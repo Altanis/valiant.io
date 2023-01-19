@@ -17,14 +17,30 @@ export enum ClientBound {
     Update = 0x00
 };
 
+export enum ServerBound {
+    /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */
+    Spawn     = 0x00,
+    /** Client tells the server they want to move. [i8(Movement)] */
+    Movement  = 0x01,
+    /** The angle the player is facing, in radians. [f32(angle)] */
+    Angle     = 0x02,
+    /** Client tells the server they want to attack. */
+    Attack    = 0x03,
+    
+    /** Client cheats (when given developer code). */
+    Cheats    = 0xFF
+};
+
 /** Fields of the Update packet. */
 export enum Fields {
+    /** The ID of the entity. */
+    ID         = 0x00,
     /** The position of the entity. */
-    Position   = 0x00,
+    Position   = 0x01,
     /** If the entity is attacking. */
-    Attacking  = 0x01,
+    Attacking  = 0x02,
     /** The weapon(s) of the player. */
-    Weapons    = 0x02
+    Weapons    = 0x03
 };
 
 /** Object types. */
@@ -39,20 +55,6 @@ export enum Movement {
     Right  = 0x02,
     Down   = 0x03,
     Left   = 0x04
-};
-
-export enum ServerBound {
-    /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */
-    Spawn     = 0x00,
-    /** Client tells the server they want to move. [i8(Movement)] */
-    Movement  = 0x01,
-    /** The angle the player is facing, in radians. [f32(angle)] */
-    Angle     = 0x02,
-    /** Client tells the server they want to attack. */
-    Attack    = 0x03,
-    
-    /** Client cheats (when given developer code). */
-    Cheats    = 0xFF
 };
 
 export const Characters: CharacterDefinition[] = [
