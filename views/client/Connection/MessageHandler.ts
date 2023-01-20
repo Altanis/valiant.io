@@ -1,4 +1,4 @@
-import { Fields, Entities } from "../Const/Enums";
+import { Fields, Entities, Phases } from "../Const/Enums";
 import Connection from "./Connection";
 
 /** A handler for all incoming messages. */
@@ -12,6 +12,8 @@ export default class MessageHandler {
 
     // Woah, that's a big packet!
     public Update() {
+        const SwiftStream = this.connection.SwiftStream;
+        
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
             let len = SwiftStream.ReadI8();
@@ -22,7 +24,7 @@ export default class MessageHandler {
                     case Fields.ID: {
                         const id = SwiftStream.ReadI8();
                         this.connection.client.player.id = id;
-                        // TODO(Altanis): Remove homsecreen, change to Arena rendering phase.
+                        this.connection.client.canvas.phase = Phases.Arena;
                         break;
                     }
                     case Fields.Position: {
@@ -52,6 +54,8 @@ export default class MessageHandler {
                     case Entities.Box: {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
+
+                        console.log("Found a box at", x, y);
                         break;
                     }
                 }

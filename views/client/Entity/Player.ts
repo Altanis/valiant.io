@@ -20,4 +20,6 @@ export default class Player {
     };
     /** The angle of the player. */
     public angle: number = 0;
+
+    /** Renders the player on the canvas. */
 }

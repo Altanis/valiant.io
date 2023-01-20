@@ -37,17 +37,26 @@ exports["default"] = Client;
 /***/ }),
 
 /***/ 680:
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+const SwiftStream_1 = __importDefault(__webpack_require__(210));
 const Enums_1 = __webpack_require__(109);
+const MessageHandler_1 = __importDefault(__webpack_require__(671));
 /** A representation of the WebSocket connection between the client and the server. */
 class Connection extends EventTarget {
     constructor(client, url) {
         super();
         /** The amount of retries attempted. */
         this.retries = 0;
+        /** The binary encoder/decoder for the connection. */
+        this.SwiftStream = new SwiftStream_1.default();
+        /** The handler for incoming messages. */
+        this.MessageHandler = new MessageHandler_1.default(this);
         this.client = client;
         this.socket = new WebSocket(url);
         this.socket.binaryType = "arraybuffer";
@@ -74,10 +83,157 @@ class Connection extends EventTarget {
                 return; // Internal migration code.
             console.log(Enums_1.CloseEvents[event.code] || Enums_1.CloseEvents.Unknown);
         });
-        // handle messages later
+        this.socket.addEventListener("message", ({ data }) => {
+            this.SwiftStream.Set(data = new Uint8Array(data));
+            this.parse();
+        });
+    }
+    parse() {
+        const SwiftStream = this.SwiftStream;
+        const header = SwiftStream.ReadI8();
+        switch (header) {
+            case Enums_1.ClientBound.Update: return this.MessageHandler.Update();
+        }
+        this.SwiftStream.Clear();
     }
 }
 exports["default"] = Connection;
+
+
+/***/ }),
+
+/***/ 671:
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const Enums_1 = __webpack_require__(109);
+/** A handler for all incoming messages. */
+class MessageHandler {
+    constructor(connection) {
+        this.connection = connection;
+    }
+    // Woah, that's a big packet!
+    Update() {
+        const SwiftStream = this.connection.SwiftStream;
+        const type = SwiftStream.ReadI8();
+        if (type === 0x00) { // update player
+            let len = SwiftStream.ReadI8();
+            for (; len--;) {
+                const field = SwiftStream.ReadI8();
+                switch (field) {
+                    case Enums_1.Fields.ID: {
+                        const id = SwiftStream.ReadI8();
+                        this.connection.client.player.id = id;
+                        this.connection.client.canvas.phase = Enums_1.Phases.Arena;
+                        break;
+                    }
+                    case Enums_1.Fields.Position: {
+                        const x = SwiftStream.ReadFloat32();
+                        const y = SwiftStream.ReadFloat32();
+                        this.connection.client.player.position.old = this.connection.client.player.position.new;
+                        this.connection.client.player.position.new = { x, y };
+                        break;
+                    }
+                    case Enums_1.Fields.Attacking:
+                        { }
+                        break;
+                    case Enums_1.Fields.Weapons: {
+                        const weapon = SwiftStream.ReadI8();
+                        this.connection.client.player.weapon = weapon;
+                    }
+                }
+            }
+        }
+        const surroundings = type === 0x00 ? SwiftStream.ReadI8() : type;
+        if (surroundings === 0x01) {
+            let len = SwiftStream.ReadI8();
+            for (; len--;) {
+                const entity = SwiftStream.ReadI8();
+                switch (entity) {
+                    case Enums_1.Entities.Box: {
+                        const x = SwiftStream.ReadFloat32();
+                        const y = SwiftStream.ReadFloat32();
+                        console.log("Found a box at", x, y);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+exports["default"] = MessageHandler;
+
+
+/***/ }),
+
+/***/ 210:
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+/** BUFFERS: Used to convert between different byte lengths. */
+const conversion = new ArrayBuffer(4);
+const u8 = new Uint8Array(conversion);
+const f32 = new Float32Array(conversion);
+/** SwiftStream, an efficient binary protocol manager written by Altanis. */
+class SwiftStream {
+    constructor() {
+        /** The buffer SwiftStream is using. */
+        this.buffer = new Uint8Array(4096);
+        /** The position at which the buffer is being read. */
+        this.at = 0;
+        /** UTF8 Decoder. */
+        this.TextDecoder = new TextDecoder();
+        /** UTF8 Encoder. */
+        this.TextEncoder = new TextEncoder();
+    }
+    Set(buffer) {
+        this.buffer = buffer;
+        this.at = 0;
+    }
+    Clear() {
+        this.buffer = new Uint8Array(4096);
+        this.at = 0;
+    }
+    /** READER */
+    ReadI8() {
+        return this.buffer[this.at++];
+    }
+    ReadFloat32() {
+        u8.set(this.buffer.slice(this.at, this.at += 4));
+        return f32[0];
+    }
+    ReadUTF8String() {
+        const start = this.at;
+        while (this.buffer[this.at++])
+            ;
+        return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));
+    }
+    /** WRITER */
+    WriteI8(value) {
+        this.buffer[this.at++] = value;
+        return this;
+    }
+    WriteFloat32(value) {
+        f32[0] = value;
+        this.buffer.set(u8, this.at);
+        this.at += 4;
+        return this;
+    }
+    WriteCString(value) {
+        this.buffer.set(this.TextEncoder.encode(value), this.at);
+        this.at += value.length;
+        this.buffer[this.at++] = 0;
+        return this;
+    }
+    Write() {
+        const result = this.buffer.subarray(0, this.at);
+        this.Clear();
+        return result;
+    }
+}
+exports["default"] = SwiftStream;
 
 
 /***/ }),
@@ -148,7 +304,7 @@ exports.Weapons = Weapons;
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Phases = exports.CloseEvents = void 0;
+exports.Movement = exports.Entities = exports.Fields = exports.ServerBound = exports.ClientBound = exports.Phases = exports.CloseEvents = void 0;
 /** Representation of possible reasons the connection was closed. */
 var CloseEvents;
 (function (CloseEvents) {
@@ -166,6 +322,54 @@ var Phases;
     Phases[Phases["Arena"] = 1] = "Arena";
 })(Phases = exports.Phases || (exports.Phases = {}));
 ;
+var ClientBound;
+(function (ClientBound) {
+    /** Tells the client of it's surroundings. */
+    ClientBound[ClientBound["Update"] = 0] = "Update";
+})(ClientBound = exports.ClientBound || (exports.ClientBound = {}));
+;
+var ServerBound;
+(function (ServerBound) {
+    /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */
+    ServerBound[ServerBound["Spawn"] = 0] = "Spawn";
+    /** Client tells the server they want to move. [i8(Movement)] */
+    ServerBound[ServerBound["Movement"] = 1] = "Movement";
+    /** The angle the player is facing, in radians. [f32(angle)] */
+    ServerBound[ServerBound["Angle"] = 2] = "Angle";
+    /** Client tells the server they want to attack. */
+    ServerBound[ServerBound["Attack"] = 3] = "Attack";
+    /** Client cheats (when given developer code). */
+    ServerBound[ServerBound["Cheats"] = 255] = "Cheats";
+})(ServerBound = exports.ServerBound || (exports.ServerBound = {}));
+;
+/** Fields of the Update packet. */
+var Fields;
+(function (Fields) {
+    /** The ID of the entity. */
+    Fields[Fields["ID"] = 0] = "ID";
+    /** The position of the entity. */
+    Fields[Fields["Position"] = 1] = "Position";
+    /** If the entity is attacking. */
+    Fields[Fields["Attacking"] = 2] = "Attacking";
+    /** The weapon(s) of the player. */
+    Fields[Fields["Weapons"] = 3] = "Weapons";
+})(Fields = exports.Fields || (exports.Fields = {}));
+;
+/** Object types. */
+var Entities;
+(function (Entities) {
+    Entities[Entities["Player"] = 0] = "Player";
+    Entities[Entities["Box"] = 1] = "Box";
+})(Entities = exports.Entities || (exports.Entities = {}));
+/** Movement codes. */
+var Movement;
+(function (Movement) {
+    Movement[Movement["Up"] = 1] = "Up";
+    Movement[Movement["Right"] = 2] = "Right";
+    Movement[Movement["Down"] = 3] = "Down";
+    Movement[Movement["Left"] = 4] = "Left";
+})(Movement = exports.Movement || (exports.Movement = {}));
+;
 
 
 /***/ }),
@@ -174,6 +378,7 @@ var Phases;
 /***/ ((__unused_webpack_module, exports) => {
 
 
+// import Vector from "../Utils/Vector";
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 /** A representation of a Player entity. */
 class Player {
@@ -182,6 +387,20 @@ class Player {
         this.character = 0;
         /** The ability index of the player. */
         this.ability = 0;
+        /** The weapon the player is holding. */
+        this.weapon = 0;
+        /** The ID of the player. */
+        this.id = 0;
+        /** The position of the player. */
+        this.position = {
+            /** Position from one frame ago. */
+            old: { x: 0, y: 0 },
+            /** Position at current frame. */
+            new: { x: 0, y: 0 }
+        };
+        /** The angle of the player. */
+        this.angle = 0;
+        /** Renders the player on the canvas. */
     }
 }
 exports["default"] = Player;
@@ -270,7 +489,9 @@ class CanvasManager {
         }
     }
     /** Renders the actual arena when spawned in. */
-    Arena(delta) { }
+    Arena(delta) {
+        console.log(delta);
+    }
 }
 exports["default"] = CanvasManager;
 
@@ -361,7 +582,6 @@ class ElementManager {
             /** @ts-ignore */
             this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;
         }
-        // TODO(altanis): fix ability selector when switching characters
         const playerAbility = Definitions_1.Abilities[this.client.player.ability];
         if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {
             this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;

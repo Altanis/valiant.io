@@ -72,5 +72,7 @@ export default class CanvasManager {
     }
 
     /** Renders the actual arena when spawned in. */
-    private Arena(delta: number) {}
+    private Arena(delta: number) {
+        console.log(delta);
+    }
 }

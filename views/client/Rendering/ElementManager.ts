@@ -94,7 +94,6 @@ export default class ElementManager {
             this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;
         }
 
-        // TODO(altanis): fix ability selector when switching characters
         const playerAbility = Abilities[this.client.player.ability]!;
         if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {
             this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;
