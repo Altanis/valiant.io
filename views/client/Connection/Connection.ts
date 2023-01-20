@@ -1,7 +1,7 @@
 import SwiftStream from "./SwiftStream";
 import Client from '../Client';
 
-import { CloseEvents, ClientBound } from "../Const/Enums";
+import { CloseEvents, ClientBound, ServerBound } from "../Const/Enums";
 import MessageHandler from "./MessageHandler";
 
 /** A representation of the WebSocket connection between the client and the server. */
@@ -37,6 +37,34 @@ export default class Connection extends EventTarget {
         this.socket.binaryType = "arraybuffer";
 
         this.handle();
+    }
+
+    public send(header: number, data: { [key: string]: any }) {
+        switch (header) {
+            case ServerBound.Spawn: {
+                this.socket.send(
+                    this.SwiftStream
+                        .WriteCString(data.name)
+                        .WriteI8(this.client.player.character)
+                        .WriteI8(this.client.player.character)
+                        .Write()
+                );
+
+                break;
+            }
+            case ServerBound.Movement: {
+                this.socket.send(this.SwiftStream.WriteI8(data.movement).Write());
+                break;
+            }
+            case ServerBound.Angle: {
+                this.socket.send(this.SwiftStream.WriteI8(this.client.player.angle).Write());
+                break;
+            }
+            case ServerBound.Attack: {
+                this.socket.send(this.SwiftStream.WriteI8(data.isAtk).Write());
+                break;
+            }
+        }
     }
 
     private handle() {
