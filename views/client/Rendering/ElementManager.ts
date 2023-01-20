@@ -1,5 +1,6 @@
 import Client from "../Client";
 import { Characters, Abilities } from "../Const/Definitions";
+import { ServerBound } from "../Const/Enums";
 
 /** Manages DOM elements. */
 export default class ElementManager {
@@ -77,6 +78,13 @@ export default class ElementManager {
         this.homescreen.characterSelector.arrowRight.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character + 1) % Characters.length;
             this.client.player.ability = Characters[this.client.player.character]!.abilities[0];
+        });
+
+        /** Send play signal to server when Play is pressed. */
+        this.homescreen.play.addEventListener("click", () => {
+            this.client.connection.send(ServerBound.Spawn, {
+                name: "Altanis"
+            });
         });
     }
 
