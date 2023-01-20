@@ -33,6 +33,7 @@ export default class CanvasManager {
         };
 
     public render() {
+        console.log(this.phase);
         this.delta = Date.now() - this.delta;
 
         switch (this.phase) {

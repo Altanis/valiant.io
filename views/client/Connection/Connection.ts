@@ -40,15 +40,19 @@ export default class Connection extends EventTarget {
     }
 
     public send(header: number, data: { [key: string]: any }) {
+        this.SwiftStream.WriteI8(header);
+
         switch (header) {
             case ServerBound.Spawn: {
                 this.socket.send(
                     this.SwiftStream
                         .WriteCString(data.name)
                         .WriteI8(this.client.player.character)
-                        .WriteI8(this.client.player.character)
+                        .WriteI8(this.client.player.ability)
                         .Write()
                 );
+
+                console.log("we all want llv");
 
                 break;
             }
@@ -63,6 +67,10 @@ export default class Connection extends EventTarget {
             case ServerBound.Attack: {
                 this.socket.send(this.SwiftStream.WriteI8(data.isAtk).Write());
                 break;
+            }
+            default: {
+                this.SwiftStream.Write();
+                throw new Error("Could not find header.");
             }
         }
     }

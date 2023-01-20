@@ -13,7 +13,7 @@ export default class MessageHandler {
     // Woah, that's a big packet!
     public Update() {
         const SwiftStream = this.connection.SwiftStream;
-        
+
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
             let len = SwiftStream.ReadI8();
@@ -24,7 +24,10 @@ export default class MessageHandler {
                     case Fields.ID: {
                         const id = SwiftStream.ReadI8();
                         this.connection.client.player.id = id;
+                        
+                        this.connection.client.elements.homescreen.homescreen.style.display = "none";
                         this.connection.client.canvas.phase = Phases.Arena;
+
                         break;
                     }
                     case Fields.Position: {

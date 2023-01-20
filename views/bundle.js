@@ -70,6 +70,36 @@ class Connection extends EventTarget {
         this.socket.binaryType = "arraybuffer";
         this.handle();
     }
+    send(header, data) {
+        this.SwiftStream.WriteI8(header);
+        switch (header) {
+            case Enums_1.ServerBound.Spawn: {
+                this.socket.send(this.SwiftStream
+                    .WriteCString(data.name)
+                    .WriteI8(this.client.player.character)
+                    .WriteI8(this.client.player.ability)
+                    .Write());
+                console.log("we all want llv");
+                break;
+            }
+            case Enums_1.ServerBound.Movement: {
+                this.socket.send(this.SwiftStream.WriteI8(data.movement).Write());
+                break;
+            }
+            case Enums_1.ServerBound.Angle: {
+                this.socket.send(this.SwiftStream.WriteI8(this.client.player.angle).Write());
+                break;
+            }
+            case Enums_1.ServerBound.Attack: {
+                this.socket.send(this.SwiftStream.WriteI8(data.isAtk).Write());
+                break;
+            }
+            default: {
+                this.SwiftStream.Write();
+                throw new Error("Could not find header.");
+            }
+        }
+    }
     handle() {
         this.socket.addEventListener("open", () => {
             this.client.logger.success("[WS]: Connected to server.");
@@ -125,6 +155,7 @@ class MessageHandler {
                     case Enums_1.Fields.ID: {
                         const id = SwiftStream.ReadI8();
                         this.connection.client.player.id = id;
+                        this.connection.client.elements.homescreen.homescreen.style.display = "none";
                         this.connection.client.canvas.phase = Enums_1.Phases.Arena;
                         break;
                     }
@@ -452,6 +483,7 @@ class CanvasManager {
         };
     }
     render() {
+        console.log(this.phase);
         this.delta = Date.now() - this.delta;
         switch (this.phase) {
             case Enums_1.Phases.Homescreen:
@@ -504,6 +536,7 @@ exports["default"] = CanvasManager;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const Definitions_1 = __webpack_require__(668);
+const Enums_1 = __webpack_require__(109);
 /** Manages DOM elements. */
 class ElementManager {
     constructor(client) {
@@ -544,9 +577,24 @@ class ElementManager {
             /** The div which contains toggleable settings. */
             settings: document.getElementById("settingsModal"),
         };
+        /** Elements which display while playing. */
+        this.arena = {
+            /** The div which contains every stat of the player. */
+            stats: document.getElementById("stats"),
+            /** The health bar in the stats div. */
+            health: document.getElementById("health"),
+            /** The armor bar in the stats div. */
+            armor: document.getElementById("armor"),
+            /** The energy bar in the stats div. */
+            energy: document.getElementById("energy"),
+        };
         /** The canvas to draw on. */
         /** @ts-ignore */
         this.canvas = document.getElementById("canvas");
+        /** Pre-setup: add stat texts. */
+        document.querySelectorAll(".progress-bar").forEach((p, i) => {
+            // TODO(Altanis): Find stat text.
+        });
         this.client = client;
         this.setup();
         this.loop();
@@ -567,6 +615,12 @@ class ElementManager {
         this.homescreen.characterSelector.arrowRight.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character + 1) % Definitions_1.Characters.length;
             this.client.player.ability = Definitions_1.Characters[this.client.player.character].abilities[0];
+        });
+        /** Send play signal to server when Play is pressed. */
+        this.homescreen.play.addEventListener("click", () => {
+            this.client.connection.send(Enums_1.ServerBound.Spawn, {
+                name: "Altanis"
+            });
         });
     }
     loop() {

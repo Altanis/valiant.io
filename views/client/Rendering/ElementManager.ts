@@ -46,6 +46,19 @@ export default class ElementManager {
         settings: document.getElementById("settingsModal")!,
     };
 
+    /** Elements which display while playing. */
+    public arena = {
+        /** The div which contains every stat of the player. */
+        stats: document.getElementById("stats")!,
+
+        /** The health bar in the stats div. */
+        health: document.getElementById("health")!,
+        /** The armor bar in the stats div. */
+        armor: document.getElementById("armor")!,
+        /** The energy bar in the stats div. */
+        energy: document.getElementById("energy")!,
+    };
+
     /** The canvas to draw on. */
     /** @ts-ignore */
     public canvas: HTMLCanvasElement = document.getElementById("canvas")!;
@@ -53,6 +66,11 @@ export default class ElementManager {
     public client: Client;
 
     constructor(client: Client) {
+        /** Pre-setup: add stat texts. */
+        document.querySelectorAll(".progress-bar")!.forEach((p, i) => {
+            // TODO(Altanis): Find stat text.
+        });
+
         this.client = client;
 
         this.setup();
