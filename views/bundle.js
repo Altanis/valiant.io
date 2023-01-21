@@ -79,7 +79,6 @@ class Connection extends EventTarget {
                     .WriteI8(this.client.player.character)
                     .WriteI8(this.client.player.ability)
                     .Write());
-                console.log("we all want llv");
                 break;
             }
             case Enums_1.ServerBound.Movement: {
@@ -155,6 +154,7 @@ class MessageHandler {
                     case Enums_1.Fields.ID: {
                         const id = SwiftStream.ReadI8();
                         this.connection.client.player.id = id;
+                        console["log"]("as the hours pass...");
                         this.connection.client.elements.homescreen.homescreen.style.display = "none";
                         this.connection.client.canvas.phase = Enums_1.Phases.Arena;
                         break;

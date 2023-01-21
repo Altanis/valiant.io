@@ -39,7 +39,7 @@ export default class MessageHandler {
 
                         break;
                     }
-                    case Fields.Attacking: {} break;
+                    case Fields.Attacking: { break; };
                     case Fields.Weapons: {
                         const weapon = SwiftStream.ReadI8();
                         this.connection.client.player.weapon = weapon;

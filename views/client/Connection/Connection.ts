@@ -51,9 +51,7 @@ export default class Connection extends EventTarget {
                         .WriteI8(this.client.player.ability)
                         .Write()
                 );
-
-                console.log("we all want llv");
-
+                
                 break;
             }
             case ServerBound.Movement: {
