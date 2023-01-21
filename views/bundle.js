@@ -593,7 +593,21 @@ class ElementManager {
         this.canvas = document.getElementById("canvas");
         /** Pre-setup: add stat texts. */
         document.querySelectorAll(".progress-bar").forEach((p, i) => {
-            // TODO(Altanis): Find stat text.
+            let name = "";
+            switch (i) {
+                case 0:
+                    name = "health";
+                    break;
+                case 1:
+                    name = "armor";
+                    break;
+                case 2:
+                    name = "energy";
+                    break;
+            }
+            name += "Text";
+            /** @ts-ignore */
+            this.arena[name] = p;
         });
         this.client = client;
         this.setup();

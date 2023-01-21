@@ -47,7 +47,7 @@ export default class ElementManager {
     };
 
     /** Elements which display while playing. */
-    public arena = {
+    public arena: { [key: string]: HTMLElement } = {
         /** The div which contains every stat of the player. */
         stats: document.getElementById("stats")!,
 
@@ -68,7 +68,17 @@ export default class ElementManager {
     constructor(client: Client) {
         /** Pre-setup: add stat texts. */
         document.querySelectorAll(".progress-bar")!.forEach((p, i) => {
-            // TODO(Altanis): Find stat text.
+            let name = "";
+            switch (i) {
+                case 0: name = "health"; break;
+                case 1: name = "armor"; break;
+                case 2: name = "energy"; break;
+            }
+
+            name += "Text";
+
+            /** @ts-ignore */
+            this.arena[name] = p;
         });
 
         this.client = client;
