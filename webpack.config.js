@@ -22,5 +22,6 @@ module.exports = {
     },
     optimization: {
         minimize: process.env.PROD === "true"
-    }
+    },
+    mode: process.env.PROD === "true" ? "production" : "development"
 };

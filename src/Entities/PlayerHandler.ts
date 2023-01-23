@@ -78,7 +78,7 @@ export default class PlayerHandler extends Entity {
             this.SwiftStream.Set(buffer);
 
             const header = this.SwiftStream.ReadI8();
-            // if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
+            if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
 
             switch (header) {
                 case ServerBound.Spawn: this.server.MessageHandler.Spawn(this); break;
@@ -121,6 +121,7 @@ export default class PlayerHandler extends Entity {
             this.SwiftStream.WriteI8(0x00);
             /** Tells the client the amount of field updates for the player. */
             this.SwiftStream.WriteI8(this.update.size);
+            console.log(this.id);
             /** Informs the client of what properties have changed. */
             this.update.forEach(property => {
                 switch (property) {
@@ -147,6 +148,7 @@ export default class PlayerHandler extends Entity {
         }
 
         this.update.clear();
+        console.log("clearing");
         const buffer = this.SwiftStream.Write();
         if (buffer.byteLength > 1) this.socket.send(buffer);
     }

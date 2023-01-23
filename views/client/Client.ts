@@ -17,5 +17,5 @@ export default class Client {
     /** The DOM element manager. */
     public elements = new ElementManager(this);
     /** The canvas on which the client draws on. */
-    public canvas = new CanvasManager();
+    public canvas = new CanvasManager(this);
 };

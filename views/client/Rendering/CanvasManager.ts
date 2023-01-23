@@ -1,3 +1,4 @@
+import Client from "../Client";
 import { Phases } from "../Const/Enums";
 
 /** Constant for 360 degrees in radians. */
@@ -12,10 +13,27 @@ export default class CanvasManager {
     public canvas: HTMLCanvasElement = document.getElementById("canvas")!;
     /** The context to draw on. */
     public ctx: CanvasRenderingContext2D = this.canvas.getContext("2d")!;
+
+    /** MAP CANVAS */
+    /** The canvas which represents the minimap. */
+    /** @ts-ignore */
+    public mapCanvas: HTMLCanvasElement = document.getElementById("mapDisplay")!;
+    /** The context to draw on for the minimap. */
+    public mapCtx: CanvasRenderingContext2D = this.mapCanvas.getContext("2d")!;
+
+    /** The client which needs relative rendering. */
+    public client: Client;
+
     /** The phase in which rendering is occuring. */
     public phase = Phases.Homescreen; 
     /** The difference in between two frame renders. */
     private delta = 0;
+    /** The variable which keeps track of the last update. */
+    private lastUpdate = 0;
+    /** The object which tracks FPS. */
+    private FPS = {
+        fps: [0]
+    };
 
     /** The stars on the homescreen. */
     public stars: {
@@ -31,10 +49,17 @@ export default class CanvasManager {
             stars: [],
             radiusIncrement: 0.1
         };
+    
+    constructor(client: Client) {
+        this.client = client;
+    }
 
     public render() {
-        console.log(this.phase);
-        this.delta = Date.now() - this.delta;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.mapCtx.clearRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);
+
+        this.delta = Date.now() - this.lastUpdate;
+        this.lastUpdate = Date.now();
 
         switch (this.phase) {
             case Phases.Homescreen: this.Homescreen(); break;
@@ -74,6 +99,8 @@ export default class CanvasManager {
 
     /** Renders the actual arena when spawned in. */
     private Arena(delta: number) {
-        console.log(delta);
+        if (this.FPS.fps.length > 10) this.FPS.fps.shift();
+        this.FPS.fps.push(1000 / delta);
+        this.client.elements.arena.fps.innerText = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length).toFixed(1) + '  FPS';
     }
 }

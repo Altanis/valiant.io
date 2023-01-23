@@ -57,6 +57,16 @@ export default class ElementManager {
         armor: document.getElementById("armor")!,
         /** The energy bar in the stats div. */
         energy: document.getElementById("energy")!,
+
+        /** The utils of the player, such as FPS/MS/Minimap. */
+        utils: document.getElementById("utils")!,
+
+        /** The name of the game. */
+        gameName: document.getElementById("gameName")!,
+        /** The FPS of the client. */
+        fps: document.getElementById("fps")!,
+        /** The ping of the client. */
+        ping: document.getElementById("ping")!,
     };
 
     /** The canvas to draw on. */
@@ -66,21 +76,6 @@ export default class ElementManager {
     public client: Client;
 
     constructor(client: Client) {
-        /** Pre-setup: add stat texts. */
-        document.querySelectorAll(".progress-bar")!.forEach((p, i) => {
-            let name = "";
-            switch (i) {
-                case 0: name = "health"; break;
-                case 1: name = "armor"; break;
-                case 2: name = "energy"; break;
-            }
-
-            name += "Text";
-
-            /** @ts-ignore */
-            this.arena[name] = p;
-        });
-
         this.client = client;
 
         this.setup();
@@ -96,6 +91,21 @@ export default class ElementManager {
 
         window.dispatchEvent(new Event("resize"));
 
+        /** Add stat texts. */
+        document.querySelectorAll(".progress-bar")!.forEach((p, i) => {
+            let name = "";
+            switch (i) {
+                case 0: name = "health"; break;
+                case 1: name = "armor"; break;
+                case 2: name = "energy"; break;
+            }
+
+            name += "Text";
+
+            /** @ts-ignore */
+            this.arena[name] = p.children[1];
+        });
+        
         /** Create pointers for abilities and characters. */
         console.log(this.homescreen.characterSelector.arrowRight);
         this.homescreen.characterSelector.arrowLeft.addEventListener("click", () => {
@@ -113,6 +123,12 @@ export default class ElementManager {
             this.client.connection.send(ServerBound.Spawn, {
                 name: "Altanis"
             });
+
+            const { health, armor, energy } = Characters[this.client.player.character].stats;
+
+            this.arena.healthText.innerText = `${health}/${health}`;
+            this.arena.armorText.innerText = `${armor}/${armor}`;
+            this.arena.energyText.innerText = `${energy}/${energy}`;
         });
     }
 

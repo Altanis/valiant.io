@@ -26,7 +26,11 @@ export default class MessageHandler {
                         this.connection.client.player.id = id;
                         
                         this.connection.client.elements.homescreen.homescreen.style.display = "none";
+
                         this.connection.client.canvas.phase = Phases.Arena;
+                        this.connection.client.elements.arena.stats.style.display = "block";
+                        this.connection.client.elements.arena.utils.style.display = "block";
+                        this.connection.client.canvas.mapCanvas.style.display = "block";
 
                         break;
                     }
