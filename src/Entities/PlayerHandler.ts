@@ -148,7 +148,6 @@ export default class PlayerHandler extends Entity {
         }
 
         this.update.clear();
-        console.log("clearing");
         const buffer = this.SwiftStream.Write();
         if (buffer.byteLength > 1) this.socket.send(buffer);
     }

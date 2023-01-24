@@ -1,5 +1,6 @@
 import Client from "../Client";
 import { Phases } from "../Const/Enums";
+import ImageManager from "./ImageManager";
 
 /** Constant for 360 degrees in radians. */
 const TAU = Math.PI * 2;
@@ -33,7 +34,10 @@ export default class CanvasManager {
     /** The object which tracks FPS. */
     private FPS = {
         fps: [0]
-    };
+    };    
+
+    /** Manager for images. */
+    public ImageManager = new ImageManager();
 
     /** The stars on the homescreen. */
     public stars: {
@@ -102,5 +106,38 @@ export default class CanvasManager {
         if (this.FPS.fps.length > 10) this.FPS.fps.shift();
         this.FPS.fps.push(1000 / delta);
         this.client.elements.arena.fps.innerText = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length).toFixed(1) + '  FPS';
+
+        this.client.player.update();
+
+        // RENDER OUTBOUNDS:
+        this.ctx.fillStyle = "rgba(12, 50, 54, 1)";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.ctx.save();
+
+        let { x: cameraX, y: cameraY } = this.client.player.position.lerp;
+        if (cameraX === 0) cameraX = 0.00001;
+        if (cameraY === 0) cameraY = 0.00001;
+
+        /** Set up player camera. */
+        const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);
+        this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.
+        this.ctx.scale(factor, factor); // Multiply operands by a view scale if needed.
+        /** @ts-ignore */
+        this.ctx.translate(-cameraX, -cameraY);
+
+        /** Render background of the arena. */
+
+        // RENDER INBOUNDS:
+        this.ctx.strokeStyle = "#2F8999";
+        this.ctx.lineWidth = 10;        
+        this.ctx.fillStyle = "rgb(5,28,31)";
+
+        this.ctx.strokeRect(0, 0, 14400, 14400);
+        this.ctx.fillRect(0, 0, 14400, 14400);
+
+        this.client.player.render(this, this.ctx);
+
+        this.ctx.restore();
     }
 }

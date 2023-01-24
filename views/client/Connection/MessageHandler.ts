@@ -38,6 +38,7 @@ export default class MessageHandler {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
 
+                        console.log(x, y);
                         this.connection.client.player.position.old = this.connection.client.player.position.new;
                         this.connection.client.player.position.new = { x, y };
 

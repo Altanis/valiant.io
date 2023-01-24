@@ -72,6 +72,10 @@ export default class ElementManager {
     /** The canvas to draw on. */
     /** @ts-ignore */
     public canvas: HTMLCanvasElement = document.getElementById("canvas")!;
+
+    /** The keys currently being pressed. */
+    public activeKeys = new Set<number>();
+
     /** The client this class is managing. */
     public client: Client;
 

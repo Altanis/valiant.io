@@ -55,7 +55,8 @@ export default class Connection extends EventTarget {
                 break;
             }
             case ServerBound.Movement: {
-                this.socket.send(this.SwiftStream.WriteI8(data.movement).Write());
+                data.keys.forEach((key: number) => this.SwiftStream.WriteI8(key));
+                this.socket.send(this.SwiftStream.Write());
                 break;
             }
             case ServerBound.Angle: {
@@ -68,7 +69,7 @@ export default class Connection extends EventTarget {
             }
             default: {
                 this.SwiftStream.Write();
-                throw new Error("Could not find header.");
+                throw new Error("Could not find header. " + header);
             }
         }
     }
@@ -99,9 +100,14 @@ export default class Connection extends EventTarget {
         const header = SwiftStream.ReadI8();
 
         switch (header) {
-            case ClientBound.Update: return this.MessageHandler.Update();
+            case ClientBound.Update: this.MessageHandler.Update(); break;
+            default: {
+                this.SwiftStream.Clear();
+                throw new Error("Could not parse packet. " + header);
+            }
         }
 
         this.SwiftStream.Clear();
+        console.log(this.SwiftStream.buffer);
     }
 }
