@@ -1,5 +1,6 @@
 import Client from "../Client";
-import { Phases } from "../Const/Enums";
+import { Phases, ServerBound } from "../Const/Enums";
+import { lerp } from "../Utils/Functions";
 import ImageManager from "./ImageManager";
 
 /** Constant for 360 degrees in radians. */
@@ -103,19 +104,38 @@ export default class CanvasManager {
 
     /** Renders the actual arena when spawned in. */
     private Arena(delta: number) {
+        /** Update FPS. */
         if (this.FPS.fps.length > 10) this.FPS.fps.shift();
         this.FPS.fps.push(1000 / delta);
         this.client.elements.arena.fps.innerText = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length).toFixed(1) + '  FPS';
 
-        this.client.player.update();
-
+        /** Recognize keypresses. */
+        if (this.client.elements.activeKeys.size) {
+            console.log(this.client.elements.activeKeys);
+            this.client.connection.send(ServerBound.Movement, {
+                keys: this.client.elements.activeKeys
+            });
+        }
+        
         // RENDER OUTBOUNDS:
         this.ctx.fillStyle = "rgba(12, 50, 54, 1)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.save();
 
-        let { x: cameraX, y: cameraY } = this.client.player.position.lerp;
+        let pos: { x: number, y: number, ts: number };
+        const frame = Date.now() - (1000 / 60);
+        if (frame < this.client.player.position.old.ts) pos = this.client.player.position.old;
+        else if (frame > this.client.player.position.new.ts) pos = this.client.player.position.new;
+        else {
+            pos = {
+                x: lerp(this.client.player.position.old.x, this.client.player.position.new.x, 0.5),
+                y: lerp(this.client.player.position.old.y, this.client.player.position.new.y, 0.5),
+                ts: Date.now()
+            }
+        };
+
+        let { x: cameraX, y: cameraY } = pos;
         if (cameraX === 0) cameraX = 0.00001;
         if (cameraY === 0) cameraY = 0.00001;
 
@@ -136,7 +156,7 @@ export default class CanvasManager {
         this.ctx.strokeRect(0, 0, 14400, 14400);
         this.ctx.fillRect(0, 0, 14400, 14400);
 
-        this.client.player.render(this, this.ctx);
+        this.client.player.render(this, this.ctx, pos);
 
         this.ctx.restore();
     }

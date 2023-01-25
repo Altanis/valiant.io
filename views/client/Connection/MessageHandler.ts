@@ -40,7 +40,7 @@ export default class MessageHandler {
 
                         console.log(x, y);
                         this.connection.client.player.position.old = this.connection.client.player.position.new;
-                        this.connection.client.player.position.new = { x, y };
+                        this.connection.client.player.position.new = { x, y, ts: Date.now() };
 
                         break;
                     }
