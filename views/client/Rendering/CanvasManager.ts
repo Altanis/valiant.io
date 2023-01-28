@@ -1,12 +1,11 @@
 import Client from "../Client";
 import { Phases, ServerBound } from "../Const/Enums";
-import { lerp } from "../Utils/Functions";
+import { lerp, lerpAngle, randomRange } from "../Utils/Functions";
 import ImageManager from "./ImageManager";
 
 /** Constant for 360 degrees in radians. */
 const TAU = Math.PI * 2;
 /** Psuedorandom number in between two ranges. */
-const randomRange = (min: number, max: number): number => Math.random() * (max - min) + min;
 
 /** The canvas where nearly all visual representation is drawn. */
 export default class CanvasManager {
@@ -108,14 +107,6 @@ export default class CanvasManager {
         if (this.FPS.fps.length > 10) this.FPS.fps.shift();
         this.FPS.fps.push(1000 / delta);
         this.client.elements.arena.fps.innerText = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length).toFixed(1) + '  FPS';
-
-        /** Recognize keypresses. */
-        if (this.client.elements.activeKeys.size) {
-            console.log(this.client.elements.activeKeys);
-            this.client.connection.send(ServerBound.Movement, {
-                keys: this.client.elements.activeKeys
-            });
-        }
         
         // RENDER OUTBOUNDS:
         this.ctx.fillStyle = "rgba(12, 50, 54, 1)";
@@ -124,7 +115,10 @@ export default class CanvasManager {
         this.ctx.save();
 
         let pos: { x: number, y: number, ts: number };
+        let angle: number;
+
         const frame = Date.now() - (1000 / 60);
+        
         if (frame < this.client.player.position.old.ts) pos = this.client.player.position.old;
         else if (frame > this.client.player.position.new.ts) pos = this.client.player.position.new;
         else {
@@ -135,16 +129,20 @@ export default class CanvasManager {
             }
         };
 
+        if (frame < this.client.player.angle.old.ts) angle = this.client.player.angle.old.measure;
+        else if (frame > this.client.player.angle.new.ts) angle = this.client.player.angle.new.measure;
+        else {
+            angle = lerpAngle(this.client.player.angle.old.measure, this.client.player.angle.new.measure, 0.5);
+        }
+
         let { x: cameraX, y: cameraY } = pos;
-        if (cameraX === 0) cameraX = 0.00001;
-        if (cameraY === 0) cameraY = 0.00001;
 
         /** Set up player camera. */
         const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.
-        this.ctx.scale(factor, factor); // Multiply operands by a view scale if needed.
-        /** @ts-ignore */
         this.ctx.translate(-cameraX, -cameraY);
+        this.ctx.scale(factor, factor); // Multiply operands by a view scale if needed.
+        this.ctx.translate(cameraX, cameraY);
 
         /** Render background of the arena. */
 
@@ -156,7 +154,7 @@ export default class CanvasManager {
         this.ctx.strokeRect(0, 0, 14400, 14400);
         this.ctx.fillRect(0, 0, 14400, 14400);
 
-        this.client.player.render(this, this.ctx, pos);
+        this.client.player.render(this, this.ctx, pos, angle);
 
         this.ctx.restore();
     }

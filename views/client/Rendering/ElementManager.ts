@@ -75,6 +75,8 @@ export default class ElementManager {
 
     /** The keys currently being pressed. */
     public activeKeys = new Set<number>();
+    /** The mouse coordinates of the client. */
+    public mouse = { x: 0, y: 0 };
 
     /** The client this class is managing. */
     public client: Client;
@@ -170,6 +172,32 @@ export default class ElementManager {
     
                 this.homescreen.characterSelector.abilitySelector.appendChild(image);
             });
+        }
+
+        /** Recognize keypresses. */
+        if (this.activeKeys.size) {
+            this.client.connection.send(ServerBound.Movement, {
+                keys: this.activeKeys
+            });
+        }
+
+        /** Recognize mouse movements. */
+        if (this.mouse && this.client.player.alive) {
+            const player = this.client.player;
+
+            const old = player.angle.old.measure;
+            const measure = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
+            if (old !== measure) {
+                this.client.connection.send(ServerBound.Attack, {
+                    measure
+                });
+
+                player.angle.old = player.angle.new;
+                player.angle.new = {
+                    measure,
+                    ts: Date.now()
+                };
+            }
         }
 
         requestAnimationFrame(this.loop.bind(this));

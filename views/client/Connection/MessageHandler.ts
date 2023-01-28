@@ -24,6 +24,7 @@ export default class MessageHandler {
                     case Fields.ID: {
                         const id = SwiftStream.ReadI8();
                         this.connection.client.player.id = id;
+                        this.connection.client.player.alive = true;
                         
                         this.connection.client.elements.homescreen.homescreen.style.display = "none";
 

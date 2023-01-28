@@ -46,7 +46,8 @@ const Weapons = [
         range: Math.PI / 4,
         speed: 30,
         src: "rusty_blade",
-        offset: 50
+        offsetX: 0,
+        offsetY: 0
     }
 ];
 

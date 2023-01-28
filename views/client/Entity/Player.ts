@@ -1,7 +1,6 @@
 import { Characters, Weapons } from "../Const/Definitions";
-import { ServerBound } from "../Const/Enums";
 import CanvasManager from "../Rendering/CanvasManager";
-import { lerp } from "../Utils/Functions";
+import { TAU } from "../Utils/Functions";
 
 /** A representation of a Player entity. */
 export default class Player {
@@ -11,6 +10,8 @@ export default class Player {
     public ability = 0;
     /** The weapon the player is holding. */
     public weapon = 0;
+    /** If the player is alive. */
+    public alive = false;
 
     /** The ID of the player. */
     public id = 0;
@@ -18,24 +19,44 @@ export default class Player {
     public position = {
         // Starting position is middle of arena.
         /** Position from one frame ago. */
-        old: { x: 7200, y: 7200, ts: 0 },
+        old: { x: 0, y: 0, ts: 0 },
         /** Position at current frame. */
-        new: { x: 7200, y: 7200, ts: 0 },
+        new: { x: 0, y: 0, ts: 0 },
     };
     /** The angle of the player. */
     public angle = {
         /** Angle from one frame ago. */
-        old: 0,
+        old: {
+            ts: 0,
+            measure: 0
+        },
         /** Angle at current frame. */
-        new: 0,
+        new: {
+            ts: 0,
+            measure: 0
+        },
         /** Interpolation factor. */
         factor: 0
     };
 
     /** Renders the player onto the canvas. */
-    public render(manager: CanvasManager, ctx: CanvasRenderingContext2D, position: { x: number, y: number }) {
+    public render(
+        manager: CanvasManager,
+        ctx: CanvasRenderingContext2D,
+        position: { x: number, y: number },
+        angle: number
+    ) {
+        position.x *= -1;
+        position.y *= -1;
+        
         const c = Characters[this.character];
         const w = Weapons[this.weapon];
+
+        if (angle > Math.PI) angle = Math.PI - 0.01;
+        else if (angle < -Math.PI) angle = -Math.PI + 0.01;
+
+        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
+        ctx.scale(scaleX, 1);
 
         /** Render character. */
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);
@@ -47,6 +68,18 @@ export default class Player {
         const weapon = manager.ImageManager.get(`img/weapons/${w.src}`);
         if (!weapon) return;
 
-        ctx.drawImage(weapon, position.x, position.y + w.offset, 200, 40);
+        ctx.save();
+
+        if (scaleX === -1) {
+            if (angle > -Math.PI / 2 && angle < Math.PI) {
+                angle = Math.PI - angle;
+            } else if (angle < -Math.PI / 2 && angle > -Math.PI) {
+                angle = Math.abs(angle + (Math.PI / 2)) - (Math.PI / 2);
+            }
+        }
+        
+        ctx.rotate(angle);
+        ctx.drawImage(weapon, position.x + w.offsetX, position.y + w.offsetY, 200, 40);
+        ctx.restore();
     }
 }

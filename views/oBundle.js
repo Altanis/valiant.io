@@ -790,7 +790,7 @@ const Game = {
             
                 player.angle.old = player.angle.current;
                 player.angle.current = { measure, ts: Date.now(), lerpFactor: player.angle.current.lerpFactor, direction: player.angle.current.direction, cycles: player.angle.current.cycles };
-            }
+            } 
         }
 
         if (player.attack.attacking) {

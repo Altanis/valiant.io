@@ -13,6 +13,8 @@ const KEYDOWN_MAP = new Map([
     [65, 4],
 ]);
 
+client.elements.canvas.addEventListener('contextmenu', event => event.preventDefault());
+
 document.addEventListener("keydown", function (event) {
     switch (event.code) {
         case "Enter": {
@@ -39,4 +41,9 @@ document.addEventListener("keyup", function (event) {
     }
 });
 
-client.elements.canvas.addEventListener('contextmenu', event => event.preventDefault());
+document.addEventListener("mousemove", function (event) { 
+    client.elements.mouse = {
+        x: event.clientX,
+        y: event.clientY
+    };
+});

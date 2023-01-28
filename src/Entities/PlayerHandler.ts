@@ -121,7 +121,6 @@ export default class PlayerHandler extends Entity {
             this.SwiftStream.WriteI8(0x00);
             /** Tells the client the amount of field updates for the player. */
             this.SwiftStream.WriteI8(this.update.size);
-            console.log(this.id);
             /** Informs the client of what properties have changed. */
             this.update.forEach(property => {
                 switch (property) {
