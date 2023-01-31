@@ -1,4 +1,5 @@
 import Client from "./Client";
+import { Phases } from "./Const/Enums";
 const client = new Client();
 
 const KEYDOWN_MAP = new Map([
@@ -46,4 +47,14 @@ document.addEventListener("mousemove", function (event) {
         x: event.clientX,
         y: event.clientY
     };
+});
+
+client.elements.canvas.addEventListener("mousedown", function(event) {
+    if (client.canvas.phase === Phases.Arena) client.player.attack.attacking.client = true;
+    event.preventDefault();
+});
+
+client.elements.canvas.addEventListener("mouseup", function(event) {
+    if (client.canvas.phase === Phases.Arena) client.player.attack.attacking.client = false;
+    event.preventDefault();
 });

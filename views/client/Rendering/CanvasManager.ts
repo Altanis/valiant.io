@@ -72,7 +72,7 @@ export default class CanvasManager {
     }
 
     /** UTILITIES */
-    private drawCircle(x: number, y: number, r: number, ctx = this.ctx) {
+    public drawCircle(x: number, y: number, r: number, ctx = this.ctx) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, TAU);
         ctx.fill();
@@ -140,9 +140,8 @@ export default class CanvasManager {
         /** Set up player camera. */
         const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.
-        this.ctx.translate(-cameraX, -cameraY);
         this.ctx.scale(factor, factor); // Multiply operands by a view scale if needed.
-        this.ctx.translate(cameraX, cameraY);
+        this.ctx.translate(-cameraX, -cameraY);
 
         /** Render background of the arena. */
 

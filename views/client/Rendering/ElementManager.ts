@@ -1,6 +1,7 @@
 import Client from "../Client";
-import { Characters, Abilities } from "../Const/Definitions";
+import { Characters, Abilities, Weapons } from "../Const/Definitions";
 import { ServerBound } from "../Const/Enums";
+import { TAU, lerpAngle } from "../Utils/Functions";
 
 /** Manages DOM elements. */
 export default class ElementManager {
@@ -47,7 +48,10 @@ export default class ElementManager {
     };
 
     /** Elements which display while playing. */
-    public arena: { [key: string]: HTMLElement } = {
+    public arena = {
+        /** The div containing all of these elements. */
+        game: document.getElementById("game")!,
+
         /** The div which contains every stat of the player. */
         stats: document.getElementById("stats")!,
 
@@ -67,6 +71,15 @@ export default class ElementManager {
         fps: document.getElementById("fps")!,
         /** The ping of the client. */
         ping: document.getElementById("ping")!,
+    };
+
+    /** Elements which play when the player disconnects from the game. */
+    public disconnect = {
+        /** The div which contains the disconnect message. */
+        disconnect: document.getElementById("disconnect")!,
+
+        /** The message displayed when disconnecting. */
+        disconnectMessage: document.getElementById("disconnect-message")!
     };
 
     /** The canvas to draw on. */
@@ -131,20 +144,25 @@ export default class ElementManager {
             });
 
             const { health, armor, energy } = Characters[this.client.player.character].stats;
-
+            
+            /** @ts-ignore */
             this.arena.healthText.innerText = `${health}/${health}`;
+            /** @ts-ignore */
             this.arena.armorText.innerText = `${armor}/${armor}`;
+            /** @ts-ignore */
             this.arena.energyText.innerText = `${energy}/${energy}`;
         });
     }
 
     private loop() {
+        const player = this.client.player;
+
         /** Update client's canvas. */
         this.client.canvas?.render();
 
         /** Check if character has changed. */
         let intuition = false;
-        const character = Characters[this.client.player.character]!;
+        const character = Characters[player.character]!;
         if (this.homescreen.characterSelector.characterName.innerText !== character.name) {
             intuition = true;
             this.homescreen.characterSelector.characterName.innerText = character.name;
@@ -152,7 +170,7 @@ export default class ElementManager {
             this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;
         }
 
-        const playerAbility = Abilities[this.client.player.ability]!;
+        const playerAbility = Abilities[player.ability]!;
         if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {
             this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;
 
@@ -167,7 +185,7 @@ export default class ElementManager {
                 }
     
                 image.addEventListener("click", () => {
-                    this.client.player.ability = character.abilities[i];
+                    player.ability = character.abilities[i];
                 });
     
                 this.homescreen.characterSelector.abilitySelector.appendChild(image);
@@ -182,9 +200,7 @@ export default class ElementManager {
         }
 
         /** Recognize mouse movements. */
-        if (this.mouse && this.client.player.alive) {
-            const player = this.client.player;
-
+        if (this.mouse && player.alive && !player.attack.attacking.server) {
             const old = player.angle.old.measure;
             const measure = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
             if (old !== measure) {
@@ -198,6 +214,42 @@ export default class ElementManager {
                     ts: Date.now()
                 };
             }
+        }
+
+        /** Update angle when attacking. */
+        if (player.attack.attacking.server) {
+            player.angle.old = player.angle.new;
+            if (!player.attack.mouse)
+                player.attack.mouse = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
+        
+            const weapon = Weapons[player.weapon];
+            let posRange = player.attack.mouse + weapon.range;
+            let negRange = player.attack.mouse + weapon.range;
+
+            if (posRange > Math.PI) posRange -= TAU;
+            if (negRange < -Math.PI) negRange += TAU;
+
+            const angle = lerpAngle(posRange, negRange, player.attack.lerpFactor);
+            player.attack.lerpFactor += 5 * (weapon.speed / 1000) * player.attack.direction;
+
+            if (player.attack.lerpFactor >= 1 || player.attack.lerpFactor <= 0) {
+                player.attack.direction *= -1;
+                if (++player.attack.cycles % 2 === 0) {
+                    player.attack.attacking.server = player.attack.attacking.change;
+                }
+            }
+
+            player.angle.new = {
+                measure: angle,
+                ts: Date.now()
+            }
+        }
+
+        /** Check for when to send an ATTACK packet. */
+        if (player.attack.attacking.client !== player.attack.attacking.server) {
+            this.client.connection.send(ServerBound.Attack, {
+                isAtk: player.attack.attacking.client
+            });
         }
 
         requestAnimationFrame(this.loop.bind(this));

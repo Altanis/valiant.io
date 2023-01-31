@@ -1,7 +1,7 @@
 import SwiftStream from "./SwiftStream";
 import Client from '../Client';
 
-import { CloseEvents, ClientBound, ServerBound } from "../Const/Enums";
+import { CloseEvents, ClientBound, ServerBound, Phases } from "../Const/Enums";
 import MessageHandler from "./MessageHandler";
 
 /** A representation of the WebSocket connection between the client and the server. */
@@ -86,7 +86,15 @@ export default class Connection extends EventTarget {
 
         this.socket.addEventListener("close", event => {
             if (event.code === 4999) return; // Internal migration code.
-            console.log(CloseEvents[event.code] || CloseEvents.Unknown);
+            this.client.elements.homescreen.homescreen.style.display =
+                this.client.elements.arena.game.style.display = "none";
+            
+            this.client.canvas.phase = Phases.Homescreen;
+            this.client.elements.disconnect.disconnect.style.display = "block";
+            this.client.logger.err(
+                /** @ts-ignore */
+                this.client.elements.disconnect.disconnectMessage.innerText = CloseEvents[event.code] || CloseEvents[3006]
+            );
         });
 
         this.socket.addEventListener("message", ({ data }) => {         

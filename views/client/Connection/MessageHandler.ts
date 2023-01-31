@@ -13,6 +13,7 @@ export default class MessageHandler {
     // Woah, that's a big packet!
     public Update() {
         const SwiftStream = this.connection.SwiftStream;
+        const player = this.connection.client.player;
 
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
@@ -23,8 +24,8 @@ export default class MessageHandler {
                 switch (field) {
                     case Fields.ID: {
                         const id = SwiftStream.ReadI8();
-                        this.connection.client.player.id = id;
-                        this.connection.client.player.alive = true;
+                        player.id = id;
+                        player.alive = true;
                         
                         this.connection.client.elements.homescreen.homescreen.style.display = "none";
 
@@ -40,15 +41,21 @@ export default class MessageHandler {
                         const y = SwiftStream.ReadFloat32();
 
                         console.log(x, y);
-                        this.connection.client.player.position.old = this.connection.client.player.position.new;
-                        this.connection.client.player.position.new = { x, y, ts: Date.now() };
+                        player.position.old = player.position.new;
+                        player.position.new = { x, y, ts: Date.now() };
 
                         break;
                     }
-                    case Fields.Attacking: { break; };
+                    case Fields.Attacking: {
+                        player.attack.attacking.change = SwiftStream.ReadI8() === 0x01;
+                        if (!player.attack.attacking.server && player.attack.attacking.change)
+                            player.attack.attacking.server = true;
+
+                        break;
+                    };
                     case Fields.Weapons: {
                         const weapon = SwiftStream.ReadI8();
-                        this.connection.client.player.weapon = weapon;
+                        player.weapon = weapon;
                     }
                 }
             }
