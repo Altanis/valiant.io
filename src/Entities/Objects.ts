@@ -6,7 +6,7 @@ import Entity from './Entity';
 export class Box extends Entity {
     constructor(server: GameServer) {
         super(server, [50, 50], "Box");
-        this.position = new Vector(14400, 14400);
+        this.position = new Vector(0, 0);
     }
 
     public tick() {

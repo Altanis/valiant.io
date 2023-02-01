@@ -45,9 +45,11 @@ export default class MessageHandler {
         player.position = new Vector(0, 0); //new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
 
         player.alive = true;
+        
         player.update.add("id");
         player.update.add("position");
         player.update.add("weapon");
+        player.update.add("fov");
     }
 
     // [1, ...i8(Movement)]

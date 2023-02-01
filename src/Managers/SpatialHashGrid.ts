@@ -25,6 +25,7 @@ class Box {
         this.entityId = id;
     }
 
+    // Future Reference: (2090, 1045) sized object does not collide with (50, 50) sized object. The coordinates are (60, 60) and (0, 0) respectively.
     collidesWith(box: Box) {
         return !(
             this.x - this.w / 2 > box.x + box.w / 2 ||

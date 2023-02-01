@@ -55,8 +55,11 @@ export default class PlayerHandler extends Entity {
     public attacking = false;
     public autoAttack = false;
 
-    /** The amount of data to be sent to the client. [width, height] */
-    public resolution = [(14400 / 7.5) | 0, (14400 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
+    /** 
+     * The field of vision of the client.
+     * FOV of 1 -> (1881, 941); default FOV is 0.9.
+    */
+    public fov = 0.9; // TODO(Altanis): Let characters have different fovs.
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
         super(server, [150, 150], "Player");
@@ -129,12 +132,14 @@ export default class PlayerHandler extends Entity {
                     /** @ts-ignore */
                     case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(this.attacking && !this.cooldown); break;
                     case "weapon": this.SwiftStream.WriteI8(Fields.Weapons).WriteI8(this.weapon!.id); break;
+                    case "fov": this.SwiftStream.WriteI8(Fields.FOV).WriteFloat32(this.fov); break;
                 }
             });
         }
 
         /** TODO(Altanis): Inform client of surroundings. */
-        const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.resolution[0], this.resolution[1], this.id);
+        const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 1881 / this.fov, 941 / this.fov, this.id);
+        console.log(surroundings, this.position);
         if (surroundings.length) {
             this.SwiftStream.WriteI8(0x01).WriteI8(surroundings.length);
             for (const surrounding of surroundings) {

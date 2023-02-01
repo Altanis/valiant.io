@@ -126,7 +126,6 @@ export default class ElementManager {
         });
         
         /** Create pointers for abilities and characters. */
-        console.log(this.homescreen.characterSelector.arrowRight);
         this.homescreen.characterSelector.arrowLeft.addEventListener("click", () => {
             this.client.player.character = (this.client.player.character - 1 + Characters.length) % Characters.length;
             this.client.player.ability = Characters[this.client.player.character]!.abilities[0];
@@ -238,8 +237,6 @@ export default class ElementManager {
                     player.attack.attacking.server = player.attack.attacking.change;
                 }
             }
-
-            console.log("attackAngle", angle);
 
             player.angle.new = {
                 measure: angle,

@@ -1,9 +1,9 @@
 import { Characters, Weapons } from "../Const/Definitions";
 import CanvasManager from "../Rendering/CanvasManager";
-import { TAU } from "../Utils/Functions";
+import Entity from "./_Entity";
 
 /** A representation of a Player entity. */
-export default class Player {
+export default class Player extends Entity {
     /** The character index of the player. */
     public character = 0;
     /** The ability index of the player. */
@@ -12,17 +12,9 @@ export default class Player {
     public weapon = 0;
     /** If the player is alive. */
     public alive = false;
+    /** The dimensions of the player. */
+    public dimensions = { width: 300, height: 300 };
 
-    /** The ID of the player. */
-    public id = 0;
-    /** The position of the player. */
-    public position = {
-        // Starting position is middle of arena.
-        /** Position from one frame ago. */
-        old: { x: 0, y: 0, ts: 0 },
-        /** Position at current frame. */
-        new: { x: 0, y: 0, ts: 0 },
-    };
     /** The angle of the player. */
     public angle = {
         /** Angle from one frame ago. */
@@ -60,6 +52,11 @@ export default class Player {
         cycles: 0
     };
 
+    /** The field of vision of the player. */
+    public fov = 0.9;
+    /** The entities surrounding the player. */
+    public surroundings: Entity[] = [];
+
     /** Renders the player onto the canvas. */
     public render(
         manager: CanvasManager,
@@ -81,7 +78,7 @@ export default class Player {
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);
         if (!character) return;
 
-        ctx.drawImage(character, -150, -150, 300, 300);
+        ctx.drawImage(character, -150, -150, this.dimensions.width, this.dimensions.height);
 
         /** Render weapon. */
         const weapon = manager.ImageManager.get(`img/weapons/${w.src}`);
@@ -97,6 +94,9 @@ export default class Player {
         
         ctx.rotate(angle);
         ctx.drawImage(weapon, w.offsetX, w.offsetY, 200, 40);
+
+        // TODO(Altanis): Create a blue tracer to illustrate the path of the sword.
+
         ctx.restore();
 
         /** Render position on the minimap. */

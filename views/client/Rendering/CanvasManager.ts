@@ -140,7 +140,7 @@ export default class CanvasManager {
         /** Set up player camera. */
         const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.
-        this.ctx.scale(factor, factor); // Multiply operands by a view scale if needed.
+        this.ctx.scale(factor * this.client.player.fov, factor * this.client.player.fov); // Multiply operands by a view scale if needed.
         this.ctx.translate(-cameraX, -cameraY);
 
         /** Render background of the arena. */
@@ -153,6 +153,7 @@ export default class CanvasManager {
         this.ctx.strokeRect(0, 0, 14400, 14400);
         this.ctx.fillRect(0, 0, 14400, 14400);
 
+        for (const entity of this.client.player.surroundings) entity.render(this.ctx, frame);
         this.client.player.render(this, this.ctx, pos, angle);
 
         this.ctx.restore();

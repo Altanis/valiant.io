@@ -40,7 +40,6 @@ export default class MessageHandler {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
 
-                        console.log(x, y);
                         player.position.old = player.position.new;
                         player.position.new = { x, y, ts: Date.now() };
 
@@ -56,6 +55,13 @@ export default class MessageHandler {
                     case Fields.Weapons: {
                         const weapon = SwiftStream.ReadI8();
                         player.weapon = weapon;
+                        break;
+                    }
+                    case Fields.FOV: {
+                        const fov = SwiftStream.ReadFloat32();
+                        console.log("found FOV", fov);
+                        player.fov = fov;
+                        break;
                     }
                 }
             }
@@ -71,6 +77,7 @@ export default class MessageHandler {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
 
+                        // TODO(Altanis): Fix fov.
                         console.log("Found a box at", x, y);
                         break;
                     }

@@ -41,7 +41,9 @@ export enum Fields {
     /** If the entity is attacking. */
     Attacking  = 0x02,
     /** The weapon(s) of the player. */
-    Weapons    = 0x03
+    Weapons    = 0x03,
+    /** The resolution (FoV) of the entity. */
+    FOV = 0x04
 };
 
 /** Object types. */
