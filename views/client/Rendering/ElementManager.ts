@@ -219,16 +219,16 @@ export default class ElementManager {
         /** Update angle when attacking. */
         if (player.attack.attacking.server) {
             player.angle.old = player.angle.new;
-            if (!player.attack.mouse)
-                player.attack.mouse = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
+            player.attack.mouse = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
         
             const weapon = Weapons[player.weapon];
             let posRange = player.attack.mouse + weapon.range;
-            let negRange = player.attack.mouse + weapon.range;
+            let negRange = player.attack.mouse - weapon.range;
 
             if (posRange > Math.PI) posRange -= TAU;
             if (negRange < -Math.PI) negRange += TAU;
 
+            // TODO(Altanis): Fix lerpAngle fucktion.
             const angle = lerpAngle(posRange, negRange, player.attack.lerpFactor);
             player.attack.lerpFactor += 5 * (weapon.speed / 1000) * player.attack.direction;
 
@@ -238,6 +238,8 @@ export default class ElementManager {
                     player.attack.attacking.server = player.attack.attacking.change;
                 }
             }
+
+            console.log("attackAngle", angle);
 
             player.angle.new = {
                 measure: angle,

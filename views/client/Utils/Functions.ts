@@ -7,4 +7,9 @@ export const randomRange = (min: number, max: number): number => Math.random() *
 /** Linear interpolation for any type of integer. */
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 /** Linear interpolation for specifically angles. */
-export const lerpAngle = (a: number, b: number, t: number) => a + -((a - b + Math.PI * 3) % (TAU) - Math.PI) * t;
+export const lerpAngle = (a: number, b: number, t: number) => {
+    console.log("params", a, b, t);
+    const value = a + (-((a - b + Math.PI * 3) % (TAU) - Math.PI)) * t;
+    console.log("values", value);
+    return value;
+}
