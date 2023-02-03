@@ -39,6 +39,8 @@ export default class MessageHandler {
                     case Fields.Position: {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
+                        
+                        console.log(x, y);
 
                         player.position.old = player.position.new;
                         player.position.new = { x, y, ts: Date.now() };

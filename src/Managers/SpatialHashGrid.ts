@@ -13,11 +13,11 @@ class Box {
     /** The height of the box. */
     h: number;
     /** The entity ID this box belongs to. */
-    entityId: number | null;
+    entityId: number;
     /** The query ID of the box. */
     queryId: number | undefined;
 
-    constructor(x: number, y: number, w: number, h: number, id: number | null) {
+    constructor(x: number, y: number, w: number, h: number, id: number) {
         this.x = x;
         this.y = y;
         this.w = w;
@@ -54,10 +54,13 @@ export default class SpatialHashGrid {
 
         const box = new Box(x, y, w, h, id);
 
-        const startX = box.x >> this.cellSize;
-        const startY = box.y >> this.cellSize;
-        const endX = ((box.x + box.w) >> this.cellSize) + 1;
-        const endY = ((box.y + box.h) >> this.cellSize) + 1;
+        const centerX = box.x + box.w / 2;
+        const centerY = box.y + box.h / 2;
+    
+        const startX = centerX >> this.cellSize;
+        const startY = centerY >> this.cellSize;
+        const endX = ((centerX + box.w / 2) >> this.cellSize) + 1;
+        const endY = ((centerY + box.h / 2) >> this.cellSize) + 1;
 
         for (let x = startX; x < endX; x++) {
             for (let y = startY; y < endY; y++) {
@@ -79,12 +82,15 @@ export default class SpatialHashGrid {
     query(x: number, y: number, w: number, h: number, id: number) {
         const box = new Box(x, y, w, h, id);
 
-        const startX = box.x >> this.cellSize;
-        const startY = box.y >> this.cellSize;
-        const endX = ((box.x + box.w) >> this.cellSize) + 1;
-        const endY = ((box.y + box.h) >> this.cellSize) + 1;
+        const centerX = box.x + box.w / 2;
+        const centerY = box.y + box.h / 2;
+    
+        const startX = centerX >> this.cellSize;
+        const startY = centerY >> this.cellSize;
+        const endX = ((centerX + box.w / 2) >> this.cellSize) + 1;
+        const endY = ((centerY + box.h / 2) >> this.cellSize) + 1;
 
-        const found: Box[] = [];
+        const found: Map<number, Box> = new Map();
 
         const queryId = this.queryId++;
 
@@ -93,7 +99,6 @@ export default class SpatialHashGrid {
                 const key = x + y * 0xB504;
 
                 const cell = this.cells.get(key);
-
                 if (!cell) continue;
                 
                 for (let i = 0; i < cell.length; i++) {
@@ -101,13 +106,13 @@ export default class SpatialHashGrid {
 
                     if (box.queryId !== queryId && box.entityId !== id) {
                         box.queryId = queryId;
-                        found.push(box);
+                        found.set(box.entityId, box);
                     }
                 }
             }
         }
 
-        return found;
+        return [...found.values()];
     }
 
     clear() {

@@ -62,7 +62,7 @@ export default class PlayerHandler extends Entity {
     public fov = 0.9; // TODO(Altanis): Let characters have different fovs.
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
-        super(server, [150, 150], "Player");
+        super(server, [300, 300], "Player");
 
         this.server = server;
         this.id = this.server.entities.length;
