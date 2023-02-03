@@ -1,928 +1,197 @@
-console.time();
-const Config = {
-    WebSocket: {
-        CloseEvents: {
-            3000: "The server has detected multiple connections by you. Please terminate any existing connections.",
-            3001: "The server is full.",
-            3002: "The server has detected a malformed request made by you. Please refresh.",
-            3003: "The server has detected that you are a banned player.",
-            3006: "An unknown error has occurred. Please refresh."
-        }
-    },
-    HomeScreen: {
-        /** The amount of stars to be drawn. */
-        starCount: 100,
-        /** The holder for every star. */
-        stars: [],
-        /** The increment for all of the stars */
-        increment: 0.1,
-    },
-    Gamemodes: {
-        List: ["FFA"],
-        Pointer: 0,
-    },
-    Characters: {
-        List: ["Knight", "Priest", "Assassin"],
-        _cp: 0,
-        MagicFrames: 8,
-        MagicDelay: 4, // 15 frames per second
-    },
-    Arena: {
-        /** The dimensions of the arena. */
-        arenaBounds: 14400,
-        /** The spacing for the grid system. */
-        gridSize: 100,
-    },
-    Audio: {
-        List: ["ffa"],
-        Pointer: 0,
-    },
-    
-    DisplayDisconnect: false,
-    CurrentPhase: 0, // [0: Homescreen, 1: Arena, 2: Death]
-    Options: {
-        hideGrid: false,
-    },
-    FPS: {
-        fpsArr: [],
-        fps: 0,
-    }
-};
-
-const Data = {
-    /** PLAYERS */
-    Characters: {
-        Knight: {
-            Abilities: [
-                {
-                    name: "Dual Wield",
-                    description: "Attack with double the power.",
-                    src: "assets/img/abilities/dual_wield.png"
-                },
-                {
-                    name: "Charge",
-                    description: "Bash into a foe with your shield.",
-                    src: "assets/img/abilities/charge.png"
-                }
-            ],
-            Stats: {
-                Health: 7,
-                Armor: 6,
-                Energy: 250,
-            }
-        },
-        Priest: {
-            Abilities: [
-                {
-                    name: "Castor",
-                    description: "Attack with double the power.",
-                    src: "assets/img/abilities/dual_wield.png"
-                },
-            ]
-        },
-        Assassin: {
-            Abilities: [
-                {
-                    name: "Dual Wield",
-                    description: "Attack with double the power.",
-                    src: "assets/img/abilities/dual_wield.png"
-                },
-                {
-                    name: "Charge",
-                    description: "Bash into a foe with your shield.",
-                    src: "assets/img/abilities/charge.png"
-                },
-            ]
-        },
-    },
-
-    /** WEAPONS */
-    Weapons: [
-        {
-            name: "Rusty Blade",
-            type: "melee",
-            rarity: "common",
-            damage: 10,
-            range: Math.PI / 4,
-            speed: 30,
-            src: "assets/img/weapons/rusty_blade.png"
-        }
-    ]
-};
-
-/** BUFFERS: Used to convert between different byte-lengths. */
-const conversion = new ArrayBuffer(4);
-const u8 = new Uint8Array(conversion);
-const f32 = new Float32Array(conversion);
-
-/** SwiftStream, an efficient binary protocol manager written by Altanis. */
-const SwiftStream = new (class {
-    /** The buffer SwiftStream is using. */
-    buffer = new Uint8Array(4096);
-    /** The position at which the buffer is being read. */
-    at = 0;
-    /** UTF8 Decoder. */
-    TextDecoder = new TextDecoder();
-    /** UTF8 Encoder. */
-    TextEncoder = new TextEncoder();
-    
-    Set(buffer) {
-        this.buffer = buffer;
-        this.at = 0;
-    }
-    
-    Clear() {
-        this.buffer = new Uint8Array(4096);
-        this.at = 0;
-    }
-    
-    /** READER */
-    ReadI8() {
-        return this.buffer[this.at++];
-    }
-    
-    ReadFloat32() {
-        u8.set(this.buffer.slice(this.at, this.at += 4));
-        return f32[0];
-    }
-    
-    ReadUTF8String() {
-        const start = this.at;
-        while (this.buffer[this.at++]);
-        return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));
-    }
-    
-    /** WRITER */
-    WriteI8(value) {
-        this.buffer[this.at++] = value;
-        return this;
-    }
-    
-    WriteFloat32(value) {
-        f32[0] = value;
-        this.buffer.set(u8, this.at);
-        this.at += 4;
-        return this;
-    }
-    
-    WriteCString(value) {
-        this.buffer.set(this.TextEncoder.encode(value), this.at);
-        this.at += value.length;
-        this.buffer[this.at++] = 0;
-        return this;
-    }
-    
-    Write() {
-        const result = this.buffer.subarray(0, this.at);
-        this.Clear();
-        return result;
-    }
-});
-
-Math.TAU = Math.PI * 2;
-Math.randomRange = (min, max) => Math.random() * (max - min) + min;
-
-/** Observe mutations. */
-Object.defineProperties(Config.Characters, {
-    CharacterPointer: {
-        get() { return this._cp },
-        set(value) {
-            characterName.innerText = Config.Characters.List[value];
-            const src = `assets/img/characters/gifs/${characterName.innerText}.gif`;
-            characterSprite.src = src;
-            
-            const characterAbilities = Data.Characters[characterName.innerText].Abilities;
-            abilities.innerHTML = "";
-            for (const ability of characterAbilities) {
-                const abilityElement = document.createElement("img");
-                abilityElement.width = abilityElement.height = 50;
-                abilityElement.src = ability.src;
-                abilityElement.classList.add("character-ability");
-                abilityElement.addEventListener("click", () => {
-                    const index = characterAbilities.indexOf(ability);
-                    Config.Characters.AbilityPointer = index;
-                });
-                abilities.appendChild(abilityElement);
-            }
-            
-            Config.Characters.AbilityPointer = 0;
-            abilityName.innerText = characterAbilities[Config.Characters.AbilityPointer].name;
-            abilityDesc.innerText = characterAbilities[Config.Characters.AbilityPointer].description;
-            
-            this._cp = value;
-        },
-    },
-    AbilityPointer: {
-        get() { return this._ap },
-        set(value) {
-            abilities.children[Config.Characters.AbilityPointer]?.classList.remove("selected");
-            abilities.children[value]?.classList.add("selected");
-            abilityName.innerText = Data.Characters[characterName.innerText].Abilities[value].name;
-            abilityDesc.innerText = Data.Characters[characterName.innerText].Abilities[value].description;
-            
-            this._ap = value;
-        }
-    }
-});
-
-function lerp(a, b, t) {
-    return a + (b - a) * t;
-}
-
-function lerpAngle(angle1, angle2, t) {
-    const diff = -((angle1 - angle2 + Math.PI * 3) % (Math.TAU) - Math.PI);
-    return angle1 + diff * t;
-}
-
-console.timeEnd();
-
-/** DOM ELEMENTS */
-console.time();
-/** Home screen elements */
-const HomeScreen = document.getElementById("homescreen"),
-    SettingsModal = document.getElementById("settingsModal"),
-    Play = document.getElementById("play"),
-    NameInput = document.getElementById("name"),
-    Gamemodes = document.getElementById("gamemodes"),
-    DisconnectScreen = document.getElementById("disconnect"),
-    Settings = document.getElementById("settings"),
-    Back = document.getElementById("back");
-
-/** Settings options */
-const hideGrid = document.getElementById("hideGrid");
-
-const characterName = document.getElementById("character-name"),
-    characterSprite = document.getElementById("character-sprite");
-
-const arrowLeft = document.getElementById("arrow-left"),
-    arrowRight = document.getElementById("arrow-right");
-
-const abilityName = document.getElementById("ability-name"),
-    abilityDesc = document.getElementById("ability-desc"),
-    abilities = document.getElementById("ability");
-
-/** Game eleemnts */
-/** Game utils */   
-const stats = document.getElementById("stats");
-
-const healthBar = document.getElementById("health"),
-    armorBar = document.getElementById("armor"),
-    energyBar = document.getElementById("energy");
-
-let el = [];
-document.querySelectorAll(".progress-bar").forEach((p, i) => el[i] = p.children[1]);
-console.log(el);
-let [healthText, armorText, energyText] = el;
-
-const utils = document.getElementById("utils"),
-    fps = document.getElementById("fps"),
-    ping = document.getElementById("ping");
-
-/** Image Caching */
-const ImageCache = new Map();
-
-const Storage = {
-    get(key) {
-        return localStorage.getItem(key);
-    },
-    set(key, value) {
-        localStorage.setItem(key, value);
-    },
-    remove(key) {
-        localStorage.removeItem(key);
-    },
-    has(key) {
-        return localStorage.hasOwnProperty(key);
-    }
-};
-
-hideGrid.checked = Config.Options.hideGrid = Storage.get("hideGrid") === "true";
-
-const canvas = document.getElementById("canvas");
-/** @type {CanvasRenderingContext2D} */
-const ctx = canvas.getContext("2d");
-
-const mapCanvas = document.getElementById("mapDisplay");
-/** @type {CanvasRenderingContext2D} */
-const mapCtx = mapCanvas.getContext("2d");
-
-let gridCanvas, gridCtx;
-
-function resize() {
-    canvas.width = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
-}
-
-window.addEventListener("resize", resize);
-resize();
-
-const AudioManager = class {
-    constructor() {
-        this.audio = new Audio();
-    }
-    
-    play(name) {
-        this.audio.src = `assets/audio/${name}.mp3`;
-        this.audio.play();
-    }
-};
-
-const Player = class {
-    constructor(name) {
-        this.id = null;
-        this.character = Data.Characters[name];
-        this.position = {
-            old: { x: null, y: null, ts: null },
-            current: { x: null, y: null, ts: null },
-        };
-        this.angle = {
-            old: { measure: null, ts: null, lerpFactor: 0, direction: -1, cycles: 0 },
-            current: { measure: null, ts: null, lerpFactor: 0, direction: -1, cycles: 0 },
-        };
-        this.attack = {
-            state: false,
-            attacking: false,
-            direction: 1,
-            changeState: false,
-            onlyOnce: false,
-            mPos: false,
-        };
-        this.weapon = null;
-        this.surroundings = []; // { type, x, y }
-    }
-
-    teleport(x, y) {
-        SocketManager.socket.send(SwiftStream.WriteI8(0xFF).WriteFloat32(x).WriteFloat32(y).Write());
-    }
-}
-
-const player = new Player("Knight");
-
-Object.defineProperties(Player, {
-    /** Character index */
-    character: {
-        get() { return Config.Characters.CharacterPointer },
-        set() { throw new Error("why is this being set?") },
-    },
-    /** Ability index */
-    ability: {
-        get() { return Config.Characters.CharacterPointer },
-        set() { throw new Error("why is this being set?") },
-    },
-})
-
-const WebSocketManager = class {
-    constructor(url) {
-        this.url = url; // The URL to connect to.
-        this.socket = new WebSocket(url); // The WebSocket connection.
-        this.socket.binaryType = "arraybuffer";
-        this.migrations = 0; // The amount of migrations to a new server. Resets when a connection is successfully established.
-        
-        this.handle();
-    }
-    
-    migrate(url) {
-        if (++this.migrations > 3) return console.log("Failed to reconnect to the server. Please refresh.");
-        
-        this.url = url;
-        this.socket.close(4999, "Migrating to a new server.");
-        
-        this.socket = new WebSocket(url);
-        this.socket.binaryType = "arraybuffer";
-        
-        this.handle();
-    }
-    
-    handle() {
-        this.socket.addEventListener("open", () => {
-            console.log("Connected to server!");
-            this.migrations = 0;
-            HomeScreen.style.display = "block";
-            canvas.style.display = "block";
-            DisconnectScreen.style.display = "none";
-        });
-        
-        this.socket.addEventListener("close", event => {
-            if (event.code === 4999) return; // Migrating to a new server.
-            
-            if ([3001, 3003, 3006].includes(event.code)) return this.migrate(this.url);
-            console.log(Config.WebSocket.CloseEvents[event.code] || "An unknown error has occurred. Please refresh.");
-            
-            /** Inform client a connection was not able to be sustained. */
-            if (!Config.DisplayDisconnect) return;
-            HomeScreen.style.display = "none";
-            canvas.style.display = "none";
-            document.getElementById("disconnect-message").innerText = Config.WebSocket.CloseEvents[event.code] || "An unknown error has occurred. Please refresh.";
-            DisconnectScreen.style.display = "block";
-        });
-        
-        this.socket.addEventListener("error", event => {
-            console.log("An error has occured during the connection:", event);
-            this.migrate(this.url);
-        });
-        
-        this.socket.addEventListener("message", ({ data }) => {
-            data = new Uint8Array(data);
-            SwiftStream.Set(data);
-            this.parse();
-        });
-    }
-    
-    parse() {
-        const header = SwiftStream.ReadI8();
-        switch (header) {
-            case 0x00: { // UPDATE HEADER
-                const updateReq = SwiftStream.ReadI8();
-                if (updateReq === 0x00) { // PLAYER UPDATE
-                    const id = SwiftStream.ReadI8(); // Player ID
-                    let length = SwiftStream.ReadI8(); // Length of fields
-                    
-                    for (; length--;) {
-                        const field = SwiftStream.ReadI8();
-                        switch (field) {
-                            case 0x00: { // POSITION
-                                const x = SwiftStream.ReadFloat32();
-                                const y = SwiftStream.ReadFloat32();
-                                
-                                if (player.position.old.x === null) { // Start Game
-                                    HomeScreen.style.display = "none";
-                                    Config.CurrentPhase = 1;
-                                }
-                                
-                                player.position.old = player.position.current;
-                                player.position.current = { x, y, ts: Date.now() };
-                                
-                                player.id = id;
-                                break;
-                            }
-                            case 0x01: { // ATTACKING
-                                player.attack.changeState = SwiftStream.ReadI8() === 0x01;
-                                if (!player.attack.attacking && player.attack.changeState) player.attack.attacking = true;
-                                break;
-                            }
-                            case 0x02: { // WEAPON
-                                player.weapon = Data.Weapons[SwiftStream.ReadI8()];
-                                if (!player.weapon) throw new Error("Could not find weapon.");
-                            }
-                        }
-                    }
-                }
-                
-                const surroudings = updateReq === 0x00 ? SwiftStream.ReadI8() : updateReq;
-                if (surroudings === 0x01) { // surroundings near player
-                    length = SwiftStream.ReadI8() || 0; // Length of surroundings
-                    for (; length--;) {
-                        const entity = SwiftStream.ReadI8();
-                        player.surroundings = [];
-
-                        switch (entity) {
-                            case 0x00: { // PLAYER
-                                break;
-                            }
-                            case 0x01: { // box
-                                const x = SwiftStream.ReadFloat32();
-                                const y = SwiftStream.ReadFloat32();
-
-                                player.surroundings.push({
-                                    type: "Box",
-                                    x,
-                                    y
-                                });
-                            }
-                        }
-                    }
-                }
-                
-                break;
-            }
-            default: console.log(header);
-        }
-        
-        SwiftStream.Clear();
-    }
-    
-    /** Sends a packet to the server informing that the client wants to spawn. */
-    play() {    
-        this.socket.send(SwiftStream.WriteI8(0x00).WriteCString("Knight").WriteI8(Config.Characters.CharacterPointer).WriteI8(Config.Characters.AbilityPointer).Write());
-        stats.style.display = "flex";
-        utils.style.display = "block";
-
-        healthText.innerText = `${player.character.Stats.Health}/${player.character.Stats.Health}`;
-        armorText.innerText = `${player.character.Stats.Armor}/${player.character.Stats.Armor}`;
-        energyText.innerText = `${player.character.Stats.Energy}/${player.character.Stats.Energy}`;
-    }
-}
-
-const SocketManager = new WebSocketManager("ws://localhost:8080");
-const audio = new AudioManager();
-
-console.timeEnd();
-
-console.time();
-
-const Game = {
-    RenderCircle(x, y, radius, context = ctx) {
-        context.beginPath();
-        context.arc(x, y, radius, 0, Math.TAU);
-        context.fill();
-    },
-    
-    Setup() {
-        /**
-        * Sets up the game. Ran once before the requestAnimationFrame loop.
-        */
-
-        /** Sets up the character modal. */
-        Config.Characters.CharacterPointer = 0;
-        
-        /** Adds a listener to each gamemode, selects them when clicked. 
-        * TODO(Altanis|Feature): Connect to a new WebSocket when a gamemode is selected.
-        */
-        for (let i = Gamemodes.children.length; i--;) {
-            const child = Gamemodes.children[i];
-            if (child.classList.contains("disabled")) continue;
-            if (Config.Gamemodes.Pointer === i) child.classList.add("selected");
-
-            child.addEventListener("click", function () {
-                Config.Gamemodes.Pointer = i;
-                for (const sibling of this.parentElement.children) sibling.classList.remove("selected");
-                this.classList.add("selected");
-            });
-        }
-        
-        /** Adds a listener to each arrow, incrementing/decrementing the pointer to each character. */
-        arrowLeft.addEventListener("click", function () {
-            Config.Characters.CharacterPointer = ((Config.Characters.CharacterPointer - 1) + Config.Characters.List.length) % Config.Characters.List.length;
-        });
-        
-        arrowRight.addEventListener("click", function () {
-            Config.Characters.CharacterPointer = (Config.Characters.CharacterPointer + 1) % Config.Characters.List.length;
-        });
-        
-        /** Adds a listener to the Play button to start the game. */
-        Play.addEventListener("click", function () {
-            SocketManager.play();
-            mapCanvas.style.display = "block";
-        });
-
-        /** Adds a listener to the Settings button to open the Settings modal. */
-        Settings.addEventListener("click", function () {
-            SettingsModal.style.display = "flex";
-            HomeScreen.style.display = "none";
-        });
-
-        Back.addEventListener("click", function () {
-            SettingsModal.style.display = "none";
-            HomeScreen.style.display = "block";
-        });
-
-        /** Adds listeners to all options. */
-        hideGrid.addEventListener("click", function () {
-            Storage.set("hideGrid", hideGrid.checked = Config.Options.hideGrid = !Config.Options.hideGrid);
-            
-        });
-    },
-    
-    HomeScreen() {
-        /**
-        * This section draws the home screen animation. It resembles space while moving quick in it.
-        * To make the effect that space is moving, we need to:
-        * 1. Draw a black background
-        * 2. Draw big stars with varying radii
-        * 3. Increase their radii by small amounts to simulate moving close to them
-        * 4. Generate new stars when the old ones become big
-        */
-        
-        ctx.fillStyle = "#000000";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = "#FFFFFF";
-        if (Config.HomeScreen.stars.length !== Config.HomeScreen.starCount) {
-            for (let i = Config.HomeScreen.starCount - Config.HomeScreen.stars.length; --i;) {
-                Config.HomeScreen.stars.push({
-                    x: Math.randomRange(0, canvas.width),
-                    y: Math.randomRange(0, canvas.height),
-                    radius: Math.randomRange(0.1, 1.5)
-                });
-            }
-        }
-        
-        for (let i = Config.HomeScreen.stars.length; i--;) {
-            const star = Config.HomeScreen.stars[i];
-            Game.RenderCircle(star.x, star.y, star.radius);
-            star.radius += Config.HomeScreen.increment;
-            if (star.radius >= 3) {
-                Config.HomeScreen.stars.splice(i, 1);
-            }
-        }
-    },
-    
-    RenderPlayer(angle, cache, weapon) {
-        // RENDER PLAYER:
-        if (!cache) return;
-        
-        if (++cache[0] >= Config.Characters.MagicDelay) {
-            cache[1] = ++cache[1] % Config.Characters.MagicFrames;
-            cache[0] = 0;
-        }
-
-        if (!cache[2][cache[1]]) return;
-        ctx.save();         
-        
-        angle = ((angle + Math.PI * 3) % Math.TAU - Math.PI);
-        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
-        player.attack.attacking && console.log(angle, scaleX);
-        ctx.translate((canvas.width - 150) / 2 + 75, (canvas.height - 150) / 2 + 75);        
-        ctx.scale(scaleX, 1);
-        
-        ctx.drawImage(cache[2][cache[1]], -75, -75, 150, 150);
-        ctx.restore();
-
-        // RENDER WEAPON:
-        // Render weapon next to player:
-        if (!weapon) return;
-
-        ctx.save();
-        ctx.translate((canvas.width) / 2, (canvas.height + 50) / 2);
-        ctx.rotate(angle);
-        ctx.drawImage(weapon, 0, 0, 100, 20);
-        ctx.restore();
-    
-        // Render tracer behind sword:
-        /*if (player.attack.attacking) {
-            ctx.strokeStyle = "blue";
-            console.log(Math.cos(player.angle.current.measure), Math.sin(player.angle.current.measure));
-            ctx.lineTo(Math.cos(player.angle.current.measure), Math.sin(player.angle.current.measure));
-            ctx.stroke();
-        }*/
-
-        /*if (!cache[2][cache[1]]) return;
-        ctx.drawImage(cache[2][cache[1]], (canvas.width - 150) / 2, (canvas.height - 150) / 2, 150, 150);*/
-        // TODO(Altanis): Render name.
-        /*ctx.font = "30px Ubuntu, Orbitron";
-        ctx.fillStyle = "#FFFFFF";
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "center";
-        ctx.lineWidth = 8;
-        
-        const xOffset = player.position.current.x - ((canvas.width - player.position.current.x) / 2);
-        const yOffset = player.position.current.y - ((canvas.height - player.position.current.y) / 2) - 150 - 34;
-        
-        ctx.fillText("altanis", xOffset, yOffset);*/
-    },
-    
-    // TODO(Altanis): fix relative pos
-    RenderSurroundings(pos, xOff, yOff) { 
-        for (const surrounding of player.surroundings) {
-            const { type, x, y } = surrounding;
-
-            console.log(xOff, yOff);
-
-            ctx.fillStyle = "white";
-            ctx.fillRect(x - pos.x, y - pos.y, 200, 200);
-        }
-    },
-
-    Arena(delta) {
-        /**
-        * This section draws the arena. It resembles the space every entity is in.
-        */
-        
-        /**  
-        * 1. Renders outbound as entire canvas.
-        * 2. Calculates the x and y offsets for the player to view relative to their position.
-        * At (0, 0), the x and y offsets of the arena should be half of their respective dimensions (height/width). 
-        * 3. Apply inbounds, dimensions are half of the arena bounds.
-        */
-        
-        // RENDER OUTBOUNDS:
-        ctx.fillStyle = "rgba(12, 50, 54, 1)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // RENDER INBOUNDS:  
-        ctx.strokeStyle = "#2F8999";
-        ctx.lineWidth = 10;        
-        ctx.fillStyle = "rgb(5,28,31)";
-        
-        // LERP COORDS:
-        let pos, angle;
-        const frame = Date.now() - (1000 / 60);
-        if (frame < player.position.old.ts) pos = player.position.old;
-        else if (frame > player.position.current.ts) pos = player.position.current;
-        else {
-            pos = {
-                x: player.position.old.x + (player.position.current.x - player.position.old.x) * 0.5,
-                y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5
-            };
-        }
-
-        if (frame < player.angle.old.ts) angle = player.angle.old.measure;
-        else if (frame > player.angle.current.ts) angle = player.angle.current.measure;
-        else {
-            angle = lerpAngle(player.angle.old.measure, player.angle.current.measure, (frame - player.angle.old.ts) / (player.angle.current.ts - player.angle.old.ts));
-        }
-        
-        const xOffset = (canvas.width - pos.x) / 2;
-        const yOffset = (canvas.height - pos.y) / 2;
-    
-        ctx.strokeStyle = "#2F8999";
-        ctx.strokeRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
-        ctx.fillRect(xOffset, yOffset, (Config.Arena.arenaBounds + 150) / 2, (Config.Arena.arenaBounds + 150) / 2);
-
-        // RENDER MINIMAP:
-        mapCtx.fillStyle = "#FFFFFF";
-
-        const minimapX = pos.x * mapCanvas.width / Config.Arena.arenaBounds;
-        const minimapY = pos.y * mapCanvas.height / Config.Arena.arenaBounds;
-
-        Game.RenderCircle(minimapX, minimapY, 2, mapCtx);
-
-        // CALCULATE FPS:
-        if (Config.FPS.fpsArr.length > 10) Config.FPS.fpsArr.shift();
-        Config.FPS.fpsArr.push(1000 / delta);
-        fps.innerText = `${Config.FPS.fps = (Config.FPS.fpsArr.reduce((a, b) => a + b) / Config.FPS.fpsArr.length).toFixed(1)} FPS`;
-
-        /** This section renders the player. */
-        const character = "Knight";
-        const weapon = player.weapon;
-        
-        const cache = ImageCache.get(character);
-        if (!cache) {
-            ImageCache.set(character, [0, 0, []]);
-            for (let i = Config.Characters.MagicFrames; i--;) {
-                const image = new Image();
-                image.src = `img/characters/frames/${character}/${character}${i + 1}.png`;
-                image.addEventListener("load", function() {
-                    ImageCache.get(character)[2].push(image);
-                });
-            }
-        }
-
-        const weaponCache = ImageCache.get(weapon.name);
-        if (!weaponCache) {
-            const image = new Image();
-            image.src = weapon.src;
-            image.addEventListener("load", function () {
-                ImageCache.set(weapon.name, image);
-            });
-        }
-        
-        Game.RenderPlayer(angle, cache, weaponCache);
-        player.surroundings.length && Game.RenderSurroundings(pos, xOffset, yOffset);
-
-        /** This section calculates and sends the angle and movement directions. */
-        if (ACTIVE_KEYS.size) {
-            const buffer = SwiftStream.WriteI8(0x01);
-            ACTIVE_KEYS.forEach(dir => buffer.WriteI8(dir));
-            SocketManager.socket.send(buffer.Write());
-        }
-
-        if (player.attack.state !== player.attack.attacking) {
-            SocketManager.socket.send(SwiftStream.WriteI8(0x03).WriteI8(player.attack.state).Write());
-        }
-        
-        // TODO(Altanis): Optimize object redefinitions.
-        if (player.mouse && !player.attack.attacking) {
-            let old = player.angle.old.measure;
-            const measure = player.attack.mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            if (old !== measure) {
-                SocketManager.socket.send(SwiftStream.WriteI8(0x02).WriteFloat32(measure).Write());
-            
-                player.angle.old = player.angle.current;
-                player.angle.current = { measure, ts: Date.now(), lerpFactor: player.angle.current.lerpFactor, direction: player.angle.current.direction, cycles: player.angle.current.cycles };
-            }
-        }
-
-        if (player.attack.attacking) {
-            player.angle.old = player.angle.current;
-            if (!player.attack.mPos) player.attack.mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-
-            let mPos = player.attack.mPos;
-            let posRange = mPos + weapon.range;
-            let negRange = mPos - weapon.range;
-
-            if (posRange > Math.PI) posRange -= Math.TAU;
-            if (negRange < -Math.PI) negRange += Math.TAU;
-
-            let angle = lerpAngle(posRange, negRange, player.angle.current.lerpFactor);
-
-            player.angle.current.lerpFactor += 5 * (weapon.speed / 1000) * player.angle.current.direction;
-            if (player.angle.current.lerpFactor >= 1 || player.angle.current.lerpFactor <= 0) {
-                player.angle.current.direction *= -1;
-                if (++player.angle.current.cycles % 2 === 0) {
-                    player.attack.attacking = player.attack.changeState;
-                    if (player.attack.onlyOnce) player.attack.onlyOnce = player.attack.changeState = player.attack.attacking = false;
-                }
-            }
-
-            player.angle.current = {
-                measure: angle,
-                ts: Date.now(),
-                lerpFactor: player.angle.current.lerpFactor,
-                direction: player.angle.current.direction,
-                cycles: player.angle.current.cycles
-            };
-        } else player.angle.current.lerpFactor = 0.5;
-
-        /*if (player.attack.attacking) {
-            player.angle.old = player.angle.current;
-            let mPos = Math.atan2(player.mouse.y - (canvas.height / 2), player.mouse.x - (canvas.width / 2));
-            let angle = lerpAngle(mPos + Math.PI / 2, mPos - Math.PI / 2, player.angle.current.increment % Math.PI / 2);
-            
-            player.angle.current.increment += weapon.speed;
-            if (player.angle.current.increment >= Math.PI / 2) {
-                player.attack.direction = -player.attack.direction;
-            }
-
-            angle += player.attack.direction * weapon.speed;
-            console.log(angle, player.angle.current.increment % Math.PI / 2)
-            player.angle.current = { measure: angle, ts: Date.now(), increment: player.angle.current.increment };
-        }*/
-    }
-}
-
-const ATTACH_MAPS = new Map([
-    /** Movement keys. */
-    [38, 1],
-    [87, 1],
-    [39, 2],
-    [68, 2],
-    [40, 3],
-    [83, 3],
-    [37, 4],
-    [65, 4],
-]);
-
-const ACTIVE_KEYS = new Set();
-ACTIVE_KEYS.lerpFactor = 0;
-
-document.addEventListener("keydown", function (event) {
-    /** Play game. */
-    switch (event.code) {
-        case "Enter": {
-            if (document.activeElement === NameInput && Play.style.display === "block") Play.click();
-            break;
-        }
-        // TODO(Altanis): Make space only attack once.
-        case "Space": {
-            if (Config.CurrentPhase === 1) {
-                player.attack.state = true;
-                player.attack.onlyOnce = true;
-            }
-            return;
-        }
-    }
-    
-    /** Movement keys. */
-    const attach = ATTACH_MAPS.get(event.which || event.keyCode);
-    if (attach) {
-        ACTIVE_KEYS.add(attach);
-        event.preventDefault();
-    }
-});
-
-document.addEventListener("keyup", function (event) {
-    /** Movement keys. */
-    const attach = ATTACH_MAPS.get(event.which || event.keyCode);
-    if (attach) {
-        ACTIVE_KEYS.delete(attach);
-        event.preventDefault();
-    }
-});
-
-document.addEventListener("mousemove", function (event) {
-    player.mouse = { x: event.clientX, y: event.clientY }; // special only to client
-});
-
-canvas.addEventListener('contextmenu', event => event.preventDefault());
-
-canvas.addEventListener("mousedown", function(event) {
-    if (Config.CurrentPhase === 1) player.attack.state = true;
-    event.preventDefault();
-});
-
-canvas.addEventListener("mouseup", function(event) {
-    if (Config.CurrentPhase === 1) player.attack.state = false;
-    event.preventDefault();
-});
-
-Game.Setup();
-
-let delta, lastUpdate;
-function UpdateGame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
-    
-    delta = Date.now() - (lastUpdate || 0);
-    lastUpdate = Date.now();
-
-    switch (Config.CurrentPhase) {
-        case 0: Game.HomeScreen(); break;
-        case 1: Game.Arena(delta); break;
-    }
-    requestAnimationFrame(UpdateGame);
-}
-
-UpdateGame();
-
-console.timeEnd();
+/*
+ * ATTENTION: The "eval" devtool has been used (maybe by default in mode: "development").
+ * This devtool is neither made for production nor for readable output files.
+ * It uses "eval()" calls to create a separate source file in the browser devtools.
+ * If you are trying to read the output file, select a different devtool (https://webpack.js.org/configuration/devtool/)
+ * or disable the default devtool with "devtool: false".
+ * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
+ */
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./views/client/Client.ts":
+/*!********************************!*\
+  !*** ./views/client/Client.ts ***!
+  \********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Connection_1 = __importDefault(__webpack_require__(/*! ./Connection/Connection */ \"./views/client/Connection/Connection.ts\"));\r\nconst Logger_1 = __importDefault(__webpack_require__(/*! ./Utils/Logger */ \"./views/client/Utils/Logger.ts\"));\r\nconst ElementManager_1 = __importDefault(__webpack_require__(/*! ./Rendering/ElementManager */ \"./views/client/Rendering/ElementManager.ts\"));\r\nconst CanvasManager_1 = __importDefault(__webpack_require__(/*! ./Rendering/CanvasManager */ \"./views/client/Rendering/CanvasManager.ts\"));\r\nconst Player_1 = __importDefault(__webpack_require__(/*! ./Entity/Player */ \"./views/client/Entity/Player.ts\"));\r\n/** A representation of the client currently on the site. */\r\nclass Client {\r\n    constructor() {\r\n        /** The logging system in the IOStream. */\r\n        this.logger = Logger_1.default;\r\n        /** The player information of the client. */\r\n        this.player = new Player_1.default();\r\n        /** The connection between the client and the server. */\r\n        this.connection = new Connection_1.default(this, \"ws://localhost:8080\");\r\n        /** The DOM element manager. */\r\n        this.elements = new ElementManager_1.default(this);\r\n        /** The canvas on which the client draws on. */\r\n        this.canvas = new CanvasManager_1.default(this);\r\n    }\r\n}\r\nexports[\"default\"] = Client;\r\n;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Client.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Connection/Connection.ts":
+/*!***********************************************!*\
+  !*** ./views/client/Connection/Connection.ts ***!
+  \***********************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst SwiftStream_1 = __importDefault(__webpack_require__(/*! ./SwiftStream */ \"./views/client/Connection/SwiftStream.ts\"));\r\nconst Enums_1 = __webpack_require__(/*! ../Const/Enums */ \"./views/client/Const/Enums.ts\");\r\nconst MessageHandler_1 = __importDefault(__webpack_require__(/*! ./MessageHandler */ \"./views/client/Connection/MessageHandler.ts\"));\r\n/** A representation of the WebSocket connection between the client and the server. */\r\nclass Connection extends EventTarget {\r\n    constructor(client, url) {\r\n        super();\r\n        /** The amount of retries attempted. */\r\n        this.retries = 0;\r\n        /** The binary encoder/decoder for the connection. */\r\n        this.SwiftStream = new SwiftStream_1.default();\r\n        /** The handler for incoming messages. */\r\n        this.MessageHandler = new MessageHandler_1.default(this);\r\n        this.client = client;\r\n        this.socket = new WebSocket(url);\r\n        this.socket.binaryType = \"arraybuffer\";\r\n        this.handle();\r\n    }\r\n    migrate(url) {\r\n        if (++this.retries > 3)\r\n            return this.client.logger.err(\"[WS]: Threshold for retries has been exceeded. Please reload.\");\r\n        this.socket.close(4999);\r\n        this.socket = new WebSocket(url);\r\n        this.socket.binaryType = \"arraybuffer\";\r\n        this.handle();\r\n    }\r\n    send(header, data) {\r\n        this.SwiftStream.WriteI8(header);\r\n        switch (header) {\r\n            case Enums_1.ServerBound.Spawn: {\r\n                this.socket.send(this.SwiftStream\r\n                    .WriteCString(data.name)\r\n                    .WriteI8(this.client.player.character)\r\n                    .WriteI8(this.client.player.ability)\r\n                    .Write());\r\n                break;\r\n            }\r\n            case Enums_1.ServerBound.Movement: {\r\n                data.keys.forEach((key) => this.SwiftStream.WriteI8(key));\r\n                this.socket.send(this.SwiftStream.Write());\r\n                break;\r\n            }\r\n            case Enums_1.ServerBound.Angle: {\r\n                this.socket.send(this.SwiftStream.WriteI8(data.measure).Write());\r\n                break;\r\n            }\r\n            case Enums_1.ServerBound.Attack: {\r\n                this.socket.send(this.SwiftStream.WriteI8(data.isAtk).Write());\r\n                break;\r\n            }\r\n            default: {\r\n                this.SwiftStream.Write();\r\n                throw new Error(\"Could not find header. \" + header);\r\n            }\r\n        }\r\n    }\r\n    handle() {\r\n        this.socket.addEventListener(\"open\", () => {\r\n            this.client.logger.success(\"[WS]: Connected to server.\");\r\n        });\r\n        this.socket.addEventListener(\"error\", () => {\r\n            this.client.logger.err(\"[WS]: Connection to server has failed.\");\r\n            this.migrate(this.socket.url);\r\n        });\r\n        this.socket.addEventListener(\"close\", event => {\r\n            if (event.code === 4999)\r\n                return; // Internal migration code.\r\n            this.client.elements.homescreen.homescreen.style.display =\r\n                this.client.elements.arena.game.style.display = \"none\";\r\n            this.client.canvas.phase = Enums_1.Phases.Homescreen;\r\n            this.client.elements.disconnect.disconnect.style.display = \"block\";\r\n            this.client.logger.err(\r\n            /** @ts-ignore */\r\n            this.client.elements.disconnect.disconnectMessage.innerText = Enums_1.CloseEvents[event.code] || Enums_1.CloseEvents[3006]);\r\n        });\r\n        this.socket.addEventListener(\"message\", ({ data }) => {\r\n            this.SwiftStream.Set(data = new Uint8Array(data));\r\n            this.parse();\r\n        });\r\n    }\r\n    parse() {\r\n        const SwiftStream = this.SwiftStream;\r\n        const header = SwiftStream.ReadI8();\r\n        switch (header) {\r\n            case Enums_1.ClientBound.Update:\r\n                this.MessageHandler.Update();\r\n                break;\r\n            default: {\r\n                this.SwiftStream.Clear();\r\n                throw new Error(\"Could not parse packet. \" + header);\r\n            }\r\n        }\r\n        this.SwiftStream.Clear();\r\n    }\r\n}\r\nexports[\"default\"] = Connection;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Connection/Connection.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Connection/MessageHandler.ts":
+/*!***************************************************!*\
+  !*** ./views/client/Connection/MessageHandler.ts ***!
+  \***************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Enums_1 = __webpack_require__(/*! ../Const/Enums */ \"./views/client/Const/Enums.ts\");\r\nconst Box_1 = __importDefault(__webpack_require__(/*! ../Entity/Box */ \"./views/client/Entity/Box.ts\"));\r\n/** A handler for all incoming messages. */\r\nclass MessageHandler {\r\n    constructor(connection) {\r\n        this.connection = connection;\r\n    }\r\n    // Woah, that's a big packet!\r\n    Update() {\r\n        const SwiftStream = this.connection.SwiftStream;\r\n        const player = this.connection.client.player;\r\n        player.surroundings = [];\r\n        const type = SwiftStream.ReadI8();\r\n        if (type === 0x00) { // update player\r\n            let len = SwiftStream.ReadI8();\r\n            for (; len--;) {\r\n                const field = SwiftStream.ReadI8();\r\n                switch (field) {\r\n                    case Enums_1.Fields.ID: {\r\n                        const id = SwiftStream.ReadI8();\r\n                        player.id = id;\r\n                        player.alive = true;\r\n                        this.connection.client.elements.homescreen.homescreen.style.display = \"none\";\r\n                        this.connection.client.canvas.phase = Enums_1.Phases.Arena;\r\n                        this.connection.client.elements.arena.stats.style.display = \"block\";\r\n                        this.connection.client.elements.arena.utils.style.display = \"block\";\r\n                        this.connection.client.canvas.mapCanvas.style.display = \"block\";\r\n                        break;\r\n                    }\r\n                    case Enums_1.Fields.Position: {\r\n                        const x = SwiftStream.ReadFloat32();\r\n                        const y = SwiftStream.ReadFloat32();\r\n                        console.log(x, y);\r\n                        player.position.old = player.position.new;\r\n                        player.position.new = { x, y, ts: Date.now() };\r\n                        break;\r\n                    }\r\n                    case Enums_1.Fields.Attacking:\r\n                        {\r\n                            player.attack.attacking.change = SwiftStream.ReadI8() === 0x01;\r\n                            if (!player.attack.attacking.server && player.attack.attacking.change)\r\n                                player.attack.attacking.server = true;\r\n                            break;\r\n                        }\r\n                        ;\r\n                    case Enums_1.Fields.Weapons: {\r\n                        const weapon = SwiftStream.ReadI8();\r\n                        player.weapon = weapon;\r\n                        break;\r\n                    }\r\n                    case Enums_1.Fields.FOV: {\r\n                        const fov = SwiftStream.ReadFloat32();\r\n                        console.log(\"found FOV\", fov);\r\n                        player.fov = fov;\r\n                        break;\r\n                    }\r\n                }\r\n            }\r\n        }\r\n        const surroundings = type === 0x00 ? SwiftStream.ReadI8() : type;\r\n        if (surroundings === 0x01) {\r\n            let len = SwiftStream.ReadI8();\r\n            for (; len--;) {\r\n                const entity = SwiftStream.ReadI8();\r\n                switch (entity) {\r\n                    case Enums_1.Entities.Box: {\r\n                        const x = SwiftStream.ReadFloat32();\r\n                        const y = SwiftStream.ReadFloat32();\r\n                        console.log(\"Found a box at\", x, y);\r\n                        player.surroundings.push(new Box_1.default(x, y));\r\n                        break;\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\nexports[\"default\"] = MessageHandler;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Connection/MessageHandler.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Connection/SwiftStream.ts":
+/*!************************************************!*\
+  !*** ./views/client/Connection/SwiftStream.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\n/** BUFFERS: Used to convert between different byte lengths. */\r\nconst conversion = new ArrayBuffer(4);\r\nconst u8 = new Uint8Array(conversion);\r\nconst f32 = new Float32Array(conversion);\r\n/** SwiftStream, an efficient binary protocol manager written by Altanis. */\r\nclass SwiftStream {\r\n    constructor() {\r\n        /** The buffer SwiftStream is using. */\r\n        this.buffer = new Uint8Array(4096);\r\n        /** The position at which the buffer is being read. */\r\n        this.at = 0;\r\n        /** UTF8 Decoder. */\r\n        this.TextDecoder = new TextDecoder();\r\n        /** UTF8 Encoder. */\r\n        this.TextEncoder = new TextEncoder();\r\n    }\r\n    Set(buffer) {\r\n        this.buffer = buffer;\r\n        this.at = 0;\r\n    }\r\n    Clear() {\r\n        this.buffer = new Uint8Array(4096);\r\n        this.at = 0;\r\n    }\r\n    /** READER */\r\n    ReadI8() {\r\n        return this.buffer[this.at++];\r\n    }\r\n    ReadFloat32() {\r\n        u8.set(this.buffer.slice(this.at, this.at += 4));\r\n        return f32[0];\r\n    }\r\n    ReadUTF8String() {\r\n        const start = this.at;\r\n        while (this.buffer[this.at++])\r\n            ;\r\n        return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));\r\n    }\r\n    /** WRITER */\r\n    WriteI8(value) {\r\n        this.buffer[this.at++] = value;\r\n        return this;\r\n    }\r\n    WriteFloat32(value) {\r\n        f32[0] = value;\r\n        this.buffer.set(u8, this.at);\r\n        this.at += 4;\r\n        return this;\r\n    }\r\n    WriteCString(value) {\r\n        this.buffer.set(this.TextEncoder.encode(value), this.at);\r\n        this.at += value.length;\r\n        this.buffer[this.at++] = 0;\r\n        return this;\r\n    }\r\n    Write() {\r\n        const result = this.buffer.subarray(0, this.at);\r\n        this.Clear();\r\n        return result;\r\n    }\r\n}\r\nexports[\"default\"] = SwiftStream;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Connection/SwiftStream.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Const/Definitions.ts":
+/*!*******************************************!*\
+  !*** ./views/client/Const/Definitions.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nexports.Weapons = exports.Abilities = exports.Characters = void 0;\r\n/** Characters and all their necessary clientside data. */\r\nconst Characters = [\r\n    /** Knight */\r\n    {\r\n        name: \"Knight\",\r\n        stats: {\r\n            health: 7,\r\n            armor: 6,\r\n            energy: 250\r\n        },\r\n        abilities: [0, 1],\r\n        src: \"Knight.gif\"\r\n    },\r\n    {\r\n        name: \"Priest\",\r\n        stats: {},\r\n        abilities: [1],\r\n        src: \"Priest.gif\"\r\n    }\r\n];\r\nexports.Characters = Characters;\r\n/** Abilities, a specific property of characters. */\r\nconst Abilities = [\r\n    /** Dual Wield */\r\n    {\r\n        name: \"Dual Wield\",\r\n        description: \"Attack with double the power.\",\r\n        src: \"dual_wield.png\",\r\n    },\r\n    /** Charge */\r\n    {\r\n        name: \"Charge\",\r\n        description: \"Bash into a foe with your shield.\",\r\n        src: \"charge.png\",\r\n    }\r\n];\r\nexports.Abilities = Abilities;\r\n/** Weapons, objects used to attack. */\r\nconst Weapons = [\r\n    /** Rusty Blade */\r\n    {\r\n        name: \"Rusty Blade\",\r\n        type: \"melee\",\r\n        rarity: \"common\",\r\n        damage: 10,\r\n        range: Math.PI / 4,\r\n        speed: 30,\r\n        src: \"rusty_blade\",\r\n        offsetX: 0,\r\n        offsetY: 0\r\n    }\r\n];\r\nexports.Weapons = Weapons;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Const/Definitions.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Const/Enums.ts":
+/*!*************************************!*\
+  !*** ./views/client/Const/Enums.ts ***!
+  \*************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nexports.Movement = exports.Entities = exports.Fields = exports.ServerBound = exports.ClientBound = exports.Phases = exports.CloseEvents = void 0;\r\n/** Representation of possible reasons the connection was closed. */\r\nexports.CloseEvents = {\r\n    3000: \"The server has detected multiple connections by you. Please terminate any existing connections.\",\r\n    3001: \"The server is full.\",\r\n    3002: \"The server has detected a malformed request made by you. Please refresh.\",\r\n    3003: \"The server has detected that you are a banned player.\",\r\n    3006: \"An unknown error has occurred. Please refresh.\"\r\n};\r\n/** Representation of the phase canvas is rendering. */\r\nvar Phases;\r\n(function (Phases) {\r\n    Phases[Phases[\"Homescreen\"] = 0] = \"Homescreen\";\r\n    Phases[Phases[\"Arena\"] = 1] = \"Arena\";\r\n})(Phases = exports.Phases || (exports.Phases = {}));\r\n;\r\nvar ClientBound;\r\n(function (ClientBound) {\r\n    /** Tells the client of it's surroundings. */\r\n    ClientBound[ClientBound[\"Update\"] = 0] = \"Update\";\r\n})(ClientBound = exports.ClientBound || (exports.ClientBound = {}));\r\n;\r\nvar ServerBound;\r\n(function (ServerBound) {\r\n    /** Client tells the server they want to spawn. [string(name), i8(characterIdx), i8(abilityIdx)] */\r\n    ServerBound[ServerBound[\"Spawn\"] = 0] = \"Spawn\";\r\n    /** Client tells the server they want to move. [i8(Movement)] */\r\n    ServerBound[ServerBound[\"Movement\"] = 1] = \"Movement\";\r\n    /** The angle the player is facing, in radians. [f32(angle)] */\r\n    ServerBound[ServerBound[\"Angle\"] = 2] = \"Angle\";\r\n    /** Client tells the server they want to attack. */\r\n    ServerBound[ServerBound[\"Attack\"] = 3] = \"Attack\";\r\n    /** Client cheats (when given developer code). */\r\n    ServerBound[ServerBound[\"Cheats\"] = 255] = \"Cheats\";\r\n})(ServerBound = exports.ServerBound || (exports.ServerBound = {}));\r\n;\r\n/** Fields of the Update packet. */\r\nvar Fields;\r\n(function (Fields) {\r\n    /** The ID of the entity. */\r\n    Fields[Fields[\"ID\"] = 0] = \"ID\";\r\n    /** The position of the entity. */\r\n    Fields[Fields[\"Position\"] = 1] = \"Position\";\r\n    /** If the entity is attacking. */\r\n    Fields[Fields[\"Attacking\"] = 2] = \"Attacking\";\r\n    /** The weapon(s) of the player. */\r\n    Fields[Fields[\"Weapons\"] = 3] = \"Weapons\";\r\n    /** The resolution (FoV) of the entity. */\r\n    Fields[Fields[\"FOV\"] = 4] = \"FOV\";\r\n})(Fields = exports.Fields || (exports.Fields = {}));\r\n;\r\n/** Object types. */\r\nvar Entities;\r\n(function (Entities) {\r\n    Entities[Entities[\"Player\"] = 0] = \"Player\";\r\n    Entities[Entities[\"Box\"] = 1] = \"Box\";\r\n})(Entities = exports.Entities || (exports.Entities = {}));\r\n/** Movement codes. */\r\nvar Movement;\r\n(function (Movement) {\r\n    Movement[Movement[\"Up\"] = 1] = \"Up\";\r\n    Movement[Movement[\"Right\"] = 2] = \"Right\";\r\n    Movement[Movement[\"Down\"] = 3] = \"Down\";\r\n    Movement[Movement[\"Left\"] = 4] = \"Left\";\r\n})(Movement = exports.Movement || (exports.Movement = {}));\r\n;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Const/Enums.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Entity/Box.ts":
+/*!************************************!*\
+  !*** ./views/client/Entity/Box.ts ***!
+  \************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Functions_1 = __webpack_require__(/*! ../Utils/Functions */ \"./views/client/Utils/Functions.ts\");\r\nconst _Entity_1 = __importDefault(__webpack_require__(/*! ./_Entity */ \"./views/client/Entity/_Entity.ts\"));\r\nclass Box extends _Entity_1.default {\r\n    constructor(x, y) {\r\n        super();\r\n        /** The dimensions of the box. */\r\n        this.dimensions = { width: 300, height: 300 };\r\n        this.position.new = { x, y, ts: Date.now() };\r\n    }\r\n    render(ctx, frame) {\r\n        let pos;\r\n        if (frame < this.position.old.ts)\r\n            pos = this.position.old;\r\n        else if (frame > this.position.new.ts)\r\n            pos = this.position.new;\r\n        else {\r\n            pos = {\r\n                x: (0, Functions_1.lerp)(this.position.old.x, this.position.new.x, 0.5),\r\n                y: (0, Functions_1.lerp)(this.position.old.y, this.position.new.y, 0.5),\r\n                ts: Date.now()\r\n            };\r\n        }\r\n        const { width, height } = this.dimensions;\r\n        ctx.fillStyle = \"red\";\r\n        ctx.fillRect(pos.x, pos.y, width, height);\r\n    }\r\n}\r\nexports[\"default\"] = Box;\r\n;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Entity/Box.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Entity/Player.ts":
+/*!***************************************!*\
+  !*** ./views/client/Entity/Player.ts ***!
+  \***************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Definitions_1 = __webpack_require__(/*! ../Const/Definitions */ \"./views/client/Const/Definitions.ts\");\r\nconst _Entity_1 = __importDefault(__webpack_require__(/*! ./_Entity */ \"./views/client/Entity/_Entity.ts\"));\r\n/** A representation of a Player entity. */\r\nclass Player extends _Entity_1.default {\r\n    constructor() {\r\n        super(...arguments);\r\n        /** The character index of the player. */\r\n        this.character = 0;\r\n        /** The ability index of the player. */\r\n        this.ability = 0;\r\n        /** The weapon the player is holding. */\r\n        this.weapon = 0;\r\n        /** If the player is alive. */\r\n        this.alive = false;\r\n        /** The dimensions of the player. */\r\n        this.dimensions = { width: 300, height: 300 };\r\n        /** The angle of the player. */\r\n        this.angle = {\r\n            /** Angle from one frame ago. */\r\n            old: {\r\n                ts: 0,\r\n                measure: 0\r\n            },\r\n            /** Angle at current frame. */\r\n            new: {\r\n                ts: 0,\r\n                measure: 0\r\n            },\r\n            /** Interpolation factor. */\r\n            factor: 0\r\n        };\r\n        /** Attack information of the player. */\r\n        this.attack = {\r\n            /** Whether or not the player is attacking. */\r\n            attacking: {\r\n                /** The client-side state. */\r\n                client: false,\r\n                /** The server-side state. */\r\n                server: false,\r\n                /** Whether or not to change state. */\r\n                change: false\r\n            },\r\n            /** The direction of angle movement. */\r\n            direction: 1,\r\n            /** The mouse angle when attacking. */\r\n            mouse: 0,\r\n            /** The lerp factor at which the mouse should go in between [posRange, negRange]. */\r\n            lerpFactor: 0,\r\n            /** The amount of times the direction has been reversed. */\r\n            cycles: 0\r\n        };\r\n        /** The field of vision of the player. */\r\n        this.fov = 0.9;\r\n        /** The entities surrounding the player. */\r\n        this.surroundings = [];\r\n    }\r\n    /** Renders the player onto the canvas. */\r\n    render(manager, ctx, position, angle) {\r\n        const c = Definitions_1.Characters[this.character];\r\n        const w = Definitions_1.Weapons[this.weapon];\r\n        if (angle > Math.PI)\r\n            angle = Math.PI - 0.01;\r\n        else if (angle < -Math.PI)\r\n            angle = -Math.PI + 0.01;\r\n        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.\r\n        ctx.translate(position.x, position.y);\r\n        ctx.scale(scaleX, 1);\r\n        /** Render character. */\r\n        const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);\r\n        if (!character)\r\n            return;\r\n        ctx.drawImage(character, -150, -150, this.dimensions.width, this.dimensions.height);\r\n        /** Render weapon. */\r\n        const weapon = manager.ImageManager.get(`img/weapons/${w.src}`);\r\n        if (!weapon)\r\n            return;\r\n        if (scaleX === -1) {\r\n            if (angle > -Math.PI / 2 && angle < Math.PI) {\r\n                angle = Math.PI - angle;\r\n            }\r\n            else if (angle < -Math.PI / 2 && angle > -Math.PI) {\r\n                angle = Math.abs(angle + (Math.PI / 2)) - (Math.PI / 2);\r\n            }\r\n        }\r\n        ctx.rotate(angle);\r\n        ctx.drawImage(weapon, w.offsetX, w.offsetY, 200, 40);\r\n        // TODO(Altanis): Create a blue tracer to illustrate the path of the sword.\r\n        ctx.restore();\r\n        /** Render position on the minimap. */\r\n        manager.mapCtx.fillStyle = \"#FFFFFF\";\r\n        const minimapX = position.x * manager.mapCanvas.width / 14400;\r\n        const minimapY = position.y * manager.mapCanvas.height / 14400;\r\n        manager.drawCircle(minimapX, minimapY, 2, manager.mapCtx);\r\n    }\r\n}\r\nexports[\"default\"] = Player;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Entity/Player.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Entity/_Entity.ts":
+/*!****************************************!*\
+  !*** ./views/client/Entity/_Entity.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nclass Entity {\r\n    constructor() {\r\n        /** The ID of the entity. */\r\n        this.id = -1;\r\n        /** The position of the entity. */\r\n        this.position = {\r\n            /** Position from one frame ago. */\r\n            old: { x: 0, y: 0, ts: 0 },\r\n            /** Position at current frame. */\r\n            new: { x: 0, y: 0, ts: 0 },\r\n        };\r\n        /** The dimensions of the player. */\r\n        this.dimensions = { width: 0, height: 0 };\r\n    }\r\n    render(...args) { }\r\n    ;\r\n}\r\nexports[\"default\"] = Entity;\r\n;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Entity/_Entity.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Index.ts":
+/*!*******************************!*\
+  !*** ./views/client/Index.ts ***!
+  \*******************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Client_1 = __importDefault(__webpack_require__(/*! ./Client */ \"./views/client/Client.ts\"));\r\nconst Enums_1 = __webpack_require__(/*! ./Const/Enums */ \"./views/client/Const/Enums.ts\");\r\nconst client = new Client_1.default();\r\nconst KEYDOWN_MAP = new Map([\r\n    /** Movement keys. */\r\n    [38, 1],\r\n    [87, 1],\r\n    [39, 2],\r\n    [68, 2],\r\n    [40, 3],\r\n    [83, 3],\r\n    [37, 4],\r\n    [65, 4],\r\n]);\r\nclient.elements.canvas.addEventListener('contextmenu', event => event.preventDefault());\r\ndocument.addEventListener(\"keydown\", function (event) {\r\n    switch (event.code) {\r\n        case \"Enter\": {\r\n            if ( /** activeElement === NameInput && */client.elements.homescreen.play.style.display === \"block\") {\r\n                client.elements.homescreen.play.click();\r\n            }\r\n            break;\r\n        }\r\n    }\r\n    const key = KEYDOWN_MAP.get(event.which || event.keyCode);\r\n    if (key) {\r\n        client.elements.activeKeys.add(key);\r\n        event.preventDefault();\r\n    }\r\n});\r\ndocument.addEventListener(\"keyup\", function (event) {\r\n    const key = KEYDOWN_MAP.get(event.which || event.keyCode);\r\n    if (key) {\r\n        client.elements.activeKeys.delete(key);\r\n        event.preventDefault();\r\n    }\r\n});\r\ndocument.addEventListener(\"mousemove\", function (event) {\r\n    client.elements.mouse = {\r\n        x: event.clientX,\r\n        y: event.clientY\r\n    };\r\n});\r\nclient.elements.canvas.addEventListener(\"mousedown\", function (event) {\r\n    if (client.canvas.phase === Enums_1.Phases.Arena)\r\n        client.player.attack.attacking.client = true;\r\n    event.preventDefault();\r\n});\r\nclient.elements.canvas.addEventListener(\"mouseup\", function (event) {\r\n    if (client.canvas.phase === Enums_1.Phases.Arena)\r\n        client.player.attack.attacking.client = false;\r\n    event.preventDefault();\r\n});\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Index.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Rendering/CanvasManager.ts":
+/*!*************************************************!*\
+  !*** ./views/client/Rendering/CanvasManager.ts ***!
+  \*************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\r\nvar __importDefault = (this && this.__importDefault) || function (mod) {\r\n    return (mod && mod.__esModule) ? mod : { \"default\": mod };\r\n};\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Enums_1 = __webpack_require__(/*! ../Const/Enums */ \"./views/client/Const/Enums.ts\");\r\nconst Functions_1 = __webpack_require__(/*! ../Utils/Functions */ \"./views/client/Utils/Functions.ts\");\r\nconst ImageManager_1 = __importDefault(__webpack_require__(/*! ./ImageManager */ \"./views/client/Rendering/ImageManager.ts\"));\r\n/** Constant for 360 degrees in radians. */\r\nconst TAU = Math.PI * 2;\r\n/** Psuedorandom number in between two ranges. */\r\n/** The canvas where nearly all visual representation is drawn. */\r\nclass CanvasManager {\r\n    constructor(client) {\r\n        /** The canvas element. */\r\n        /** @ts-ignore */\r\n        this.canvas = document.getElementById(\"canvas\");\r\n        /** The context to draw on. */\r\n        this.ctx = this.canvas.getContext(\"2d\");\r\n        /** MAP CANVAS */\r\n        /** The canvas which represents the minimap. */\r\n        /** @ts-ignore */\r\n        this.mapCanvas = document.getElementById(\"mapDisplay\");\r\n        /** The context to draw on for the minimap. */\r\n        this.mapCtx = this.mapCanvas.getContext(\"2d\");\r\n        /** The phase in which rendering is occuring. */\r\n        this.phase = Enums_1.Phases.Homescreen;\r\n        /** The difference in between two frame renders. */\r\n        this.delta = 0;\r\n        /** The variable which keeps track of the last update. */\r\n        this.lastUpdate = 0;\r\n        /** The object which tracks FPS. */\r\n        this.FPS = {\r\n            fps: [0]\r\n        };\r\n        /** Manager for images. */\r\n        this.ImageManager = new ImageManager_1.default();\r\n        /** The stars on the homescreen. */\r\n        this.stars = {\r\n            count: 200,\r\n            stars: [],\r\n            radiusIncrement: 0.1\r\n        };\r\n        this.client = client;\r\n    }\r\n    render() {\r\n        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);\r\n        this.mapCtx.clearRect(0, 0, this.mapCanvas.width, this.mapCanvas.height);\r\n        this.delta = Date.now() - this.lastUpdate;\r\n        this.lastUpdate = Date.now();\r\n        switch (this.phase) {\r\n            case Enums_1.Phases.Homescreen:\r\n                this.Homescreen();\r\n                break;\r\n            case Enums_1.Phases.Arena:\r\n                this.Arena(this.delta);\r\n                break;\r\n        }\r\n    }\r\n    /** UTILITIES */\r\n    drawCircle(x, y, r, ctx = this.ctx) {\r\n        ctx.beginPath();\r\n        ctx.arc(x, y, r, 0, TAU);\r\n        ctx.fill();\r\n    }\r\n    /** Renders the homescreen background (with pulsating stars). */\r\n    Homescreen() {\r\n        this.ctx.fillStyle = \"#000000\";\r\n        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);\r\n        this.ctx.fillStyle = \"#FFFFFF\";\r\n        for (let i = this.stars.count - this.stars.stars.length; --i;) {\r\n            this.stars.stars.push({\r\n                x: (0, Functions_1.randomRange)(0, this.canvas.width),\r\n                y: (0, Functions_1.randomRange)(0, this.canvas.width),\r\n                radius: (0, Functions_1.randomRange)(0.1, 1.5),\r\n            });\r\n        }\r\n        for (let i = this.stars.stars.length; i--;) {\r\n            const star = this.stars.stars[i];\r\n            this.drawCircle(star.x, star.y, star.radius);\r\n            star.radius += this.stars.radiusIncrement;\r\n            if (star.radius >= 3)\r\n                this.stars.stars.splice(i, 1);\r\n        }\r\n    }\r\n    /** Renders the actual arena when spawned in. */\r\n    Arena(delta) {\r\n        /** Update FPS. */\r\n        if (this.FPS.fps.length > 10)\r\n            this.FPS.fps.shift();\r\n        this.FPS.fps.push(1000 / delta);\r\n        this.client.elements.arena.fps.innerText = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length).toFixed(1) + '  FPS';\r\n        // RENDER OUTBOUNDS:\r\n        this.ctx.fillStyle = \"rgba(12, 50, 54, 1)\";\r\n        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);\r\n        this.ctx.save();\r\n        let pos;\r\n        let angle;\r\n        const frame = Date.now() - (1000 / 60);\r\n        if (frame < this.client.player.position.old.ts)\r\n            pos = this.client.player.position.old;\r\n        else if (frame > this.client.player.position.new.ts)\r\n            pos = this.client.player.position.new;\r\n        else {\r\n            pos = {\r\n                x: (0, Functions_1.lerp)(this.client.player.position.old.x, this.client.player.position.new.x, 0.5),\r\n                y: (0, Functions_1.lerp)(this.client.player.position.old.y, this.client.player.position.new.y, 0.5),\r\n                ts: Date.now()\r\n            };\r\n        }\r\n        ;\r\n        if (frame < this.client.player.angle.old.ts)\r\n            angle = this.client.player.angle.old.measure;\r\n        else if (frame > this.client.player.angle.new.ts)\r\n            angle = this.client.player.angle.new.measure;\r\n        else {\r\n            angle = (0, Functions_1.lerpAngle)(this.client.player.angle.old.measure, this.client.player.angle.new.measure, 0.5);\r\n        }\r\n        let { x: cameraX, y: cameraY } = pos;\r\n        /** Set up player camera. */\r\n        const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);\r\n        this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.\r\n        this.ctx.scale(factor * this.client.player.fov, factor * this.client.player.fov); // Multiply operands by a view scale if needed.\r\n        this.ctx.translate(-cameraX, -cameraY);\r\n        /** Render background of the arena. */\r\n        // RENDER INBOUNDS:\r\n        this.ctx.strokeStyle = \"#2F8999\";\r\n        this.ctx.lineWidth = 10;\r\n        this.ctx.fillStyle = \"rgb(5,28,31)\";\r\n        this.ctx.strokeRect(0, 0, 14400, 14400);\r\n        this.ctx.fillRect(0, 0, 14400, 14400);\r\n        for (const entity of this.client.player.surroundings)\r\n            entity.render(this.ctx, frame);\r\n        this.client.player.render(this, this.ctx, pos, angle);\r\n        this.ctx.restore();\r\n    }\r\n}\r\nexports[\"default\"] = CanvasManager;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Rendering/CanvasManager.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Rendering/ElementManager.ts":
+/*!**************************************************!*\
+  !*** ./views/client/Rendering/ElementManager.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nconst Definitions_1 = __webpack_require__(/*! ../Const/Definitions */ \"./views/client/Const/Definitions.ts\");\r\nconst Enums_1 = __webpack_require__(/*! ../Const/Enums */ \"./views/client/Const/Enums.ts\");\r\nconst Functions_1 = __webpack_require__(/*! ../Utils/Functions */ \"./views/client/Utils/Functions.ts\");\r\n/** Manages DOM elements. */\r\nclass ElementManager {\r\n    constructor(client) {\r\n        /** Interactive elements on the homescreen. */\r\n        this.homescreen = {\r\n            /** The div which contains all elements of the homescreen. */\r\n            homescreen: document.getElementById(\"homescreen\"),\r\n            /** The button which spawns the player. */\r\n            play: document.getElementById(\"play\"),\r\n            /** The input where the name is held. */\r\n            // none yet\r\n            /** The div which holds all 3 gamemode buttons. */\r\n            gamemodes: document.getElementById(\"gamemodes\"),\r\n            /** The button to trigger the settings modal. */\r\n            settings: document.getElementById(\"settings\"),\r\n            /** The screen which displays when the client has disconnected. */\r\n            disconnect: document.getElementById(\"disconnect\"),\r\n            /** The div with the character selector. */\r\n            characterSelector: {\r\n                /** The left arrow for the character. */\r\n                arrowLeft: document.getElementById(\"arrow-left\"),\r\n                /** The right arrow for the character. */\r\n                arrowRight: document.getElementById(\"arrow-right\"),\r\n                /** The name of the character. */\r\n                characterName: document.getElementById(\"character-name\"),\r\n                /** The sprite of the character. */\r\n                characterSprite: document.getElementById(\"character-sprite\"),\r\n                /** The name of the ability. */\r\n                abilityName: document.getElementById(\"ability-name\"),\r\n                /** The description of the ability. */\r\n                abilityDesc: document.getElementById(\"ability-desc\"),\r\n                /** The selector icons of the abilities. */\r\n                abilitySelector: document.getElementById(\"ability\")\r\n            }\r\n        };\r\n        /** Toggleable settings. */\r\n        this.settings = {\r\n            /** The div which contains toggleable settings. */\r\n            settings: document.getElementById(\"settingsModal\"),\r\n        };\r\n        /** Elements which display while playing. */\r\n        this.arena = {\r\n            /** The div containing all of these elements. */\r\n            game: document.getElementById(\"game\"),\r\n            /** The div which contains every stat of the player. */\r\n            stats: document.getElementById(\"stats\"),\r\n            /** The health bar in the stats div. */\r\n            health: document.getElementById(\"health\"),\r\n            /** The armor bar in the stats div. */\r\n            armor: document.getElementById(\"armor\"),\r\n            /** The energy bar in the stats div. */\r\n            energy: document.getElementById(\"energy\"),\r\n            /** The utils of the player, such as FPS/MS/Minimap. */\r\n            utils: document.getElementById(\"utils\"),\r\n            /** The name of the game. */\r\n            gameName: document.getElementById(\"gameName\"),\r\n            /** The FPS of the client. */\r\n            fps: document.getElementById(\"fps\"),\r\n            /** The ping of the client. */\r\n            ping: document.getElementById(\"ping\"),\r\n        };\r\n        /** Elements which play when the player disconnects from the game. */\r\n        this.disconnect = {\r\n            /** The div which contains the disconnect message. */\r\n            disconnect: document.getElementById(\"disconnect\"),\r\n            /** The message displayed when disconnecting. */\r\n            disconnectMessage: document.getElementById(\"disconnect-message\")\r\n        };\r\n        /** The canvas to draw on. */\r\n        /** @ts-ignore */\r\n        this.canvas = document.getElementById(\"canvas\");\r\n        /** The keys currently being pressed. */\r\n        this.activeKeys = new Set();\r\n        /** The mouse coordinates of the client. */\r\n        this.mouse = { x: 0, y: 0 };\r\n        this.client = client;\r\n        this.setup();\r\n        this.loop();\r\n    }\r\n    setup() {\r\n        /** Add resize handlers for the canvas. */\r\n        window.addEventListener(\"resize\", () => {\r\n            this.canvas.height = window.innerHeight * window.devicePixelRatio;\r\n            this.canvas.width = window.innerWidth * window.devicePixelRatio;\r\n        });\r\n        window.dispatchEvent(new Event(\"resize\"));\r\n        /** Add stat texts. */\r\n        document.querySelectorAll(\".progress-bar\").forEach((p, i) => {\r\n            let name = \"\";\r\n            switch (i) {\r\n                case 0:\r\n                    name = \"health\";\r\n                    break;\r\n                case 1:\r\n                    name = \"armor\";\r\n                    break;\r\n                case 2:\r\n                    name = \"energy\";\r\n                    break;\r\n            }\r\n            name += \"Text\";\r\n            /** @ts-ignore */\r\n            this.arena[name] = p.children[1];\r\n        });\r\n        /** Create pointers for abilities and characters. */\r\n        this.homescreen.characterSelector.arrowLeft.addEventListener(\"click\", () => {\r\n            this.client.player.character = (this.client.player.character - 1 + Definitions_1.Characters.length) % Definitions_1.Characters.length;\r\n            this.client.player.ability = Definitions_1.Characters[this.client.player.character].abilities[0];\r\n        });\r\n        this.homescreen.characterSelector.arrowRight.addEventListener(\"click\", () => {\r\n            this.client.player.character = (this.client.player.character + 1) % Definitions_1.Characters.length;\r\n            this.client.player.ability = Definitions_1.Characters[this.client.player.character].abilities[0];\r\n        });\r\n        /** Send play signal to server when Play is pressed. */\r\n        this.homescreen.play.addEventListener(\"click\", () => {\r\n            this.client.connection.send(Enums_1.ServerBound.Spawn, {\r\n                name: \"Altanis\"\r\n            });\r\n            const { health, armor, energy } = Definitions_1.Characters[this.client.player.character].stats;\r\n            /** @ts-ignore */\r\n            this.arena.healthText.innerText = `${health}/${health}`;\r\n            /** @ts-ignore */\r\n            this.arena.armorText.innerText = `${armor}/${armor}`;\r\n            /** @ts-ignore */\r\n            this.arena.energyText.innerText = `${energy}/${energy}`;\r\n        });\r\n    }\r\n    loop() {\r\n        var _a;\r\n        const player = this.client.player;\r\n        /** Update client's canvas. */\r\n        (_a = this.client.canvas) === null || _a === void 0 ? void 0 : _a.render();\r\n        /** Check if character has changed. */\r\n        let intuition = false;\r\n        const character = Definitions_1.Characters[player.character];\r\n        if (this.homescreen.characterSelector.characterName.innerText !== character.name) {\r\n            intuition = true;\r\n            this.homescreen.characterSelector.characterName.innerText = character.name;\r\n            /** @ts-ignore */\r\n            this.homescreen.characterSelector.characterSprite.src = `assets/img/characters/gifs/${character.src}`;\r\n        }\r\n        const playerAbility = Definitions_1.Abilities[player.ability];\r\n        if (this.homescreen.characterSelector.abilityName.innerHTML !== playerAbility.name || intuition) {\r\n            this.homescreen.characterSelector.abilityName.innerHTML = playerAbility.name;\r\n            this.homescreen.characterSelector.abilitySelector.innerHTML = \"\";\r\n            character.abilities.map(ability => Definitions_1.Abilities[ability]).forEach((ability, i) => {\r\n                const image = new Image(50, 50);\r\n                image.src = `assets/img/abilities/${ability.src}`;\r\n                image.classList.add(\"character-ability\");\r\n                if (ability.name === playerAbility.name) {\r\n                    this.homescreen.characterSelector.abilityDesc.innerText = ability.description;\r\n                    image.classList.add(\"selected\");\r\n                }\r\n                image.addEventListener(\"click\", () => {\r\n                    player.ability = character.abilities[i];\r\n                });\r\n                this.homescreen.characterSelector.abilitySelector.appendChild(image);\r\n            });\r\n        }\r\n        /** Recognize keypresses. */\r\n        if (this.activeKeys.size) {\r\n            this.client.connection.send(Enums_1.ServerBound.Movement, {\r\n                keys: this.activeKeys\r\n            });\r\n        }\r\n        /** Recognize mouse movements. */\r\n        if (this.mouse && player.alive && !player.attack.attacking.server) {\r\n            const old = player.angle.old.measure;\r\n            const measure = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));\r\n            if (old !== measure) {\r\n                this.client.connection.send(Enums_1.ServerBound.Attack, {\r\n                    measure\r\n                });\r\n                player.angle.old = player.angle.new;\r\n                player.angle.new = {\r\n                    measure,\r\n                    ts: Date.now()\r\n                };\r\n            }\r\n        }\r\n        /** Update angle when attacking. */\r\n        if (player.attack.attacking.server) {\r\n            player.angle.old = player.angle.new;\r\n            player.attack.mouse = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));\r\n            const weapon = Definitions_1.Weapons[player.weapon];\r\n            let posRange = player.attack.mouse + weapon.range;\r\n            let negRange = player.attack.mouse - weapon.range;\r\n            if (posRange > Math.PI)\r\n                posRange -= Functions_1.TAU;\r\n            if (negRange < -Math.PI)\r\n                negRange += Functions_1.TAU;\r\n            // TODO(Altanis): Fix lerpAngle fucktion.\r\n            const angle = (0, Functions_1.lerpAngle)(posRange, negRange, player.attack.lerpFactor);\r\n            player.attack.lerpFactor += 5 * (weapon.speed / 1000) * player.attack.direction;\r\n            if (player.attack.lerpFactor >= 1 || player.attack.lerpFactor <= 0) {\r\n                player.attack.direction *= -1;\r\n                if (++player.attack.cycles % 2 === 0) {\r\n                    player.attack.attacking.server = player.attack.attacking.change;\r\n                }\r\n            }\r\n            player.angle.new = {\r\n                measure: angle,\r\n                ts: Date.now()\r\n            };\r\n        }\r\n        /** Check for when to send an ATTACK packet. */\r\n        if (player.attack.attacking.client !== player.attack.attacking.server) {\r\n            this.client.connection.send(Enums_1.ServerBound.Attack, {\r\n                isAtk: player.attack.attacking.client\r\n            });\r\n        }\r\n        requestAnimationFrame(this.loop.bind(this));\r\n    }\r\n}\r\nexports[\"default\"] = ElementManager;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Rendering/ElementManager.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Rendering/ImageManager.ts":
+/*!************************************************!*\
+  !*** ./views/client/Rendering/ImageManager.ts ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\n/** Manages frames of an image when rendering so it looks like a GIF. */\r\nclass ImageManager {\r\n    constructor() {\r\n        /** All cached images. */\r\n        this.images = new Map(); // CharacterName => { frames: Images[], at: number }\r\n    }\r\n    /** The delay before switching to a new frame. */\r\n    /** Requests for the current frame of an image. */\r\n    get(path, sharded = false) {\r\n        let data = this.images.get(path);\r\n        if (!data)\r\n            return this.request(path, sharded);\r\n        const image = data.frames[data.at];\r\n        /** @ts-ignore */\r\n        if (data.frames.length && sharded && ++data.delay > 2) {\r\n            data.at = ++data.at % data.frames.length;\r\n            data.delay = 0;\r\n        }\r\n        return image;\r\n    }\r\n    /** Requests for an image to be cached. */\r\n    request(path, sharded = false) {\r\n        this.images.set(path, {\r\n            at: 0,\r\n            frames: [],\r\n            delay: 0\r\n        });\r\n        if (sharded) {\r\n            for (let i = 0; i < 8; i++) {\r\n                const image = new Image();\r\n                image.src = `${path}${i + 1}.png`;\r\n                image.addEventListener(\"load\", () => {\r\n                    this.images.get(path).frames.push(image);\r\n                });\r\n            }\r\n        }\r\n        else {\r\n            const image = new Image();\r\n            image.src = path + \".png\";\r\n            image.addEventListener(\"load\", () => {\r\n                this.images.get(path).frames.push(image);\r\n            });\r\n        }\r\n    }\r\n}\r\nexports[\"default\"] = ImageManager;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Rendering/ImageManager.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Utils/Functions.ts":
+/*!*****************************************!*\
+  !*** ./views/client/Utils/Functions.ts ***!
+  \*****************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\nexports.lerpAngle = exports.lerp = exports.randomRange = exports.TAU = void 0;\r\n/** TAU, 360 degrees or Math.PI * 2. */\r\nexports.TAU = Math.PI * 2;\r\n/** Returns a random number in between two numbers. */\r\nconst randomRange = (min, max) => Math.random() * (max - min) + min;\r\nexports.randomRange = randomRange;\r\n/** Linear interpolation for any type of integer. */\r\nconst lerp = (a, b, t) => a + (b - a) * t;\r\nexports.lerp = lerp;\r\n/** Linear interpolation for specifically angles. */\r\nconst lerpAngle = (a, b, t) => {\r\n    let value = a + (-((a - b + Math.PI * 3) % (exports.TAU) - Math.PI)) * t;\r\n    if (value > Math.PI)\r\n        value -= exports.TAU;\r\n    if (value < -Math.PI)\r\n        value += exports.TAU;\r\n    return value;\r\n};\r\nexports.lerpAngle = lerpAngle;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Utils/Functions.ts?");
+
+/***/ }),
+
+/***/ "./views/client/Utils/Logger.ts":
+/*!**************************************!*\
+  !*** ./views/client/Utils/Logger.ts ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+eval("\r\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\r\n/** A colorful logger to highlight important actions. */\r\nconst Logger = {\r\n    log: (...args) => console.log(`%c[${Date().split(\" \")[4]}]: ${args.join(\" \")}`, 'color: blue;'),\r\n    err: (...args) => console.log(`%c[${Date().split(\" \")[4]}]: ${args.join(\" \")}`, 'color: red;'),\r\n    success: (...args) => console.log(`%c[${Date().split(\" \")[4]}]: ${args.join(\" \")}`, 'color: green;'),\r\n    warn: (...args) => console.log(`%c[${Date().split(\" \")[4]}]: ${args.join(\" \")}`, 'color: yellow;'),\r\n    debug: (...args) => console.log(args.join(\" \"))\r\n};\r\nexports[\"default\"] = Logger;\r\n\n\n//# sourceURL=webpack://valiant.io/./views/client/Utils/Logger.ts?");
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__("./views/client/Index.ts");
+/******/ 	
+/******/ })()
+;

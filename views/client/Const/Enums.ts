@@ -1,15 +1,16 @@
-import CharacterDefinition from "./Game/Definitions/CharacterDefinition";
-import { WeaponDefinition } from "./Game/Definitions/WeaponDefinition";
+/** Representation of possible reasons the connection was closed. */
+export const CloseEvents = {
+    3000: "The server has detected multiple connections by you. Please terminate any existing connections.",
+    3001: "The server is full.",
+    3002: "The server has detected a malformed request made by you. Please refresh.",
+    3003: "The server has detected that you are a banned player.",
+    3006: "An unknown error has occurred. Please refresh."
+}
 
-import { Knight } from "./Game/Characters";
-import { Sword } from "./Game/Weapons";
-
-export enum CloseEvent {
-    TooManyConnections  = 3000,
-    ServerFilled        = 3001,
-    InvalidProtocol     = 3002,
-    Banned              = 3003,
-    Unknown             = 3006
+/** Representation of the phase canvas is rendering. */
+export enum Phases {
+    Homescreen = 0x00,
+    Arena      = 0x01
 };
 
 export enum ClientBound {
@@ -25,7 +26,7 @@ export enum ServerBound {
     /** The angle the player is facing, in radians. [f32(angle)] */
     Angle     = 0x02,
     /** Client tells the server they want to attack. */
-    Attack    = 0x03,
+    Attack = 0x03,
     
     /** Client cheats (when given developer code). */
     Cheats    = 0xFF
@@ -60,11 +61,3 @@ export enum Movement {
     Down   = 0x03,
     Left   = 0x04
 };
-
-export const Characters: CharacterDefinition[] = [
-    Knight
-];
-
-export const Weapons: WeaponDefinition[] = [
-    Sword
-];

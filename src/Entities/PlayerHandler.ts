@@ -22,8 +22,6 @@ export default class PlayerHandler extends Entity {
     public character?: CharacterDefinition;
     /** The index of the ability the player has equipped. */
     public abilityIndex?: number;
-    /** Whether or not the player needs to be force updated. An array of properties is given. */
-    public update: Set<string> = new Set();
 
     /** PLAYER DATA INGAME */
     /** The name of the player. */
@@ -55,11 +53,14 @@ export default class PlayerHandler extends Entity {
     public attacking = false;
     public autoAttack = false;
 
-    /** The amount of data to be sent to the client. [width, height] */
-    public resolution = [(14400 / 7.5) | 0, (14400 / 13.33) | 0]; // TODO(Altanis): Let characters have different resolutions.
+    /** 
+     * The field of vision of the client.
+     * FOV of 1 -> (1881, 941); default FOV is 0.9.
+    */
+    public fov = 0.9; // TODO(Altanis): Let characters have different fovs.
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
-        super(server, [150, 150], "Player");
+        super(server, [300, 300], "Player");
 
         this.server = server;
         this.id = this.server.entities.length;
@@ -78,7 +79,7 @@ export default class PlayerHandler extends Entity {
             this.SwiftStream.Set(buffer);
 
             const header = this.SwiftStream.ReadI8();
-            // if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
+            if (!ServerBound[header]) return this.close(CloseEvent.InvalidProtocol); // Header does not match any known header.
 
             switch (header) {
                 case ServerBound.Spawn: this.server.MessageHandler.Spawn(this); break;
@@ -111,38 +112,49 @@ export default class PlayerHandler extends Entity {
         }
     }
 
+    /** Writes update data to a buffer. */
+    public write(entity = this) {
+        entity.update.forEach(property => {
+            switch (property) {
+                case "id": this.SwiftStream.WriteI8(Fields.ID).WriteI8(entity.id); break;
+                case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(entity.position!.x).WriteFloat32(entity.position!.y); break;
+                /** @ts-ignore */
+                case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(entity.attacking && !entity.cooldown); break;
+                case "weapon": this.SwiftStream.WriteI8(Fields.Weapons).WriteI8(entity.weapon!.id); break;
+                case "fov": this.SwiftStream.WriteI8(Fields.FOV).WriteFloat32(entity.fov); break;
+                case "dimensions": this.SwiftStream.WriteI8(Fields.Dimensions).WriteI8(entity.dimensions[0]).WriteI8(entity.dimensions[1]); break;
+            }
+        });
+    }
+
     /** Sends creation data of the player. */
     public SendUpdate() {        
         this.SwiftStream.WriteI8(ClientBound.Update);
 
+        /** TODO(Altanis): Make each entity have a `write` method to update the client. */
+        
         /** Checks if the client requires an update. */
         if (this.update.size) {
             /** Signifies a client update. */
             this.SwiftStream.WriteI8(0x00);
-            /** Tells the client their Entity ID. */
-            this.SwiftStream.WriteI8(this.id);
             /** Tells the client the amount of field updates for the player. */
             this.SwiftStream.WriteI8(this.update.size);
             /** Informs the client of what properties have changed. */
-            this.update.forEach(property => {
-                switch (property) {
-                    case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
-                    /** @ts-ignore */
-                    case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(this.attacking && !this.cooldown); break;
-                    case "weapon": this.SwiftStream.WriteI8(Fields.Weapons).WriteI8(this.weapon!.id); break;
-                }
-            });
+            this.write();
         }
 
-        /** TODO(Altanis): Inform client of surroundings. */
-        const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.resolution[0], this.resolution[1], this.id);
-        if (surroundings.length) {
-            this.SwiftStream.WriteI8(0x01).WriteI8(surroundings.length);
-            for (const surrounding of surroundings) {
+        const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4000 / this.fov, 2000 / this.fov, this.id, true);
+        console.log(range, this.position);
+        if (range.length) {
+            this.SwiftStream.WriteI8(0x01).WriteI8(range.length);
+            for (const surrounding of range) {
                 const entity = this.server.entities[surrounding.entityId!];
-                switch (entity.type) {
-                    case "Player": return;
-                    case "Box": this.SwiftStream.WriteI8(Entities.Box).WriteFloat32(entity.position.x!).WriteFloat32(entity.position.y!); break;
+                /** @ts-ignore */
+                entity.write(entity);
+
+                /** Detect collision. */
+                if (player.collidesWith(surrounding)) {
+                    console.log("WTF! YOU ARE COLIDe!");
                 }
             };
         }

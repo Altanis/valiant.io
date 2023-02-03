@@ -2,7 +2,7 @@ import { CloseEvent, Characters, Movement } from '../Const/Enums';
 
 import PlayerHandler from '../Entities/PlayerHandler';
 import GameServer from '../GameServer';
-import Vector from './Vector';
+import Vector from '../Utils/Vector';
 import { randInt } from '../Utils/Functions';
 import { Sword } from '../Const/Game/Weapons';
 
@@ -42,14 +42,17 @@ export default class MessageHandler {
         player.energy = player.character.stats.energy;
 
         player.velocity = new Vector(0, 0);
-        player.position = new Vector(500, 500); //new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
+        player.position = new Vector(0, 0); //new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
 
         player.alive = true;
+        
+        player.update.add("id");
         player.update.add("position");
         player.update.add("weapon");
+        player.update.add("fov");
     }
 
-    // [1, i8(Movement)]
+    // [1, ...i8(Movement)]
     Move(player: PlayerHandler): void {
         if (
             !player.alive
@@ -59,7 +62,7 @@ export default class MessageHandler {
         const movementKeys = [];
         while (player.SwiftStream.at < player.SwiftStream.buffer.length && movementKeys.length < 4)
             movementKeys.push(player.SwiftStream.ReadI8());
-                
+        
         for (const movement of movementKeys) {
             switch (movement) {
                 case Movement.Up: player.velocity!.y = -player.character!.speed; break;

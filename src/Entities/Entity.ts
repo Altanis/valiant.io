@@ -1,5 +1,5 @@
 import GameServer from '../GameServer';
-import Vector from '../Managers/Vector';
+import Vector from '../Utils/Vector';
 type EntityType = "Player" | "Box";
 
 /** The base for any entity ingame. */
@@ -16,6 +16,8 @@ export default class Entity {
     public velocity: Vector = new Vector(0, 0);
     /** The dimensions of the entity. */
     public dimensions: number[];
+    /** Whether or not the entity needs to be force updated. A set of properties is given. */
+    public update: Set<string> = new Set();
 
     constructor(server: GameServer, dimensions: number[], type: EntityType) {
         this.server = server;
@@ -30,7 +32,7 @@ export default class Entity {
         this.position!.add(this.velocity!, true);
         this.velocity!.x = this.velocity!.y = 0;
         
-        /** Reinsert into hashgrid with updated  position. */
+        /** Reinsert into hashgrid with updated position. */
         this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
     }
 }
