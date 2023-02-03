@@ -16,6 +16,8 @@ export default class Entity {
     public velocity: Vector = new Vector(0, 0);
     /** The dimensions of the entity. */
     public dimensions: number[];
+    /** Whether or not the entity needs to be force updated. A set of properties is given. */
+    public update: Set<string> = new Set();
 
     constructor(server: GameServer, dimensions: number[], type: EntityType) {
         this.server = server;

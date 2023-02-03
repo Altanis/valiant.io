@@ -115,7 +115,11 @@ export default class SpatialHashGrid {
             }
         }
 
-        return [...found.values()];
+        const range = [...found.values()];
+        return {
+            range,
+            player: (box.w = box.h = 300, box)
+        };
     }
 
     clear() {
