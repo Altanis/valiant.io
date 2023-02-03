@@ -1,6 +1,8 @@
 import { Fields, Entities, Phases } from "../Const/Enums";
 import Connection from "./Connection";
 
+import Box from "../Entity/Box";
+
 /** A handler for all incoming messages. */
 export default class MessageHandler {
     /** The connection which the handler is representing. */
@@ -14,6 +16,8 @@ export default class MessageHandler {
     public Update() {
         const SwiftStream = this.connection.SwiftStream;
         const player = this.connection.client.player;
+        
+        player.surroundings = [];
 
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
@@ -70,7 +74,7 @@ export default class MessageHandler {
         }
 
         const surroundings = type === 0x00 ? SwiftStream.ReadI8() : type;
-        if (surroundings === 0x01) {
+        if (surroundings === 0x01) {            
             let len = SwiftStream.ReadI8();
             for (;len--;) {
                 const entity = SwiftStream.ReadI8();
@@ -79,8 +83,8 @@ export default class MessageHandler {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
 
-                        // TODO(Altanis): Fix fov.
                         console.log("Found a box at", x, y);
+                        player.surroundings.push(new Box(x, y));
                         break;
                     }
                 }

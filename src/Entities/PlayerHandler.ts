@@ -138,7 +138,7 @@ export default class PlayerHandler extends Entity {
         }
 
         /** TODO(Altanis): Inform client of surroundings. */
-        const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 1881 / this.fov, 941 / this.fov, this.id);
+        const surroundings = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4000 / this.fov, 2000 / this.fov, this.id, true);
         console.log(surroundings, this.position);
         if (surroundings.length) {
             this.SwiftStream.WriteI8(0x01).WriteI8(surroundings.length);

@@ -54,13 +54,10 @@ export default class SpatialHashGrid {
 
         const box = new Box(x, y, w, h, id);
 
-        const centerX = box.x + box.w / 2;
-        const centerY = box.y + box.h / 2;
-    
-        const startX = centerX >> this.cellSize;
-        const startY = centerY >> this.cellSize;
-        const endX = ((centerX + box.w / 2) >> this.cellSize) + 1;
-        const endY = ((centerY + box.h / 2) >> this.cellSize) + 1;
+        const startX = box.x >> this.cellSize;
+        const startY = box.y >> this.cellSize;
+        const endX = ((box.x + box.w) >> this.cellSize) + 1;
+        const endY = ((box.y + box.h) >> this.cellSize) + 1;
 
         for (let x = startX; x < endX; x++) {
             for (let y = startY; y < endY; y++) {
@@ -78,20 +75,26 @@ export default class SpatialHashGrid {
      * @param y The y-coordinate of the entity.
      * @param w The width of the entity.
      * @param h The height of the entity.
+     * @param inRange Checks from center of entity to get viewport.
      */
-    query(x: number, y: number, w: number, h: number, id: number) {
+    query(x: number, y: number, w: number, h: number, id: number, inRange = false) {
         const box = new Box(x, y, w, h, id);
 
-        const centerX = box.x + box.w / 2;
-        const centerY = box.y + box.h / 2;
-    
-        const startX = centerX >> this.cellSize;
-        const startY = centerY >> this.cellSize;
-        const endX = ((centerX + box.w / 2) >> this.cellSize) + 1;
-        const endY = ((centerY + box.h / 2) >> this.cellSize) + 1;
+        let startX: number, startY: number, endX: number, endY: number;
+
+        if (inRange) {
+            startX = (box.x - box.w / 2) >> this.cellSize;
+            startY = (box.y - box.h / 2) >> this.cellSize;
+            endX = ((box.x + box.w / 2) >> this.cellSize) + 1;
+            endY = ((box.y + box.h / 2) >> this.cellSize) + 1;
+        } else {
+            startX = box.x >> this.cellSize;
+            startY = box.y >> this.cellSize;
+            endX = ((box.x + box.w) >> this.cellSize) + 1;
+            endY = ((box.y + box.h) >> this.cellSize) + 1;
+        }
 
         const found: Map<number, Box> = new Map();
-
         const queryId = this.queryId++;
 
         for (let x = startX; x < endX; x++) {

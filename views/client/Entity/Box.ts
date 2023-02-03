@@ -3,7 +3,13 @@ import Entity from "./_Entity";
 
 export default class Box extends Entity {
     /** The dimensions of the box. */
-    public dimensions = { width: 300, height: 300 };
+    public dimensions = { width: 50, height: 50 };
+
+    constructor(x: number, y: number) {
+        super();
+
+        this.position.new = { x, y, ts: Date.now() };
+    }
 
     render(
         ctx: CanvasRenderingContext2D,
