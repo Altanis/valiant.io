@@ -114,6 +114,9 @@ export default class PlayerHandler extends Entity {
 
     /** Writes update data to a buffer. */
     public write(entity = this) {
+        /** Tells the client the amount of fields updated. */
+        this.SwiftStream.WriteI8(entity.update.size);
+
         entity.update.forEach(property => {
             switch (property) {
                 case "id": this.SwiftStream.WriteI8(Fields.ID).WriteI8(entity.id); break;
@@ -125,6 +128,8 @@ export default class PlayerHandler extends Entity {
                 case "dimensions": this.SwiftStream.WriteI8(Fields.Dimensions).WriteI8(entity.dimensions[0]).WriteI8(entity.dimensions[1]); break;
             }
         });
+
+        this.update.clear();
     }
 
     /** Sends creation data of the player. */
@@ -137,8 +142,6 @@ export default class PlayerHandler extends Entity {
         if (this.update.size) {
             /** Signifies a client update. */
             this.SwiftStream.WriteI8(0x00);
-            /** Tells the client the amount of field updates for the player. */
-            this.SwiftStream.WriteI8(this.update.size);
             /** Informs the client of what properties have changed. */
             this.write();
         }
@@ -150,7 +153,7 @@ export default class PlayerHandler extends Entity {
             for (const surrounding of range) {
                 const entity = this.server.entities[surrounding.entityId!];
                 /** @ts-ignore */
-                entity.write(entity);
+                entity.write(this.SwiftStream);
 
                 /** Detect collision. */
                 if (player.collidesWith(surrounding)) {
@@ -159,7 +162,6 @@ export default class PlayerHandler extends Entity {
             };
         }
 
-        this.update.clear();
         const buffer = this.SwiftStream.Write();
         if (buffer.byteLength > 1) this.socket.send(buffer);
     }

@@ -19,6 +19,8 @@ export default class MessageHandler {
         
         player.surroundings = [];
 
+        console.log(SwiftStream.buffer);
+
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
             let len = SwiftStream.ReadI8();
@@ -78,13 +80,45 @@ export default class MessageHandler {
             let len = SwiftStream.ReadI8();
             for (;len--;) {
                 const entity = SwiftStream.ReadI8();
+                let fieldLen = SwiftStream.ReadI8();
+
                 switch (entity) {
                     case Entities.Box: {
-                        const x = SwiftStream.ReadFloat32();
-                        const y = SwiftStream.ReadFloat32();
+                        console.log("Found a box!");
 
-                        console.log("Found a box at", x, y);
-                        player.surroundings.push(new Box(x, y));
+                        const box = new Box();
+                        player.surroundings.push(box);
+
+                        for (; fieldLen--;) {
+                            const field = SwiftStream.ReadI8();
+                            switch (field) {
+                                case Fields.ID: {
+                                    box.id = SwiftStream.ReadI8();
+                                    break;
+                                }
+                                case Fields.Position: {
+                                    const x = SwiftStream.ReadFloat32();
+                                    const y = SwiftStream.ReadFloat32();
+                                
+                                    box.position.old = box.position.new;
+                                    box.position.new = {
+                                        x,
+                                        y,
+                                        ts: Date.now()
+                                    };
+
+                                    break;
+                                }
+                                case Fields.Dimensions: {
+                                    const width = SwiftStream.ReadI8();
+                                    const height = SwiftStream.ReadI8();
+
+                                    box.dimensions = { width, height };
+                                    break;
+                                }
+                            }
+                        }
+
                         break;
                     }
                 }

@@ -1,4 +1,4 @@
-import { Fields } from '../Const/Enums';
+import { Entities, Fields } from '../Const/Enums';
 
 import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
@@ -20,8 +20,11 @@ export class Box extends Entity {
         super.tick();
     }
     
-    /** Writes update informaiton. */
+    /** Writes update information. */
     public write(buffer: SwiftStream) {
+        buffer.WriteI8(Entities.Box);
+        buffer.WriteI8(this.update.size);
+
         this.update.forEach(property => {
             switch (property) {
                 case "id": buffer.WriteI8(Fields.ID).WriteI8(this.id); break;
@@ -29,5 +32,7 @@ export class Box extends Entity {
                 case "dimensions": buffer.WriteI8(Fields.Dimensions).WriteI8(this.dimensions[0]).WriteI8(this.dimensions[1]); break;
             }
         });
+
+        this.update.clear();
     }
 }
