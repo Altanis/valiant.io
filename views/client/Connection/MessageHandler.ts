@@ -17,10 +17,6 @@ export default class MessageHandler {
         const SwiftStream = this.connection.SwiftStream;
         const player = this.connection.client.player;
         
-        player.surroundings = [];
-
-        console.log(SwiftStream.buffer);
-
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
             let len = SwiftStream.ReadI8();
@@ -85,27 +81,28 @@ export default class MessageHandler {
                 switch (entity) {
                     case Entities.Box: {
                         console.log("Found a box!");
-
-                        const box = new Box();
-                        player.surroundings.push(box);
+                        let box: Box = new Box();
 
                         for (; fieldLen--;) {
                             const field = SwiftStream.ReadI8();
                             switch (field) {
                                 case Fields.ID: {
-                                    box.id = SwiftStream.ReadI8();
+                                    const id = SwiftStream.ReadI8();
+                                    let _box = player.surroundings.find(entity => entity.id === id) as Box;
+                                    if (!_box) {
+                                        box.id = id;
+                                        player.surroundings.push(box);
+                                    } else box = _box;
+
                                     break;
                                 }
                                 case Fields.Position: {
                                     const x = SwiftStream.ReadFloat32();
                                     const y = SwiftStream.ReadFloat32();
                                 
+                                    console.log(box);
                                     box.position.old = box.position.new;
-                                    box.position.new = {
-                                        x,
-                                        y,
-                                        ts: Date.now()
-                                    };
+                                    box.position.new = { x, y, ts: Date.now() };
 
                                     break;
                                 }

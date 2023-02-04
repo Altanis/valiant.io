@@ -46,7 +46,6 @@ export default class MessageHandler {
 
         player.alive = true;
         
-        player.update.add("id");
         player.update.add("position");
         player.update.add("weapon");
         player.update.add("fov");

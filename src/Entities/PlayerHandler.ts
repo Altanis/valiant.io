@@ -116,10 +116,10 @@ export default class PlayerHandler extends Entity {
     public write(entity = this) {
         /** Tells the client the amount of fields updated. */
         this.SwiftStream.WriteI8(entity.update.size);
+        this.SwiftStream.WriteI8(Fields.ID).WriteI8(entity.id);
 
         entity.update.forEach(property => {
             switch (property) {
-                case "id": this.SwiftStream.WriteI8(Fields.ID).WriteI8(entity.id); break;
                 case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(entity.position!.x).WriteFloat32(entity.position!.y); break;
                 /** @ts-ignore */
                 case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(entity.attacking && !entity.cooldown); break;
