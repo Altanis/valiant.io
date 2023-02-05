@@ -115,7 +115,7 @@ export default class PlayerHandler extends Entity {
     /** Writes update data to a buffer. */
     public write(entity = this) {
         /** Tells the client the amount of fields updated. */
-        this.SwiftStream.WriteI8(entity.update.size);
+        this.SwiftStream.WriteI8(entity.update.size + 1); // +1 for ID
         this.SwiftStream.WriteI8(Fields.ID).WriteI8(entity.id);
 
         entity.update.forEach(property => {
@@ -125,7 +125,7 @@ export default class PlayerHandler extends Entity {
                 case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(entity.attacking && !entity.cooldown); break;
                 case "weapon": this.SwiftStream.WriteI8(Fields.Weapons).WriteI8(entity.weapon!.id); break;
                 case "fov": this.SwiftStream.WriteI8(Fields.FOV).WriteFloat32(entity.fov); break;
-                case "dimensions": this.SwiftStream.WriteI8(Fields.Dimensions).WriteI8(entity.dimensions[0]).WriteI8(entity.dimensions[1]); break;
+                case "dimensions": this.SwiftStream.WriteI8(Fields.Dimensions).WriteFloat32(entity.dimensions[0]).WriteFloat32(entity.dimensions[1]); break;
             }
         });
 

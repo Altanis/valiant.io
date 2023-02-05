@@ -24,14 +24,16 @@ export class Box extends Entity {
     /** Writes update information. */
     public write(buffer: SwiftStream) {
         buffer.WriteI8(Entities.Box);
-        buffer.WriteI8(this.update.size);
+        buffer.WriteI8(this.update.size + 1); // +1 for ID
 
         buffer.WriteI8(Fields.ID).WriteI8(this.id);
 
+        if (this.update.has("position")) console.log("lmfao!");
         this.update.forEach(property => {
+            console.log(this.position, this.dimensions);
             switch (property) {
                 case "position": buffer.WriteI8(Fields.Position).WriteFloat32(this.position!.x).WriteFloat32(this.position!.y); break;
-                case "dimensions": buffer.WriteI8(Fields.Dimensions).WriteI8(this.dimensions[0]).WriteI8(this.dimensions[1]); break;
+                case "dimensions": buffer.WriteI8(Fields.Dimensions).WriteFloat32(this.dimensions[0]).WriteFloat32(this.dimensions[1]); break;
             }
         });
 

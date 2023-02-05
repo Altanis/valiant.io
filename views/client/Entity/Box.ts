@@ -21,8 +21,6 @@ export default class Box extends Entity {
             }
         }
 
-        // console.log(pos);
-
         const { width, height } = this.dimensions;
 
         ctx.fillStyle = "red";

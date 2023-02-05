@@ -16,7 +16,7 @@ export default class MessageHandler {
     public Update() {
         const SwiftStream = this.connection.SwiftStream;
         const player = this.connection.client.player;
-        
+
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
             let len = SwiftStream.ReadI8();
@@ -80,19 +80,20 @@ export default class MessageHandler {
 
                 switch (entity) {
                     case Entities.Box: {
-                        console.log("Found a box!");
                         let box: Box = new Box();
 
                         for (; fieldLen--;) {
                             const field = SwiftStream.ReadI8();
                             switch (field) {
-                                case Fields.ID: {
+                                case Fields.ID: {                                    
                                     const id = SwiftStream.ReadI8();
-                                    let _box = player.surroundings.find(entity => entity.id === id) as Box;
+                                    let _box = player.surroundings.find(entity => entity.id === id);
                                     if (!_box) {
                                         box.id = id;
                                         player.surroundings.push(box);
-                                    } else box = _box;
+                                    } else {
+                                        box = _box;
+                                    }
 
                                     break;
                                 }
@@ -100,15 +101,14 @@ export default class MessageHandler {
                                     const x = SwiftStream.ReadFloat32();
                                     const y = SwiftStream.ReadFloat32();
                                 
-                                    console.log(box);
                                     box.position.old = box.position.new;
                                     box.position.new = { x, y, ts: Date.now() };
 
                                     break;
                                 }
                                 case Fields.Dimensions: {
-                                    const width = SwiftStream.ReadI8();
-                                    const height = SwiftStream.ReadI8();
+                                    const width = SwiftStream.ReadFloat32();
+                                    const height = SwiftStream.ReadFloat32();
 
                                     box.dimensions = { width, height };
                                     break;
