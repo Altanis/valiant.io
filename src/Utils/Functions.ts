@@ -1,4 +1,8 @@
 /** Returns a random integer in bounds of `min` and `max`. */
+export function randFloat(min: number, max: number): number {
+    return Math.random() * (max - min) + min;
+}
+
 export function randInt(min: number, max: number): number {
-    return (Math.floor(Math.random() * (max - min + 1)) + min) | 0;
+    return randFloat(min, max) | 0;
 }

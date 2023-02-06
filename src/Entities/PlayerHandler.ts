@@ -28,6 +28,8 @@ export default class PlayerHandler extends Entity {
     public name: string = "unknown";
     /** Whether or not the player is alive. */
     public alive: boolean = false;
+    /** The entities surrounding the player. */
+    public surroundings: Entity[] = [];
     /** The weapon the player is hoding. */
     public weapon: WeaponDefinition | null = null;
     /** The amount of ticks needed to be passed before another attack. */
@@ -146,8 +148,15 @@ export default class PlayerHandler extends Entity {
             this.write();
         }
 
+        /** Checks if the client requires a surrounding update. */
         const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4000 / this.fov, 2000 / this.fov, this.id, true);
         console.log(range, this.position);
+
+        for (const surrounding of this.surroundings) {
+            const corresponding = range.find(entity => entity.entityId === surrounding.id);
+            if (!corresponding) {}; // TODO: Remove entity from client.
+        }
+
         if (range.length) {
             this.SwiftStream.WriteI8(0x01).WriteI8(range.length);
             for (const surrounding of range) {
@@ -164,6 +173,8 @@ export default class PlayerHandler extends Entity {
 
         const buffer = this.SwiftStream.Write();
         if (buffer.byteLength > 1) this.socket.send(buffer);
+
+        this.surroundings = [];//change
     }
 
     public close(reason: number) {
