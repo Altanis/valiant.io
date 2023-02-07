@@ -71,7 +71,15 @@ export default class MessageHandler {
             }
         }
 
-        const surroundings = type === 0x00 ? SwiftStream.ReadI8() : type;
+        const deletions = type === 0x01 ? type : SwiftStream.ReadI8();
+        if (deletions === 0x01) {
+            let entity: number;
+            while ((entity = SwiftStream.ReadI8()) !== 0xFF) {
+                player.surroundings.splice(0, player.surroundings.findIndex(e => e.id === entity));
+            }
+        }
+
+        const surroundings = deletions === 0x02 ? deletions : (type === 0x02 ? type : SwiftStream.ReadI8());
         if (surroundings === 0x01) {            
             let len = SwiftStream.ReadI8();
             for (;len--;) {

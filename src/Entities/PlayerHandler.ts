@@ -166,8 +166,10 @@ export default class PlayerHandler extends Entity {
             }; 
         }
 
+        if (wroteDeletion) this.SwiftStream.WriteI8(0xFF);
+
         if (range.length) {
-            this.SwiftStream.WriteI8(0x01).WriteI8(range.length);
+            this.SwiftStream.WriteI8(0x02).WriteI8(range.length);
             for (const surrounding of range) {
                 const entity = this.server.entities[surrounding.entityId!];
                 /** @ts-ignore */
