@@ -43,6 +43,7 @@ export default class MessageHandler {
                         const y = SwiftStream.ReadFloat32();
                         
                         console.log(x, y);
+                        player.noLerp = player.position.old.ts === 0;
 
                         player.position.old = player.position.new;
                         player.position.new = { x, y, ts: Date.now() };
@@ -71,16 +72,16 @@ export default class MessageHandler {
             }
         }
 
-        const deletions = type === 0x01 ? type : SwiftStream.ReadI8();
-        if (deletions === 0x01) {
+        const oov = type !== 0x00 ? type : SwiftStream.ReadI8();
+        if (oov === 0x01) {
             let entity: number;
             while ((entity = SwiftStream.ReadI8()) !== 0xFF) {
-                player.surroundings.splice(0, player.surroundings.findIndex(e => e.id === entity));
+                player.surroundings = player.surroundings.splice(0, player.surroundings.findIndex(e => e.id === entity));
             }
         }
 
-        const surroundings = deletions === 0x02 ? deletions : (type === 0x02 ? type : SwiftStream.ReadI8());
-        if (surroundings === 0x01) {            
+        const surroundings = type !== 0x00 ? type : (oov !== 0x01 ? oov : SwiftStream.ReadI8());
+        if (surroundings === 0x02) {            
             let len = SwiftStream.ReadI8();
             for (;len--;) {
                 const entity = SwiftStream.ReadI8();
@@ -108,6 +109,8 @@ export default class MessageHandler {
                                 case Fields.Position: {
                                     const x = SwiftStream.ReadFloat32();
                                     const y = SwiftStream.ReadFloat32();
+
+                                    box.noLerp = box.position.old.ts === 0;
                                 
                                     box.position.old = box.position.new;
                                     box.position.new = { x, y, ts: Date.now() };

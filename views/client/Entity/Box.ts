@@ -9,17 +9,7 @@ export default class Box extends Entity {
         ctx: CanvasRenderingContext2D,
         frame: number
     ) { 
-        let pos: { x: number, y: number, ts: number };
-
-        if (frame < this.position.old.ts) pos = this.position.old;
-        else if (frame > this.position.new.ts) pos = this.position.new;
-        else {
-            pos = {
-                x: lerp(this.position.old.x, this.position.new.x, 0.5),
-                y: lerp(this.position.old.y, this.position.new.y, 0.5),
-                ts: Date.now()
-            }
-        }
+        const pos = this.lerpPosition(frame);
 
         const { width, height } = this.dimensions;
 

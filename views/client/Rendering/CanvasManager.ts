@@ -114,20 +114,10 @@ export default class CanvasManager {
 
         this.ctx.save();
 
-        let pos: { x: number, y: number, ts: number };
         let angle: number;
 
         const frame = Date.now() - (1000 / 60);
-        
-        if (frame < this.client.player.position.old.ts) pos = this.client.player.position.old;
-        else if (frame > this.client.player.position.new.ts) pos = this.client.player.position.new;
-        else {
-            pos = {
-                x: lerp(this.client.player.position.old.x, this.client.player.position.new.x, 0.5),
-                y: lerp(this.client.player.position.old.y, this.client.player.position.new.y, 0.5),
-                ts: Date.now()
-            }
-        };
+        const pos = this.client.player.lerpPosition(frame);
 
         if (frame < this.client.player.angle.old.ts) angle = this.client.player.angle.old.measure;
         else if (frame > this.client.player.angle.new.ts) angle = this.client.player.angle.new.measure;

@@ -153,20 +153,24 @@ export default class PlayerHandler extends Entity {
         const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4000 / this.fov, 2000 / this.fov, this.id, true);
         console.log(range, this.position);
 
-        let wroteDeletion = false;
+        /** Tell client an entity is out in view. */
+        let wroteOOV = false;
         for (const surrounding of this.surroundings) {
             const corresponding = range.find(entity => entity.entityId === surrounding.entityId);
             if (!corresponding) { // TODO: Remove entity from client.
-                if (!wroteDeletion) {
+                if (!wroteOOV) {
+                    console.log("wrote OOV");
                     this.SwiftStream.WriteI8(0x01);
-                    wroteDeletion = true;
+                    wroteOOV = true;
                 }
 
                 this.SwiftStream.WriteI8(surrounding.entityId);
             }; 
         }
 
-        if (wroteDeletion) this.SwiftStream.WriteI8(0xFF);
+        if (wroteOOV) this.SwiftStream.WriteI8(0xFF);
+
+        // TODO(Altanis): Write deletions.
 
         if (range.length) {
             this.SwiftStream.WriteI8(0x02).WriteI8(range.length);
