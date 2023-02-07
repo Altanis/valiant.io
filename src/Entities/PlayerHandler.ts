@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import { IncomingMessage } from "http";
 
 import { ConnectionsPerIP } from '../Const/Config';
-import { CloseEvent, ClientBound, ServerBound, Fields, Entities } from '../Const/Enums';
+import { CloseEvent, ClientBound, ServerBound, Fields } from '../Const/Enums';
 import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
 import { WeaponDefinition } from '../Const/Game/Definitions/WeaponDefinition';
 
@@ -10,6 +10,7 @@ import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
 
 import Entity from './Entity';
+import { Box } from '../Managers/SpatialHashGrid';
 
 export default class PlayerHandler extends Entity {
     /** The WebSocket representing the player. */
@@ -29,7 +30,7 @@ export default class PlayerHandler extends Entity {
     /** Whether or not the player is alive. */
     public alive: boolean = false;
     /** The entities surrounding the player. */
-    public surroundings: Entity[] = [];
+    public surroundings: Box[] = [];
     /** The weapon the player is hoding. */
     public weapon: WeaponDefinition | null = null;
     /** The amount of ticks needed to be passed before another attack. */
@@ -152,9 +153,17 @@ export default class PlayerHandler extends Entity {
         const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4000 / this.fov, 2000 / this.fov, this.id, true);
         console.log(range, this.position);
 
+        let wroteDeletion = false;
         for (const surrounding of this.surroundings) {
-            const corresponding = range.find(entity => entity.entityId === surrounding.id);
-            if (!corresponding) {}; // TODO: Remove entity from client.
+            const corresponding = range.find(entity => entity.entityId === surrounding.entityId);
+            if (!corresponding) { // TODO: Remove entity from client.
+                if (!wroteDeletion) {
+                    this.SwiftStream.WriteI8(0x01);
+                    wroteDeletion = true;
+                }
+
+                this.SwiftStream.WriteI8(surrounding.entityId);
+            }; 
         }
 
         if (range.length) {
@@ -172,9 +181,9 @@ export default class PlayerHandler extends Entity {
         }
 
         const buffer = this.SwiftStream.Write();
-        if (buffer.byteLength > 1) this.socket.send(buffer);
+        if (range.length ? buffer.byteLength > 3 : buffer.byteLength > 1) this.socket.send(buffer);
 
-        this.surroundings = [];//change
+        this.surroundings = range;
     }
 
     public close(reason: number) {

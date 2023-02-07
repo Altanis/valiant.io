@@ -36,7 +36,7 @@ class Box {
     }
 }
 
-export default class SpatialHashGrid {
+class SpatialHashGrid {
     cells = new Map<number, Box[]>();
     cellSize = 4;
     queryId = 0;
@@ -126,3 +126,5 @@ export default class SpatialHashGrid {
         this.cells.clear();
     }
 }
+
+export { Box, SpatialHashGrid };

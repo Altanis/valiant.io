@@ -5,7 +5,7 @@ import { MaximumConnections } from './Const/Config';
 import { CloseEvent } from './Const/Enums';
 
 import MessageHandler from './Managers/MessageHandler';
-import SpatialHashGrid from './Managers/SpatialHashGrid';
+import { SpatialHashGrid } from './Managers/SpatialHashGrid';
 
 import PlayerHandler from './Entities/PlayerHandler';
 import Entity from './Entities/Entity';
