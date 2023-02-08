@@ -15,3 +15,6 @@ export const lerpAngle = (a: number, b: number, t: number) => {
 
     return value;
 }
+
+/** Constrain a value between two values. */
+export const constrain = (min: number, value: number, max: number) => Math.max(Math.min(value, max), min);

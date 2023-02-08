@@ -43,10 +43,11 @@ export default class MessageHandler {
                         const y = SwiftStream.ReadFloat32();
                         
                         console.log(x, y);
-                        player.noLerp = player.position.old.ts === 0;
+                        player.noLerp = player.position.current.ts === 0;
 
-                        // player.position.old = player.position.new;
-                        player.position.new = { x, y, ts: Date.now() };
+                        // TODO: Make this less  weird.
+                        player.position.current.ts = player.position.target.ts;
+                        player.position.target = { x, y, ts: Date.now() };
 
                         break;
                     }
@@ -110,10 +111,9 @@ export default class MessageHandler {
                                     const x = SwiftStream.ReadFloat32();
                                     const y = SwiftStream.ReadFloat32();
 
-                                    box.noLerp = box.position.old.ts === 0;
-                                
-                                    // box.position.old = box.position.new;
-                                    box.position.new = { x, y, ts: Date.now() };
+                                    box.noLerp = box.position.current.ts === 0;
+                                    box.position.current.ts = box.position.target.ts;
+                                    box.position.target = { x, y, ts: Date.now() };
 
                                     break;
                                 }

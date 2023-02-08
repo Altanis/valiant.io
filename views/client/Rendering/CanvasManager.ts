@@ -1,6 +1,6 @@
 import Client from "../Client";
 import { Phases, ServerBound } from "../Const/Enums";
-import { lerp, lerpAngle, randomRange } from "../Utils/Functions";
+import { constrain, lerp, lerpAngle, randomRange } from "../Utils/Functions";
 import ImageManager from "./ImageManager";
 
 /** Constant for 360 degrees in radians. */
@@ -116,9 +116,9 @@ export default class CanvasManager {
 
         this.ctx.save();
 
-        const deltaTick = deltaAverage / 16;
+        const deltaTick = constrain(0, deltaAverage / 16.66, 1);
         const pos = this.client.player.lerpPosition(deltaTick);
-        const angle = lerp(
+        const angle = lerpAngle(
             this.client.player.angle.old.measure,
             this.client.player.angle.new.measure,
             0.05 * deltaTick

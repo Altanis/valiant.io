@@ -7,9 +7,9 @@ export default class Entity {
     /** The position of the entity. */
     public position = {
         /** Position from one frame ago. */
-        old: { x: 0, y: 0, ts: 0 },
+        current: { x: 0, y: 0, ts: 0 },
         /** Position at current frame. */
-        new: { x: 0, y: 0, ts: 0 },
+        target: { x: 0, y: 0, ts: 0 },
     };
 
     /** Disable lerp for the entity (initial frame when seen). */
@@ -19,11 +19,13 @@ export default class Entity {
     public dimensions = { width: 0, height: 0 };
 
     public lerpPosition(deltaTick: number): { x: number, y: number, ts: number } {
-        this.position.old.x = lerp(this.position.old.x, this.position.new.x, 0.05 * deltaTick);
-        this.position.old.y = lerp(this.position.old.y, this.position.new.y, 0.05 * deltaTick);
-        this.position.old.ts = Date.now();
+        if (this.noLerp) return this.position.current;
 
-        return this.position.old;
+        this.position.current.x = lerp(this.position.current.x, this.position.target.x, 0.05 * deltaTick);
+        this.position.current.y = lerp(this.position.current.y, this.position.target.y, 0.05 * deltaTick);
+        this.position.current.ts = Date.now();
+
+        return this.position.current;
     }
 
     public render(...args: any) {};

@@ -444,12 +444,12 @@ const WebSocketManager = class {
                                 const x = SwiftStream.ReadFloat32();
                                 const y = SwiftStream.ReadFloat32();
                                 
-                                if (player.position.old.x === null) { // Start Game
+                                if (player.position.current.x === null) { // Start Game
                                     HomeScreen.style.display = "none";
                                     Config.CurrentPhase = 1;
                                 }
                                 
-                                player.position.old = player.position.current;
+                                player.position.current = player.position.current;
                                 player.position.current = { x, y, ts: Date.now() };
                                 
                                 player.id = id;
@@ -707,12 +707,12 @@ const Game = {
         // LERP COORDS:
         let pos, angle;
         const frame = Date.now() - (1000 / 60);
-        if (frame < player.position.old.ts) pos = player.position.old;
+        if (frame < player.position.current.ts) pos = player.position.current;
         else if (frame > player.position.current.ts) pos = player.position.current;
         else {
             pos = {
-                x: player.position.old.x + (player.position.current.x - player.position.old.x) * 0.5,
-                y: player.position.old.y + (player.position.current.y - player.position.old.y) * 0.5
+                x: player.position.current.x + (player.position.current.x - player.position.current.x) * 0.5,
+                y: player.position.current.y + (player.position.current.y - player.position.current.y) * 0.5
             };
         }
 
