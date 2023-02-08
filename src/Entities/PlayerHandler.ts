@@ -154,7 +154,7 @@ export default class PlayerHandler extends Entity {
         console.log(range, this.position);
 
         /** Tell client an entity is out in view. */
-        let wroteOOV = false;
+        /*let wroteOOV = false;
         for (const surrounding of this.surroundings) {
             const corresponding = range.find(entity => entity.entityId === surrounding.entityId);
             if (!corresponding) { // TODO: Remove entity from client.
@@ -168,12 +168,12 @@ export default class PlayerHandler extends Entity {
             }; 
         }
 
-        if (wroteOOV) this.SwiftStream.WriteI8(0xFF);
+        if (wroteOOV) this.SwiftStream.WriteI8(0xFF);*/
 
         // TODO(Altanis): Write deletions.
 
         if (range.length) {
-            this.SwiftStream.WriteI8(0x02).WriteI8(range.length);
+            this.SwiftStream.WriteI8(0x01).WriteI8(range.length);
             for (const surrounding of range) {
                 const entity = this.server.entities[surrounding.entityId!];
                 /** @ts-ignore */

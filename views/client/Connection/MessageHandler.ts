@@ -17,6 +17,8 @@ export default class MessageHandler {
         const SwiftStream = this.connection.SwiftStream;
         const player = this.connection.client.player;
 
+        // TOOD(Altanis): Split this into multiple files.
+
         const type = SwiftStream.ReadI8();
         if (type === 0x00) { // update player
             let len = SwiftStream.ReadI8();
@@ -42,10 +44,9 @@ export default class MessageHandler {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
                         
-                        console.log(x, y);
                         player.noLerp = player.position.current.ts === 0;
 
-                        // TODO: Make this less  weird.
+                        // TODO: Make this less weird.
                         player.position.current.ts = player.position.target.ts;
                         player.position.target = { x, y, ts: Date.now() };
 
@@ -65,7 +66,6 @@ export default class MessageHandler {
                     }
                     case Fields.FOV: {
                         const fov = SwiftStream.ReadFloat32();
-                        console.log("found FOV", fov);
                         player.fov = fov;
                         break;
                     }
@@ -73,16 +73,8 @@ export default class MessageHandler {
             }
         }
 
-        const oov = type !== 0x00 ? type : SwiftStream.ReadI8();
-        if (oov === 0x01) {
-            let entity: number;
-            while ((entity = SwiftStream.ReadI8()) !== 0xFF) {
-                player.surroundings = player.surroundings.splice(0, player.surroundings.findIndex(e => e.id === entity));
-            }
-        }
-
-        const surroundings = type !== 0x00 ? type : (oov !== 0x01 ? oov : SwiftStream.ReadI8());
-        if (surroundings === 0x02) {            
+        const surroundings = type !== 0x00 ? type : SwiftStream.ReadI8();
+        if (surroundings === 0x01) {            
             let len = SwiftStream.ReadI8();
             for (;len--;) {
                 const entity = SwiftStream.ReadI8();
@@ -105,6 +97,7 @@ export default class MessageHandler {
                                         box = _box;
                                     }
 
+                                    box.updated = true;
                                     break;
                                 }
                                 case Fields.Position: {
@@ -132,5 +125,11 @@ export default class MessageHandler {
                 }
             }
         }
+
+        // Remove all entities that haven't been updated.
+        let i = player.surroundings.length;
+        player.surroundings = player.surroundings.filter(entity => entity.updated);
+        if (i !== player.surroundings.length) alert("deletion!");
+        player.surroundings.forEach(entity => entity.updated = false);
     }
 }
