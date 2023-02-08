@@ -116,16 +116,13 @@ export default class CanvasManager {
 
         this.ctx.save();
 
-        let angle: number;
-
-        const frame = deltaAverage / 16;
-        const pos = this.client.player.lerpPosition(frame);
-
-        if (frame < this.client.player.angle.old.ts) angle = this.client.player.angle.old.measure;
-        else if (frame > this.client.player.angle.new.ts) angle = this.client.player.angle.new.measure;
-        else {
-            angle = lerpAngle(this.client.player.angle.old.measure, this.client.player.angle.new.measure, 0.5);
-        }
+        const deltaTick = deltaAverage / 16;
+        const pos = this.client.player.lerpPosition(deltaTick);
+        const angle = lerp(
+            this.client.player.angle.old.measure,
+            this.client.player.angle.new.measure,
+            0.05 * deltaTick
+        );
 
         let { x: cameraX, y: cameraY } = pos;
 
@@ -145,7 +142,7 @@ export default class CanvasManager {
         this.ctx.strokeRect(0, 0, 14400, 14400);
         this.ctx.fillRect(0, 0, 14400, 14400);
 
-        for (const entity of this.client.player.surroundings) entity.render(this.ctx, frame);
+        for (const entity of this.client.player.surroundings) entity.render(this.ctx, deltaTick);
         this.client.player.render(this, this.ctx, pos, angle);
 
         this.ctx.restore();

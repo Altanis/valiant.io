@@ -150,7 +150,7 @@ export default class PlayerHandler extends Entity {
         }
 
         /** Checks if the client requires a surrounding update. */
-        const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4000 / this.fov, 2000 / this.fov, this.id, true);
+        const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
         console.log(range, this.position);
 
         /** Tell client an entity is out in view. */
@@ -180,6 +180,8 @@ export default class PlayerHandler extends Entity {
                 entity.write(this.SwiftStream);
 
                 /** Detect collision. */
+                console.log(player, surrounding);
+                // TODO: Fix collision.
                 if (player.collidesWith(surrounding)) {
                     console.log("WTF! YOU ARE COLIDe!");
                 }

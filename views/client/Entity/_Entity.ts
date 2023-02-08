@@ -18,22 +18,10 @@ export default class Entity {
     /** The dimensions of the player. */
     public dimensions = { width: 0, height: 0 };
 
-    public lerpPosition(frame: number): { x: number, y: number, ts: number } {
-        if (this.noLerp) return this.position.new;
-
-        this.position.old.x = lerp(this.position.old.x, this.position.new.x, 0.05 * frame);
-        this.position.old.y = lerp(this.position.old.y, this.position.new.y, 0.05 * frame);
+    public lerpPosition(deltaTick: number): { x: number, y: number, ts: number } {
+        this.position.old.x = lerp(this.position.old.x, this.position.new.x, 0.05 * deltaTick);
+        this.position.old.y = lerp(this.position.old.y, this.position.new.y, 0.05 * deltaTick);
         this.position.old.ts = Date.now();
-
-        /*if (frame < this.position.old.ts) pos = this.position.old;
-        else if (frame > this.position.new.ts) pos = this.position.new;
-        else {
-            pos = {
-                x: lerp(this.position.old.x, this.position.new.x, 0.5),
-                y: lerp(this.position.old.y, this.position.new.y, 0.5),
-                ts: Date.now()
-            }
-        }*/
 
         return this.position.old;
     }
