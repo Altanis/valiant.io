@@ -104,10 +104,12 @@ export default class CanvasManager {
     /** Renders the actual arena when spawned in. */
     private Arena(delta: number) {
         /** Update FPS. */
-        if (this.FPS.fps.length > 10) this.FPS.fps.shift();
-        this.FPS.fps.push(1000 / delta);
-        this.client.elements.arena.fps.innerText = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length).toFixed(1) + '  FPS';
-        
+        if (this.FPS.fps.length > 30) this.FPS.fps.shift();
+        this.FPS.fps.push(delta);
+
+        const deltaAverage = (this.FPS.fps.reduce((a, b) => a + b) / this.FPS.fps.length);
+        this.client.elements.arena.fps.innerText = (1000 / deltaAverage).toFixed(1) + '  FPS';
+
         // RENDER OUTBOUNDS:
         this.ctx.fillStyle = "rgba(12, 50, 54, 1)";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
@@ -116,7 +118,7 @@ export default class CanvasManager {
 
         let angle: number;
 
-        const frame = Date.now() - (1000 / 60);
+        const frame = deltaAverage / 16;
         const pos = this.client.player.lerpPosition(frame);
 
         if (frame < this.client.player.angle.old.ts) angle = this.client.player.angle.old.measure;

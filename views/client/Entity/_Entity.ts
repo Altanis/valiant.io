@@ -20,9 +20,12 @@ export default class Entity {
 
     public lerpPosition(frame: number): { x: number, y: number, ts: number } {
         if (this.noLerp) return this.position.new;
-        let pos: { x: number, y: number, ts: number };
 
-        if (frame < this.position.old.ts) pos = this.position.old;
+        this.position.old.x = lerp(this.position.old.x, this.position.new.x, 0.05 * frame);
+        this.position.old.y = lerp(this.position.old.y, this.position.new.y, 0.05 * frame);
+        this.position.old.ts = Date.now();
+
+        /*if (frame < this.position.old.ts) pos = this.position.old;
         else if (frame > this.position.new.ts) pos = this.position.new;
         else {
             pos = {
@@ -30,9 +33,9 @@ export default class Entity {
                 y: lerp(this.position.old.y, this.position.new.y, 0.5),
                 ts: Date.now()
             }
-        }
+        }*/
 
-        return pos;
+        return this.position.old;
     }
 
     public render(...args: any) {};

@@ -45,7 +45,7 @@ export default class MessageHandler {
                         console.log(x, y);
                         player.noLerp = player.position.old.ts === 0;
 
-                        player.position.old = player.position.new;
+                        // player.position.old = player.position.new;
                         player.position.new = { x, y, ts: Date.now() };
 
                         break;
@@ -112,7 +112,7 @@ export default class MessageHandler {
 
                                     box.noLerp = box.position.old.ts === 0;
                                 
-                                    box.position.old = box.position.new;
+                                    // box.position.old = box.position.new;
                                     box.position.new = { x, y, ts: Date.now() };
 
                                     break;
