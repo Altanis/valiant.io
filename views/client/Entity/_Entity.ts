@@ -23,8 +23,10 @@ export default class Entity {
     public lerpPosition(deltaTick: number): { x: number, y: number, ts: number } {
         if (this.noLerp) return this.position.current = this.position.target;
 
-        this.position.current.x = lerp(this.position.current.x, this.position.target.x, 0.05 * deltaTick);
-        this.position.current.y = lerp(this.position.current.y, this.position.target.y, 0.05 * deltaTick);
+        /** @ts-ignore */
+        this.position.current.x = lerp(this.position.current.x, this.position.target.x, (window.starlight || 0.1) * deltaTick);
+        /** @ts-ignore */
+        this.position.current.y = lerp(this.position.current.y, this.position.target.y, (window.starlight || 0.1) * deltaTick);
         this.position.current.ts = Date.now();
 
         return this.position.current;
