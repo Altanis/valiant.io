@@ -43,12 +43,15 @@ export default class MessageHandler {
                     case Fields.Position: {
                         const x = SwiftStream.ReadFloat32();
                         const y = SwiftStream.ReadFloat32();
+                        const velX = SwiftStream.ReadFloat32();
+                        const velY = SwiftStream.ReadFloat32();
                         
                         player.noLerp = player.position.current.ts === 0;
 
                         // TODO: Make this less weird.
                         player.position.current.ts = player.position.target.ts;
                         player.position.target = { x, y, ts: Date.now() };
+                        player.position.velocity = { x: velX, y: velY };
 
                         break;
                     }

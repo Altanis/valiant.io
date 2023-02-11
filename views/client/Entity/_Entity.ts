@@ -10,6 +10,8 @@ export default class Entity {
         current: { x: 0, y: 0, ts: 0 },
         /** Position at current frame. */
         target: { x: 0, y: 0, ts: 0 },
+        /** The velocity of the player. */
+        velocity: { x: 0, y: 0 }
     };
 
     /** Disable lerp for the entity (initial frame when seen). */
@@ -28,6 +30,9 @@ export default class Entity {
         /** @ts-ignore */
         this.position.current.y = lerp(this.position.current.y, this.position.target.y, (window.starlight || 0.1) * deltaTick);
         this.position.current.ts = Date.now();
+
+        this.position.current.x += this.position.velocity.x;
+        this.position.current.y += this.position.velocity.y;
 
         return this.position.current;
     }
