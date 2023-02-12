@@ -123,7 +123,7 @@ export default class PlayerHandler extends Entity {
 
         entity.update.forEach(property => {
             switch (property) {
-                case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(entity.position!.x).WriteFloat32(entity.position!.y).WriteFloat32(entity.velocity.x).WriteFloat32(entity.velocity.y); break;
+                case "position": this.SwiftStream.WriteI8(Fields.Position).WriteFloat32(entity.position!.x).WriteFloat32(entity.position!.y); break;
                 case "attacking": this.SwiftStream.WriteI8(Fields.Attacking).WriteI8(+(entity.attacking && !entity.cooldown)); break;
                 case "weapon": this.SwiftStream.WriteI8(Fields.Weapons).WriteI8(entity.weapon!.id); break;
                 case "fov": this.SwiftStream.WriteI8(Fields.FOV).WriteFloat32(entity.fov); break;

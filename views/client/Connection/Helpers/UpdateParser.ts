@@ -28,11 +28,8 @@ export default class UpdateParser {
         [Fields.Position, (entity: Entity) => {
             const x = this.packet.ReadFloat32();
             const y = this.packet.ReadFloat32();
-            const velX = this.packet.ReadFloat32();
-            const velY = this.packet.ReadFloat32();
 
             entity.position.target = { x, y };
-            entity.position.velocity = { x: velX, y: velY };
         }],
         [Fields.Attacking, (entity: Player) => {
             const attacking = this.packet.ReadI8() === 0x01;

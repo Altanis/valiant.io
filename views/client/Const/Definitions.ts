@@ -9,13 +9,15 @@ const Characters = [
             energy: 250
         },
         abilities: [0, 1],
-        src: "Knight.gif"
+        src: "Knight.gif",
+        speed: 15
     },
     {
         name: "Priest",
         stats: {},
         abilities: [1],
-        src: "Priest.gif"
+        src: "Priest.gif",
+        speed: 15
     }
 ];
 

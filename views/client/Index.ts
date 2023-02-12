@@ -1,5 +1,6 @@
 import Client from "./Client";
-import { Phases } from "./Const/Enums";
+import { Characters } from "./Const/Definitions";
+import { Movement, Phases } from "./Const/Enums";
 const client = new Client();
 
 const KEYDOWN_MAP = new Map([
@@ -30,6 +31,14 @@ document.addEventListener("keydown", function (event) {
     const key = KEYDOWN_MAP.get(event.which || event.keyCode);
     if (key) {
         client.elements.activeKeys.add(key);
+        
+        switch (key) {
+            case Movement.Up: client.player.position.velocity.y = -Characters[client.player.character].speed; break;
+            case Movement.Right: client.player.position.velocity.x = Characters[client.player.character].speed; break;
+            case Movement.Down: client.player.position.velocity.y = Characters[client.player.character].speed; break;
+            case Movement.Left: client.player.position.velocity.x = -Characters[client.player.character].speed; break;
+        }
+
         event.preventDefault();
     }
 });
