@@ -40,6 +40,8 @@ export default class Connection extends EventTarget {
     }
 
     public send(header: number, data: { [key: string]: any }) {
+        if (this.socket.readyState !== WebSocket.OPEN) return;
+        
         this.SwiftStream.WriteI8(header);
 
         switch (header) {

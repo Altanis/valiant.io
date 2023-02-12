@@ -1,4 +1,5 @@
 import Connection from "./Connection";
+import SwiftStream from "./SwiftStream";
 import UpdateParser from "./Helpers/UpdateParser";
 
 /** A handler for all incoming messages. */
@@ -6,15 +7,18 @@ export default class MessageHandler {
     /** The connection which the handler is representing. */
     private connection: Connection;
     /** The update parser. */
-    private parser: UpdateParser;
+    private UpdateParser: UpdateParser | null = null;
 
     constructor(connection: Connection) {
         this.connection = connection;
-        this.parser = new UpdateParser(connection);
     }
 
-    /** This must be such a tiny packet, it only needs one line to parse! */
+    // Woah, that's a big packet!
     public Update() {
-        this.parser.parse();
+        const SS = new SwiftStream();
+        SS.Set(this.connection.SwiftStream.buffer);
+
+        if (!this.UpdateParser) this.UpdateParser = new UpdateParser(this.connection);
+        this.UpdateParser!.parse(SS);
     }
 }

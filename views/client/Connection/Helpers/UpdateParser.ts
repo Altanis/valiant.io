@@ -75,8 +75,8 @@ export default class UpdateParser {
         this.player = this.client.player;
     }
 
-    public parse() {
-        this.packet = this.connection.SwiftStream;
+    public parse(packet: SwiftStream) {
+        this.packet = packet;
 
         console.log(this.packet.buffer);
         this.packet.ReadI8(); // Header
