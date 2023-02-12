@@ -42,9 +42,11 @@ export enum Fields {
     /** The weapon(s) of the player. */
     Weapons    = 0x03,
     /** The resolution (FoV) of the entity. */
-    FOV = 0x04,
+    FOV        = 0x04,
     /** The dimensions of the entity. */
-    Dimensions = 0x05
+    Dimensions = 0x05,
+    /** Whether or not the entity is alive. */
+    Alive      = 0x06
 };
 
 /** Object types. */

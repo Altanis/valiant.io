@@ -9,8 +9,9 @@ export default class Box extends Entity {
         ctx: CanvasRenderingContext2D,
         frame: number
     ) { 
-        const pos = this.lerpPosition(frame);
+        this.ticks++;
 
+        const pos = this.lerpPosition(frame);
         const { width, height } = this.dimensions;
 
         ctx.fillStyle = "red";

@@ -64,6 +64,8 @@ export default class Player extends Entity {
         position: { x: number, y: number },
         angle: number
     ) {
+        this.ticks++;
+
         const c = Characters[this.character];
         const w = Weapons[this.weapon];
 
