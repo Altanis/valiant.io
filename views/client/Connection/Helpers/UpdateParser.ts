@@ -80,23 +80,19 @@ export default class UpdateParser {
     public parse(packet: SwiftStream) {
         this.packet = packet;
 
-        console.log(this.packet.buffer);
         this.packet.ReadI8(); // Header
 
         const group = this.nextGroup();
 
         if (group === 0x00) {
             const fieldLength = this.packet.ReadI8();
-            console.log("Field Length", fieldLength);
             this.nextFields(fieldLength);
         }
 
         const surroundings = group !== 0x00 ? group : this.packet.ReadI8();
         // split buffer from current position
-        console.log(this.packet.at);
         if (surroundings === 0x01) {
             const entityLength = this.packet.ReadI8();
-            console.log("Entity Length", entityLength);
             this.nextEntities(entityLength);
         }
 
@@ -112,8 +108,6 @@ export default class UpdateParser {
         for (; length--;) {
             const field = this.packet.ReadI8();
             const executor = this.fieldMap.get(field);
-
-            console.log("Field", field, "Executor", executor);
 
             if (!executor) Logger.err(`Unknown field ${field}!`);
             else executor(entity || this.player);

@@ -119,11 +119,12 @@ export default class CanvasManager {
         const deltaTick = constrain(0, deltaAverage / 16.66, 1);
         const pos = this.client.player.lerpPosition(deltaTick);
         // TODO(Altanis): Fix how angle is lerped.
-        const angle = lerpAngle(
+        const angle = this.client.player.angle.current = lerpAngle(
             this.client.player.angle.current,
             this.client.player.angle.target,
-            0.05 * deltaTick
+            0.35 * deltaTick
         );
+        console.log("sex", this.client.player.angle.current, this.client.player.angle.target, angle);
 
         let { x: cameraX, y: cameraY } = pos;
 

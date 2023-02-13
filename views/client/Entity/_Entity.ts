@@ -40,9 +40,9 @@ export default abstract class Entity {
         if (this.ticks <= 2) return this.position.current = this.position.target;
 
         /** @ts-ignore */
-        this.position.current.x = lerp(this.position.current.x, this.position.target.x, (window.starlight || 0.1) * deltaTick);
+        this.position.current.x = lerp(this.position.current.x, this.position.target.x, 0.1 * deltaTick);
         /** @ts-ignore */
-        this.position.current.y = lerp(this.position.current.y, this.position.target.y, (window.starlight || 0.1) * deltaTick);
+        this.position.current.y = lerp(this.position.current.y, this.position.target.y, 0.1 * deltaTick);
 
         this.position.current.x += this.position.velocity.x;
         this.position.current.y += this.position.velocity.y;
