@@ -1,18 +1,29 @@
 import { lerp } from "../Utils/Functions";
 
-export default class Entity {
+export default abstract class Entity {
     /** The ID of the entity. */
     public id = -1;
 
     /** The position of the entity. */
     public position = {
-        /** Position from one frame ago. */
         current: { x: 0, y: 0 },
-        /** Position at current frame. */
         target: { x: 0, y: 0 },
         /** The velocity of the player. */
         velocity: { x: 0, y: 0 }
     };
+
+    /** The angle of the entity. */
+    public angle = {
+        current: 0,
+        target: 0,
+        /** Interpolation factor. */
+        factor: 0
+    };
+    
+    /** The health of the entity. */
+    public abstract health: number;
+    /** The maximum health of the entity. */
+    public abstract maxHealth: number;
 
     /** Disable lerp for the entity (initial frame when seen). */
     public noLerp = true;

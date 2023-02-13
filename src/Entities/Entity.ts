@@ -30,7 +30,8 @@ export default class Entity {
 
     public tick() {
         this.position!.add(this.velocity!, true);
-                
+        this.velocity!.x = this.velocity!.y = 0;
+        
         /** Reinsert into hashgrid with updated position. */
         this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
     }

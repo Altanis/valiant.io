@@ -62,7 +62,7 @@ export default class Connection extends EventTarget {
                 break;
             }
             case ServerBound.Angle: {
-                this.socket.send(this.SwiftStream.WriteI8(data.measure).Write());
+                this.socket.send(this.SwiftStream.WriteFloat32(data.measure).Write());
                 break;
             }
             case ServerBound.Attack: {

@@ -47,7 +47,9 @@ export enum Fields {
     /** The dimensions of the entity. */
     Dimensions = 0x05,
     /** Whether or not the entity is alive. */
-    Alive      = 0x06
+    Alive      = 0x06,
+    /** The angle of the entity. */
+    Angle      = 0x07
 };
 
 /** Object types. */

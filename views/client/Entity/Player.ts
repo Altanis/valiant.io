@@ -15,22 +15,6 @@ export default class Player extends Entity {
     /** The dimensions of the player. */
     public dimensions = { width: 300, height: 300 };
 
-    /** The angle of the player. */
-    public angle = {
-        /** Angle from one frame ago. */
-        old: {
-            ts: 0,
-            measure: 0
-        },
-        /** Angle at current frame. */
-        new: {
-            ts: 0,
-            measure: 0
-        },
-        /** Interpolation factor. */
-        factor: 0
-    };
-
     /** Attack information of the player. */
     public attack = {
         /** Whether or not the player is attacking. */
@@ -56,6 +40,18 @@ export default class Player extends Entity {
     public fov = 0.9;
     /** The entities surrounding the player. */
     public surroundings: Entity[] = [];
+
+    /** The health of the player. */
+    public health: number;
+    /** The maximum health of the player. */
+    public get maxHealth(): number {
+        return Characters[this.character].stats.health;
+    };
+
+    constructor() {
+        super();
+        this.health = this.maxHealth;
+    }
 
     /** Renders the player onto the canvas. */
     public render(

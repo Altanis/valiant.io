@@ -28,7 +28,6 @@ export class Box extends Entity {
 
         buffer.WriteI8(Fields.ID).WriteI8(this.id);
 
-        if (this.update.has("position")) console.log("lmfao!");
         this.update.forEach(property => {
             console.log(this.position, this.dimensions);
             switch (property) {

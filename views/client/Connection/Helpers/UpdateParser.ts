@@ -64,7 +64,11 @@ export default class UpdateParser {
                     this.client.elements.arena.utils.style.display =
                     this.client.canvas.mapCanvas.style.display = "block";
             }
-        }]
+        }],
+        [Fields.Angle, (entity: Player) => {
+            const angle = this.packet.ReadFloat32();
+            entity.angle.target = angle;
+        }],
     ]);
 
     constructor(connection: Connection) {

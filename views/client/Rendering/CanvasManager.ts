@@ -118,9 +118,10 @@ export default class CanvasManager {
 
         const deltaTick = constrain(0, deltaAverage / 16.66, 1);
         const pos = this.client.player.lerpPosition(deltaTick);
+        // TODO(Altanis): Fix how angle is lerped.
         const angle = lerpAngle(
-            this.client.player.angle.old.measure,
-            this.client.player.angle.new.measure,
+            this.client.player.angle.current,
+            this.client.player.angle.target,
             0.05 * deltaTick
         );
 
@@ -129,7 +130,7 @@ export default class CanvasManager {
         /** Set up player camera. */
         const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.
-        this.ctx.scale(factor * this.client.player.fov, factor * this.client.player.fov); // Multiply operands by a view scale if needed.
+        this.ctx.scale(factor * this.client.player.fov, factor * this.client.player.fov);
         this.ctx.translate(-cameraX, -cameraY);
 
         /** Render background of the arena. */

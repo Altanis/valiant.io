@@ -129,10 +129,10 @@ export default class PlayerHandler extends Entity {
                 case "fov": this.SwiftStream.WriteI8(Fields.FOV).WriteFloat32(entity.fov); break;
                 case "dimensions": this.SwiftStream.WriteI8(Fields.Dimensions).WriteFloat32(entity.dimensions[0]).WriteFloat32(entity.dimensions[1]); break;
                 case "alive": this.SwiftStream.WriteI8(Fields.Alive).WriteI8(+entity.alive); break;
+                case "angle": this.SwiftStream.WriteI8(Fields.Angle).WriteFloat32(entity.angle); break;
             }
         });
 
-        this.velocity.x = this.velocity.y = 0;
         this.update.clear();
     }
 
@@ -152,7 +152,7 @@ export default class PlayerHandler extends Entity {
 
         /** Checks if the client requires a surrounding update. */
         const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
-        console.log(range, this.position);
+        // console.log(range, this.position);
 
         /** Tell client an entity is out in view. */
         /*let wroteOOV = false;
@@ -181,10 +181,10 @@ export default class PlayerHandler extends Entity {
                 entity.write(this.SwiftStream);
 
                 /** Detect collision. */
-                console.log(player, surrounding);
+                // console.log(player, surrounding);
                 // TODO: Fix collision.
                 if (player.collidesWith(surrounding)) {
-                    console.log("WTF! YOU ARE COLIDe!");
+                    // console.log("WTF! YOU ARE COLIDe!");
                 }
             };
         }

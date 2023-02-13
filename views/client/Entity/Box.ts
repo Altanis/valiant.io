@@ -5,6 +5,9 @@ export default class Box extends Entity {
     /** The dimensions of the box. */
     public dimensions = { width: 300, height: 300 };
 
+    public health = 100;
+    public maxHealth = 100;
+
     render(
         ctx: CanvasRenderingContext2D,
         frame: number

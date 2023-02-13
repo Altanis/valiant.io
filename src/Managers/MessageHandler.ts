@@ -79,14 +79,16 @@ export default class MessageHandler {
     // [2, i8(angle)]
     Angle(player: PlayerHandler): void {
         const angle = player.SwiftStream.ReadFloat32(); // measured in radians
+        console.log(angle);
         if (
-            !player.alive
-            || isNaN(angle)
+            isNaN(angle)
             || angle > 3.15
             || angle < -3.15
         ) return player.close(CloseEvent.InvalidProtocol);
+        if (!player.alive) return;
 
-        player.angle = (angle < 0 && angle >= -3.15) ? angle + Math.PI * 2 : angle;
+        player.angle = angle;
+        player.update.add("angle");
     }
 
     // [3, i8(isAtk)]

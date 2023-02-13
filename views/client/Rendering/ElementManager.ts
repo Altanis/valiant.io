@@ -200,24 +200,21 @@ export default class ElementManager {
 
         /** Recognize mouse movements. */
         if (this.mouse && player.alive && !player.attack.attacking.server) {
-            const old = player.angle.old.measure;
+            const old = player.angle.current;
             const measure = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
             if (old !== measure) {
-                this.client.connection.send(ServerBound.Attack, {
+                this.client.connection.send(ServerBound.Angle, {
                     measure
                 });
 
-                player.angle.old = player.angle.new;
-                player.angle.new = {
-                    measure,
-                    ts: Date.now()
-                };
+                player.angle.current = player.angle.target;
+                player.angle.target = measure;
             }
         }
 
         /** Update angle when attacking. */
         if (player.attack.attacking.server) {
-            player.angle.old = player.angle.new;
+            player.angle.current = player.angle.target;
             player.attack.mouse = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
         
             const weapon = Weapons[player.weapon];
@@ -238,10 +235,7 @@ export default class ElementManager {
                 }
             }
 
-            player.angle.new = {
-                measure: angle,
-                ts: Date.now()
-            }
+            player.angle.target = angle;
         }
 
         /** Check for when to send an ATTACK packet. */
