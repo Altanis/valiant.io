@@ -69,14 +69,14 @@ export default class Player extends Entity {
         else if (angle < -Math.PI) angle = -Math.PI + 0.01;
 
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
-        ctx.translate(position.x, position.y);
+        ctx.translate(position.x + this.position.velocity.current.x, position.y + this.position.velocity.current.y);
         ctx.scale(scaleX, 1);
 
         /** Render character. */
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);
         if (!character) return;
 
-        ctx.drawImage(character, -150 + this.position.velocity.current.x, -150 + this.position.velocity.current.y, this.dimensions.width, this.dimensions.height);
+        ctx.drawImage(character, -150, -150, this.dimensions.width, this.dimensions.height);
 
         /** Render weapon. */
         const weapon = manager.ImageManager.get(`img/weapons/${w.src}`);
@@ -91,7 +91,7 @@ export default class Player extends Entity {
         }
         
         ctx.rotate(angle);
-        ctx.drawImage(weapon, w.offsetX + this.position.velocity.current.x, w.offsetY + this.position.velocity.current.y, 200, 40);
+        ctx.drawImage(weapon, w.offsetX, w.offsetY, 200, 40);
 
         // TODO(Altanis): Create a blue tracer to illustrate the path of the sword.
 
