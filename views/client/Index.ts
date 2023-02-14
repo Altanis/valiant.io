@@ -31,12 +31,21 @@ document.addEventListener("keydown", function (event) {
     const key = KEYDOWN_MAP.get(event.which || event.keyCode);
     if (key) {
         client.elements.activeKeys.add(key);
+    
+        switch (key) {
+            case Movement.Right: client.player.position.velocity.target.x = Characters[client.player.character].speed; break;
+            case Movement.Left: client.player.position.velocity.target.x = -Characters[client.player.character].speed; break;
+            case Movement.Up: client.player.position.velocity.target.y = -Characters[client.player.character].speed; break;
+            case Movement.Down: client.player.position.velocity.target.y = Characters[client.player.character].speed; break;
+        }
         
-        /*switch (key) {
-            case Movement.Up: client.player.position.velocity.y = -Characters[client.player.character].speed; break;
-            case Movement.Right: client.player.position.velocity.x = Characters[client.player.character].speed; break;
-            case Movement.Down: client.player.position.velocity.y = Characters[client.player.character].speed; break;
-            case Movement.Left: client.player.position.velocity.x = -Characters[client.player.character].speed; break;
+        /*if (client.player.position.velocity.x === 0 && client.player.position.velocity.y === 0) {
+            switch (key) {
+                case Movement.Up: client.player.position.velocity.y = -Characters[client.player.character].speed; break;
+                case Movement.Right: client.player.position.velocity.x = Characters[client.player.character].speed; break;
+                case Movement.Down: client.player.position.velocity.y = Characters[client.player.character].speed; break;
+                case Movement.Left: client.player.position.velocity.x = -Characters[client.player.character].speed; break;
+            }
         }*/
 
         event.preventDefault();
@@ -47,6 +56,14 @@ document.addEventListener("keyup", function (event) {
     const key = KEYDOWN_MAP.get(event.which || event.keyCode);
     if (key) {
         client.elements.activeKeys.delete(key);
+
+        switch (key) {
+            case Movement.Up: client.player.position.velocity.target.y = 0; break;
+            case Movement.Right: client.player.position.velocity.target.x = 0; break;
+            case Movement.Down: client.player.position.velocity.target.y = 0; break;
+            case Movement.Left: client.player.position.velocity.target.x = 0; break;
+        }
+
         event.preventDefault();
     }
 });

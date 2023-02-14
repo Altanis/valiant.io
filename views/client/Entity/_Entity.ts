@@ -1,4 +1,4 @@
-import { lerp } from "../Utils/Functions";
+import { constrain, lerp } from "../Utils/Functions";
 
 export default abstract class Entity {
     /** The ID of the entity. */
@@ -9,7 +9,10 @@ export default abstract class Entity {
         current: { x: 0, y: 0 },
         target: { x: 0, y: 0 },
         /** The velocity of the player. */
-        velocity: { x: 0, y: 0 }
+        velocity: { 
+            current: { x: 0, y: 0 },
+            target: { x: 0, y: 0 }
+        }
     };
 
     /** The angle of the entity. */
@@ -44,8 +47,14 @@ export default abstract class Entity {
         /** @ts-ignore */
         this.position.current.y = lerp(this.position.current.y, this.position.target.y, 0.1 * deltaTick);
 
-        this.position.current.x += this.position.velocity.x;
-        this.position.current.y += this.position.velocity.y;
+        this.position.velocity.current.x = lerp(this.position.velocity.current.x, this.position.velocity.target.x, 0.1 * deltaTick);
+        this.position.velocity.current.y = lerp(this.position.velocity.current.y, this.position.velocity.target.y, 0.1 * deltaTick);
+
+        this.position.current.x += this.position.velocity.current.x;
+        this.position.current.y += this.position.velocity.current.y;
+
+        this.position.current.x = constrain(0, this.position.current.x, 14400);
+        this.position.current.y = constrain(0, this.position.current.y, 14400);
 
         return this.position.current;
     }
