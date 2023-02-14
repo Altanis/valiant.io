@@ -33,11 +33,18 @@ document.addEventListener("keydown", function (event) {
         client.elements.activeKeys.add(key);
     
         switch (key) {
+            case Movement.Right: client.player.position.velocity.target.x = 150; break;
+            case Movement.Left: client.player.position.velocity.target.x = -150; break;
+            case Movement.Up: client.player.position.velocity.target.y = -150; break;
+            case Movement.Down: client.player.position.velocity.target.y = 150; break;
+        }
+
+        /*switch (key) {
             case Movement.Right: client.player.position.velocity.target.x = Characters[client.player.character].speed; break;
             case Movement.Left: client.player.position.velocity.target.x = -Characters[client.player.character].speed; break;
             case Movement.Up: client.player.position.velocity.target.y = -Characters[client.player.character].speed; break;
             case Movement.Down: client.player.position.velocity.target.y = Characters[client.player.character].speed; break;
-        }
+        }*/
         
         /*if (client.player.position.velocity.x === 0 && client.player.position.velocity.y === 0) {
             switch (key) {

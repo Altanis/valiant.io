@@ -42,19 +42,15 @@ export default abstract class Entity {
     public lerpPosition(deltaTick: number): { x: number, y: number } {
         if (this.ticks <= 2) return this.position.current = this.position.target;
 
-        /** @ts-ignore */
         this.position.current.x = lerp(this.position.current.x, this.position.target.x, 0.1 * deltaTick);
-        /** @ts-ignore */
         this.position.current.y = lerp(this.position.current.y, this.position.target.y, 0.1 * deltaTick);
+
+        this.position.current.x = constrain(0, this.position.current.x, 14400);
+        this.position.current.y = constrain(0, this.position.current.y, 14400);
 
         this.position.velocity.current.x = lerp(this.position.velocity.current.x, this.position.velocity.target.x, 0.1 * deltaTick);
         this.position.velocity.current.y = lerp(this.position.velocity.current.y, this.position.velocity.target.y, 0.1 * deltaTick);
 
-        this.position.current.x += this.position.velocity.current.x;
-        this.position.current.y += this.position.velocity.current.y;
-
-        this.position.current.x = constrain(0, this.position.current.x, 14400);
-        this.position.current.y = constrain(0, this.position.current.y, 14400);
 
         return this.position.current;
     }
