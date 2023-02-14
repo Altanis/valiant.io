@@ -1,4 +1,3 @@
-import { lerp } from "../Utils/Functions";
 import Entity from "./_Entity";
 
 export default class Box extends Entity {
