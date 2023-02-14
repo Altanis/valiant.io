@@ -132,7 +132,7 @@ export default class CanvasManager {
         const factor = Math.min(this.canvas.width / 1080, this.canvas.height / 1920);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2); // Set <0, 0> to center.
         this.ctx.scale(factor * this.client.player.fov, factor * this.client.player.fov);
-        this.ctx.translate(-cameraX, -cameraY);
+        this.ctx.translate(-cameraX + this.client.player.position.velocity.current.x, -cameraY + this.client.player.position.velocity.current.y);
 
         /** Render background of the arena. */
 

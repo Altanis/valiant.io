@@ -69,7 +69,7 @@ export default class Player extends Entity {
         else if (angle < -Math.PI) angle = -Math.PI + 0.01;
 
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
-        ctx.translate(position.x + this.position.velocity.current.x, position.y + this.position.velocity.current.y);
+        ctx.translate(position.x, position.y);
         ctx.scale(scaleX, 1);
 
         /** Render character. */
