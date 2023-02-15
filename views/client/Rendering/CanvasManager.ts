@@ -1,5 +1,6 @@
 import Client from "../Client";
 import { Phases, ServerBound } from "../Const/Enums";
+import { ARENA_SIZE, GRID_SIZE } from "../Utils/Config";
 import { constrain, lerp, lerpAngle, randomRange } from "../Utils/Functions";
 import ImageManager from "./ImageManager";
 
@@ -134,15 +135,31 @@ export default class CanvasManager {
         this.ctx.scale(factor * this.client.player.fov, factor * this.client.player.fov);
         this.ctx.translate(-cameraX + this.client.player.position.velocity.current.x, -cameraY + this.client.player.position.velocity.current.y);
 
-        /** Render background of the arena. */
-
         // RENDER INBOUNDS:
         this.ctx.strokeStyle = "#2F8999";
         this.ctx.lineWidth = 10;        
         this.ctx.fillStyle = "rgb(5,28,31)";
 
-        this.ctx.strokeRect(0, 0, 14400, 14400);
-        this.ctx.fillRect(0, 0, 14400, 14400);
+        this.ctx.strokeRect(0, 0, ARENA_SIZE, ARENA_SIZE);
+        this.ctx.fillRect(0, 0, ARENA_SIZE, ARENA_SIZE);
+
+        // RENDER GRID:
+        this.ctx.strokeStyle = "#334f52";
+        this.ctx.lineWidth = 1;
+
+        for (let x = 0; x < ARENA_SIZE; x += GRID_SIZE) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, ARENA_SIZE);
+            this.ctx.stroke();
+        }
+
+        for (let y = 0; y < ARENA_SIZE; y += GRID_SIZE) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(ARENA_SIZE, y);
+            this.ctx.stroke();
+        }
 
         for (const entity of this.client.player.surroundings) entity.render(this.ctx, deltaTick);
         this.client.player.render(this, this.ctx, pos, angle);

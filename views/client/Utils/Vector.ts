@@ -1,3 +1,5 @@
+import { ARENA_SIZE } from "./Config";
+
 /** A representation of both direction and magnitude on a 2D plane. */
 export default class Vector {
     /** The x-coordinate of the vector. */
@@ -16,11 +18,11 @@ export default class Vector {
             let x = this.x + vector.x;
             let y = this.y + vector.y;
 
-            if (x > 14400) this.x = 14400;
+            if (x > ARENA_SIZE) this.x = ARENA_SIZE;
             else if (x < 0) this.x = 0;
             else this.x = x;
 
-            if (y > 14400) this.y = 14400;
+            if (y > ARENA_SIZE) this.y = ARENA_SIZE;
             else if (y < 0) this.y = 0;
             else this.y = y;
 
@@ -39,11 +41,11 @@ export default class Vector {
             let x = this.x - vector.x;
             let y = this.y - vector.y;
 
-            if (x > 14400) this.x = 14400;
+            if (x > ARENA_SIZE) this.x = ARENA_SIZE;
             else if (x < 0) this.x = 0;
             else this.x = x;
 
-            if (y > 14400) this.y = 14400;
+            if (y > ARENA_SIZE) this.y = ARENA_SIZE;
             else if (y < 0) this.y = 0;
             else this.y = y;
 

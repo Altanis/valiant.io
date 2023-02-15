@@ -1,3 +1,5 @@
+import { FRAME_COUNT } from "../Utils/Config";
+
 /** Manages frames of an image when rendering so it looks like a GIF. */
 export default class ImageManager {
     /** All cached images. */
@@ -33,7 +35,7 @@ export default class ImageManager {
         });
 
         if (sharded) {
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < FRAME_COUNT; i++) {
                 const image = new Image();
                 image.src = `${path}${i + 1}.png`;
                 image.addEventListener("load", () => {

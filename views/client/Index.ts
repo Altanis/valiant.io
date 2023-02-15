@@ -32,12 +32,12 @@ document.addEventListener("keydown", function (event) {
     if (key) {
         client.elements.activeKeys.add(key);
     
-        switch (key) {
-            case Movement.Right: client.player.position.velocity.target.x = 150; break;
-            case Movement.Left: client.player.position.velocity.target.x = -150; break;
-            case Movement.Up: client.player.position.velocity.target.y = -150; break;
-            case Movement.Down: client.player.position.velocity.target.y = 150; break;
-        }
+        /*switch (key) {
+            case Movement.Right: client.player.position.velocity.target.x = 15; break;
+            case Movement.Left: client.player.position.velocity.target.x = -15; break;
+            case Movement.Up: client.player.position.velocity.target.y = -15; break;
+            case Movement.Down: client.player.position.velocity.target.y = 15; break;
+        }*/
 
         /*switch (key) {
             case Movement.Right: client.player.position.velocity.target.x = Characters[client.player.character].speed; break;

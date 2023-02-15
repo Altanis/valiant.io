@@ -1,4 +1,5 @@
 import { constrain, lerp } from "../Utils/Functions";
+import { ARENA_SIZE } from "../Utils/Config";
 
 export default abstract class Entity {
     /** The ID of the entity. */
@@ -45,8 +46,8 @@ export default abstract class Entity {
         this.position.current.x = lerp(this.position.current.x, this.position.target.x, 0.1 * deltaTick);
         this.position.current.y = lerp(this.position.current.y, this.position.target.y, 0.1 * deltaTick);
 
-        this.position.current.x = constrain(0, this.position.current.x, 14400);
-        this.position.current.y = constrain(0, this.position.current.y, 14400);
+        this.position.current.x = constrain(0, this.position.current.x, ARENA_SIZE);
+        this.position.current.y = constrain(0, this.position.current.y, ARENA_SIZE);
 
         this.position.velocity.current.x = lerp(this.position.velocity.current.x, this.position.velocity.target.x, 0.1 * deltaTick);
         this.position.velocity.current.y = lerp(this.position.velocity.current.y, this.position.velocity.target.y, 0.1 * deltaTick);

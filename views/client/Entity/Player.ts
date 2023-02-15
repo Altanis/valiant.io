@@ -1,5 +1,6 @@
 import { Characters, Weapons } from "../Const/Definitions";
 import CanvasManager from "../Rendering/CanvasManager";
+import { ARENA_SIZE } from "../Utils/Config";
 import Entity from "./_Entity";
 
 /** A representation of a Player entity. */
@@ -100,8 +101,8 @@ export default class Player extends Entity {
         /** Render position on the minimap. */
         manager.mapCtx.fillStyle = "#FFFFFF";
 
-        const minimapX = position.x * manager.mapCanvas.width / 14400;
-        const minimapY = position.y * manager.mapCanvas.height / 14400;
+        const minimapX = position.x * manager.mapCanvas.width / ARENA_SIZE;
+        const minimapY = position.y * manager.mapCanvas.height / ARENA_SIZE;
 
         manager.drawCircle(minimapX, minimapY, 2, manager.mapCtx);
     }
