@@ -40,7 +40,6 @@ class SpatialHashGrid {
     cells = new Map<number, Box[]>();
     cellSize = 4;
     queryId = 0;
-    entities = 0;
     
     /**
      * Inserts an entity into the grid.
@@ -50,8 +49,6 @@ class SpatialHashGrid {
      * @param h The height of the entity.
      */
     insert(x: number, y: number, w: number, h: number, id: number) {
-        this.entities++;
-
         const box = new Box(x, y, w, h, id);
 
         const startX = box.x >> this.cellSize;
@@ -75,6 +72,7 @@ class SpatialHashGrid {
      * @param y The y-coordinate of the entity.
      * @param w The width of the entity.
      * @param h The height of the entity.
+     * @param id The ID of the entity.
      * @param inRange Checks from center of entity to get viewport.
      */
     query(x: number, y: number, w: number, h: number, id: number, inRange = false) {
@@ -115,11 +113,7 @@ class SpatialHashGrid {
             }
         }
 
-        const range = [...found.values()];
-        return {
-            range,
-            player: (box.w = box.h = 300, box)
-        };
+        return [...found.values()];
     }
 
     clear() {

@@ -17,6 +17,9 @@ export default class Box extends Entity {
         const { width, height } = this.dimensions;
 
         ctx.fillStyle = "red";
+        ctx.strokeStyle = "black";
+
+        ctx.strokeRect(pos.x, pos.y, width, height);
         ctx.fillRect(pos.x, pos.y, width, height);
     }
 };

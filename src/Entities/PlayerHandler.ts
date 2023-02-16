@@ -63,7 +63,7 @@ export default class PlayerHandler extends Entity {
     public fov = 0.9; // TODO(Altanis): Let characters have different fovs.
 
     constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
-        super(server, [300, 300], "Player");
+        super(server, [50, 50], "Player");
 
         this.server = server;
         this.id = this.server.entities.length;
@@ -151,7 +151,9 @@ export default class PlayerHandler extends Entity {
         }
 
         /** Checks if the client requires a surrounding update. */
-        const { range, player } = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
+        const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
+        const player = new Box(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
+
         // console.log(range, this.position);
 
         /** Tell client an entity is out in view. */
@@ -181,10 +183,10 @@ export default class PlayerHandler extends Entity {
                 entity.write(this.SwiftStream);
 
                 /** Detect collision. */
-                // console.log(player, surrounding);
+                console.log(player, surrounding);
                 // TODO: Fix collision.
-                if (player.collidesWith(surrounding)) {
-                    // console.log("WTF! YOU ARE COLIDe!");
+                if (surrounding.collidesWith(player)) {
+                    console.log("WTF! YOU ARE COLIDe!");
                 }
             };
         }

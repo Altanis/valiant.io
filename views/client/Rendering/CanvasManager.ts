@@ -35,7 +35,7 @@ export default class CanvasManager {
     /** The object which tracks FPS. */
     private FPS = {
         fps: [0]
-    };    
+    };
 
     /** Manager for images. */
     public ImageManager = new ImageManager();
