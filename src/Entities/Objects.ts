@@ -16,8 +16,6 @@ export class Box extends Entity {
     }
 
     public tick() {
-        this.update.add("position");
-        this.velocity = new Vector(1, 1);
         super.tick();
     }
     

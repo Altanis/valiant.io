@@ -150,6 +150,7 @@ export default class PlayerHandler extends Entity {
             this.write();
         }
 
+        // TODO(Altanis): pretty sure querying is the only way to ensure collisions..
         /** Checks if the client requires a surrounding update. */
         const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
         const player = new Box(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
