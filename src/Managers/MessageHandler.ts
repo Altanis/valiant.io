@@ -65,12 +65,18 @@ export default class MessageHandler {
         
         for (const movement of movementKeys) {
             switch (movement) {
-                case Movement.Up: player.velocity!.y = -player.character!.speed; break;
-                case Movement.Right: player.velocity!.x = player.character!.speed; break;
-                case Movement.Down: player.velocity!.y = player.character!.speed; break;
-                case Movement.Left: player.velocity!.x = -player.character!.speed; break;
+                case Movement.Up: player.velocity!.y -= player.character!.speed; break;
+                case Movement.Right: player.velocity!.x += player.character!.speed; break;
+                case Movement.Down: player.velocity!.y += player.character!.speed; break;
+                case Movement.Left: player.velocity!.x -= player.character!.speed; break;
                 default: return player.close(CloseEvent.InvalidProtocol);
             }
+        }
+
+        /** Ensure diagonal velocity is consistent (mag = 1). */
+        const distance = Math.sqrt(player.velocity!.x ** 2 + player.velocity!.y ** 2);
+        if (distance && player.character) {
+            player.velocity!.scale(player.character!.speed / distance);
         }
 
         player.update.add("position");

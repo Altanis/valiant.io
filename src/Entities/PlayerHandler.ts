@@ -11,6 +11,7 @@ import SwiftStream from '../Utils/SwiftStream';
 
 import Entity from './Entity';
 import { Box } from '../Managers/SpatialHashGrid';
+import Vector from '../Utils/Vector';
 
 export default class PlayerHandler extends Entity {
     /** The WebSocket representing the player. */
@@ -153,7 +154,7 @@ export default class PlayerHandler extends Entity {
         // TODO(Altanis): pretty sure querying is the only way to ensure collisions..
         /** Checks if the client requires a surrounding update. */
         const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
-        const player = new Box(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
+        const collisions = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id, false);
 
         // console.log(range, this.position);
 
@@ -182,18 +183,17 @@ export default class PlayerHandler extends Entity {
                 const entity = this.server.entities[surrounding.entityId!];
                 /** @ts-ignore */
                 entity.write(this.SwiftStream);
-
-                /** Detect collision. */
-                console.log(player, surrounding);
-                // TODO: Fix collision.
-                if (surrounding.collidesWith(player)) {
-                    console.log("WTF! YOU ARE COLIDe!");
-                }
             };
         }
 
+        /** Detect collisions. */
+        if (collisions.length) {
+            this.velocity.add(new Vector(1000, 1000));
+            this.update.add("position");
+        }
+
         const buffer = this.SwiftStream.Write();
-        if (range.length ? buffer.byteLength > 3 : buffer.byteLength > 1) this.socket.send(buffer);
+        if (buffer.byteLength > 1) this.socket.send(buffer);
 
         this.surroundings = range;
     }
@@ -213,12 +213,6 @@ export default class PlayerHandler extends Entity {
 
         if (this.alive) {
             /** Move position by player's velocity, reset player velocity. */
-
-            /** Ensure diagonal speed is consistent. */
-            const distance = Math.sqrt(this.velocity!.x ** 2 + this.velocity!.y ** 2);
-            if (distance && this.character) {
-                this.velocity!.scale(this.character!.speed / distance);
-            }
 
             super.tick();
             

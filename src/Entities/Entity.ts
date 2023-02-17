@@ -30,6 +30,7 @@ export default class Entity {
 
     public tick() {
         this.position!.add(this.velocity!, true);
+        console.log(this.velocity, this.position);
         this.velocity!.x = this.velocity!.y = 0;
         
         /** Reinsert into hashgrid with updated position. */

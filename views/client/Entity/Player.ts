@@ -69,11 +69,6 @@ export default class Player extends Entity {
         if (angle > Math.PI) angle = Math.PI - 0.01;
         else if (angle < -Math.PI) angle = -Math.PI + 0.01;
 
-        // render box around player, 300x300 size
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 300;
-        ctx.strokeRect(position.x, position.y, 50, 50);
-
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
         ctx.translate(position.x, position.y);
         ctx.scale(scaleX, 1);
