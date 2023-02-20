@@ -49,7 +49,13 @@ export enum Fields {
     /** Whether or not the entity is alive. */
     Alive      = 0x06,
     /** The angle of the entity. */
-    Angle      = 0x07
+    Angle      = 0x07,
+    /** The health of the entity. */
+    Health     = 0x08,
+    /** The armor of the entity. */
+    Armor      = 0x09,
+    /** The energy of the entity. */
+    Energy     = 0x0A,
 };
 
 /** Object types. */

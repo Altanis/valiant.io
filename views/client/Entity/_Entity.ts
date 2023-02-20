@@ -1,5 +1,6 @@
 import { constrain, lerp } from "../Utils/Functions";
 import { ARENA_SIZE } from "../Utils/Config";
+import CanvasManager from "../Rendering/CanvasManager";
 
 export default abstract class Entity {
     /** The ID of the entity. */
@@ -58,5 +59,6 @@ export default abstract class Entity {
         return this.position.current;
     }
 
-    public render(...args: any) {};
+    public render(...args: any) { };
+    public destroy(manager: CanvasManager, ...args: any) { };
 };

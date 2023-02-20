@@ -4,13 +4,19 @@ import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
 import Vector from '../Utils/Vector';
 import Entity from './Entity';
+import PlayerHandler from './PlayerHandler';
 
 /** A Box, an entity which blocks the player. Yields energy upon breakage. */
 export class Box extends Entity {
     /** EntityType => CollisionEffect() */
+    /** @ts-ignore */
     public static CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
-        ["Player", (player: Entity) => {
+        ["Player", (player: PlayerHandler) => {
+            player.health -= 3;
             player.velocity.add(new Vector(1000, 1000));
+
+            player.update.add("position");
+            player.update.add("health");
         }]
     ]);
 

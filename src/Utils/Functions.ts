@@ -6,3 +6,6 @@ export function randFloat(min: number, max: number): number {
 export function randInt(min: number, max: number): number {
     return randFloat(min, max) | 0;
 }
+
+/** Constrain a value between two values. */
+export const constrain = (min: number, value: number, max: number) => Math.max(Math.min(value, max), min);

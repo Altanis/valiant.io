@@ -48,7 +48,9 @@ export default class ElementManager {
     };
 
     /** Elements which display while playing. */
-    public arena = {
+    public arena: {
+        [key: string]: HTMLElement;
+    } = {
         /** The div containing all of these elements. */
         game: document.getElementById("game")!,
 
@@ -152,6 +154,14 @@ export default class ElementManager {
             this.arena.energyText.innerText = `${energy}/${energy}`;
         });
     }
+
+    public update(stat: "health" | "armor" | "energy", target: number) {
+        const max = Characters[this.client.player.character].stats[stat];
+        
+        this.arena[stat + "Text"].innerText = `${target}/${max}`;
+        this.arena[stat].style.width = `${target / max * 100}%`;
+        this.client.player[stat] = target;
+    }   
 
     private loop() {
         const player = this.client.player;

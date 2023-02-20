@@ -57,7 +57,7 @@ export default class MessageHandler {
         if (
             !player.alive
             || !player.velocity
-        ) return player.close(CloseEvent.InvalidProtocol);
+        ) return;
         
         const movementKeys = [];
         while (player.SwiftStream.at < player.SwiftStream.buffer.length && movementKeys.length < 4)
@@ -90,10 +90,8 @@ export default class MessageHandler {
         const angle = player.SwiftStream.ReadFloat32(); // measured in radians
         if (
             isNaN(angle)
-            || angle > 3.15
-            || angle < -3.15
         ) return player.close(CloseEvent.InvalidProtocol);
-        if (!player.alive) return;
+        if (!player.alive || angle < -3.15 || angle > 3.15) return;
 
         player.angle = angle;
         player.update.add("angle");
@@ -101,7 +99,7 @@ export default class MessageHandler {
 
     // [3, i8(isAtk)]
     Attack(player: PlayerHandler): void {
-        if (!player.alive || !player.weapon) return player.close(CloseEvent.InvalidProtocol);
+        if (!player.alive || !player.weapon) return;
         const isAtk = player.SwiftStream.ReadI8() === 0x01;
 
         player.attacking = isAtk;

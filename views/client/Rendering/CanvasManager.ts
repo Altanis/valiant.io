@@ -125,7 +125,6 @@ export default class CanvasManager {
             this.client.player.angle.target,
             0.35 * deltaTick
         );
-        console.log("sex", this.client.player.angle.current, this.client.player.angle.target, angle);
 
         let { x: cameraX, y: cameraY } = pos;
 

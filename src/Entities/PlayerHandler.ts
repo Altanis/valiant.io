@@ -12,6 +12,7 @@ import SwiftStream from '../Utils/SwiftStream';
 import Entity from './Entity';
 import { Box } from '../Managers/SpatialHashGrid';
 import Vector from '../Utils/Vector';
+import { constrain } from '../Utils/Functions';
 
 export default class PlayerHandler extends Entity {
     /** The WebSocket representing the player. */
@@ -49,8 +50,6 @@ export default class PlayerHandler extends Entity {
      * Measured in radians, with range of [-Math.PI, Math.PI].
     */
     public angle: number = Math.PI;
-    /** The angular velocity of the player (Δr/Δt). */
-    public angularVelocity: number = 0;
     
     /** Attack information for the player. */
     
@@ -131,6 +130,9 @@ export default class PlayerHandler extends Entity {
                 case "dimensions": this.SwiftStream.WriteI8(Fields.Dimensions).WriteFloat32(entity.dimensions[0]).WriteFloat32(entity.dimensions[1]); break;
                 case "alive": this.SwiftStream.WriteI8(Fields.Alive).WriteI8(+entity.alive); break;
                 case "angle": this.SwiftStream.WriteI8(Fields.Angle).WriteFloat32(entity.angle); break;
+                case "health": this.SwiftStream.WriteI8(Fields.Health).WriteI8(constrain(0, entity.health, entity.health)); break;
+                case "armor": this.SwiftStream.WriteI8(Fields.Armor).WriteI8(entity.armor); break;
+                case "energy": this.SwiftStream.WriteI8(Fields.Energy).WriteI8(entity.energy); break;
             }
         });
 
@@ -217,17 +219,20 @@ export default class PlayerHandler extends Entity {
         }
 
         if (this.alive) {
-            /** Move position by player's velocity, reset player velocity. */
-
             super.tick();
             
             /** Send update to player. */
             this.SendUpdate();
 
-            /** Tsrigger weapon if attacking. */
+            /** Trigger weapon if attacking. */
             if (this.attacking && this.cooldown === 0) {
                 this.weapon?.trigger(this);
             }
         }
+    }
+
+    public destroy(): void {
+        this.alive = false;
+        this.update.add("alive");
     }
 };

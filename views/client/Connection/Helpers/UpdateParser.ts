@@ -69,6 +69,10 @@ export default class UpdateParser {
             const angle = this.packet.ReadFloat32();
             entity.angle.target = angle;
         }],
+        [Fields.Health, () => {
+            const health = this.packet.ReadI8();
+            this.client.elements.update("health", health);
+        }]
     ]);
 
     constructor(connection: Connection) {
