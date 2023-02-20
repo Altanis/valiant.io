@@ -137,6 +137,11 @@ export default class PlayerHandler extends Entity {
         this.update.clear();
     }
 
+    /** Collision effect with an entity. */
+    public collide(entity: Entity) {
+        // This function is only invoked when a player collides with a player.
+    }
+
     /** Sends creation data of the player. */
     public SendUpdate() {        
         this.SwiftStream.WriteI8(ClientBound.Update);
@@ -187,9 +192,9 @@ export default class PlayerHandler extends Entity {
         }
 
         /** Detect collisions. */
-        if (collisions.length) {
-            this.velocity.add(new Vector(1000, 1000));
-            this.update.add("position");
+        for (const box of collisions) {
+            const entity = this.server.entities[box.entityId!];
+            entity.collide(this);
         }
 
         const buffer = this.SwiftStream.Write();

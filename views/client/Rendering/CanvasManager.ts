@@ -10,14 +10,13 @@ const TAU = Math.PI * 2;
 
 /** The canvas where nearly all visual representation is drawn. */
 export default class CanvasManager {
-    /** The canvas element. */
+    /** CANVAS */
     /** @ts-ignore */
     public canvas: HTMLCanvasElement = document.getElementById("canvas")!;
     /** The context to draw on. */
     public ctx: CanvasRenderingContext2D = this.canvas.getContext("2d")!;
 
     /** MAP CANVAS */
-    /** The canvas which represents the minimap. */
     /** @ts-ignore */
     public mapCanvas: HTMLCanvasElement = document.getElementById("mapDisplay")!;
     /** The context to draw on for the minimap. */
@@ -28,6 +27,7 @@ export default class CanvasManager {
 
     /** The phase in which rendering is occuring. */
     public phase = Phases.Homescreen; 
+    
     /** The difference in between two frame renders. */
     private delta = 0;
     /** The variable which keeps track of the last update. */
@@ -160,7 +160,7 @@ export default class CanvasManager {
             this.ctx.lineTo(ARENA_SIZE, y);
             this.ctx.stroke();
         }
-
+            
         for (const entity of this.client.player.surroundings) entity.render(this.ctx, deltaTick);
         this.client.player.render(this, this.ctx, pos, angle);
 

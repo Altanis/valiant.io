@@ -7,6 +7,13 @@ import Entity from './Entity';
 
 /** A Box, an entity which blocks the player. Yields energy upon breakage. */
 export class Box extends Entity {
+    /** EntityType => CollisionEffect() */
+    public static CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
+        ["Player", (player: Entity) => {
+            player.velocity.add(new Vector(1000, 1000));
+        }]
+    ]);
+
     constructor(server: GameServer) {
         super(server, [300, 300], "Box");
         this.position = new Vector(0, 0);
@@ -34,5 +41,10 @@ export class Box extends Entity {
         });
 
         this.update.clear();
+    }
+
+    /** Collision effect with an entity. */
+    public collide(entity: Entity) {
+        Box.CollisionEffects.get(entity.type)!(entity);
     }
 }

@@ -1,5 +1,6 @@
 import GameServer from '../GameServer';
 import Vector from '../Utils/Vector';
+import PlayerHandler from './PlayerHandler';
 type EntityType = "Player" | "Box";
 
 /** The base for any entity ingame. */
@@ -9,7 +10,7 @@ export default class Entity {
     /** The ID of the entity. */
     public id: number;
     /** The type of entity. */
-    public type: string;
+    public type: EntityType;
     /** The position of the entity. */
     public position: Vector = new Vector(0, 0);
     /** The velocity of the entity. */
@@ -30,10 +31,12 @@ export default class Entity {
 
     public tick() {
         this.position!.add(this.velocity!, true);
-        console.log(this.velocity, this.position);
+        this instanceof PlayerHandler && console.log("player meetball", Math.round(this.velocity!.x), Math.round(this.velocity!.y), Math.round(this.position!.x), Math.round(this.position!.y));
         this.velocity!.x = this.velocity!.y = 0;
         
         /** Reinsert into hashgrid with updated position. */
         this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
     }
+
+    public collide(entity: Entity): void {};
 }

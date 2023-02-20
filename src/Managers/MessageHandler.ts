@@ -3,7 +3,7 @@ import { CloseEvent, Characters, Movement } from '../Const/Enums';
 import PlayerHandler from '../Entities/PlayerHandler';
 import GameServer from '../GameServer';
 import Vector from '../Utils/Vector';
-import { randInt } from '../Utils/Functions';
+import { randFloat } from '../Utils/Functions';
 import { Sword } from '../Const/Game/Weapons';
 
 export default class MessageHandler {
@@ -42,7 +42,7 @@ export default class MessageHandler {
         player.energy = player.character.stats.energy;
 
         player.velocity = new Vector(0, 0);
-        player.position = new Vector(0, 0); //new Vector(randInt(0, this.server.arenaBounds), randInt(0, this.server.arenaBounds));
+        player.position = new Vector(0, 0); //new Vector(randFloat(0, this.server.arenaBounds), randFloat(0, this.server.arenaBounds));
 
         player.alive = true;
         
@@ -63,22 +63,25 @@ export default class MessageHandler {
         while (player.SwiftStream.at < player.SwiftStream.buffer.length && movementKeys.length < 4)
             movementKeys.push(player.SwiftStream.ReadI8());
         
+        const velocity = new Vector(0, 0);
+        
         for (const movement of movementKeys) {
             switch (movement) {
-                case Movement.Up: player.velocity!.y -= player.character!.speed; break;
-                case Movement.Right: player.velocity!.x += player.character!.speed; break;
-                case Movement.Down: player.velocity!.y += player.character!.speed; break;
-                case Movement.Left: player.velocity!.x -= player.character!.speed; break;
+                case Movement.Up: velocity!.y -= player.character!.speed; break;
+                case Movement.Right: velocity!.x += player.character!.speed; break;
+                case Movement.Down: velocity!.y += player.character!.speed; break;
+                case Movement.Left: velocity!.x -= player.character!.speed; break;
                 default: return player.close(CloseEvent.InvalidProtocol);
             }
         }
 
         /** Ensure diagonal velocity is consistent (mag = 1). */
-        const distance = Math.sqrt(player.velocity!.x ** 2 + player.velocity!.y ** 2);
-        if (distance && player.character) {
-            player.velocity!.scale(player.character!.speed / distance);
+        if (velocity.magnitude && player.character) {
+            velocity!.scale(player.character!.speed / velocity.magnitude);
         }
 
+        console.log(velocity);
+        player.velocity.add(velocity);
         player.update.add("position");
     }
 
