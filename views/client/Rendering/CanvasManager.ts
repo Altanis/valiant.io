@@ -73,6 +73,25 @@ export default class CanvasManager {
     }
 
     /** UTILITIES */
+    public roundRect(x: number, y: number, w: number, h: number, r: number, ctx = this.ctx) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        /** @ts-ignore */
+        r = r - (r < 0) * r;
+
+        const xr = x + r,
+            xw = x + w,
+            yh = y + h;
+        ctx.beginPath();
+        ctx.moveTo(xr, y);
+        ctx.arcTo(xw, y, xw, yh, r);
+        ctx.arcTo(xw, yh, x, yh, r);
+        ctx.arcTo(x, yh, x, y, r);
+        ctx.arcTo(x, y, xw, y, r);
+        ctx.closePath();
+        ctx.fill();
+    }
+
     public drawCircle(x: number, y: number, r: number, ctx = this.ctx) {
         ctx.beginPath();
         ctx.arc(x, y, r, 0, TAU);

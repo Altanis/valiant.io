@@ -63,6 +63,11 @@ export default class Player extends Entity {
     /** The energy of the player. */
     public energy = this.maxEnergy;
 
+    /** Private rendering utils for bars. */
+    private healthWidth = this.health;
+    private armorWidth = this.armor;
+    private energyWidth = this.energy;
+
     /** Death animation information for the character. */
     private deathAnim = {
         phase: 0, // 0 = not dead, 1 = dying, 2 = dead
@@ -99,6 +104,9 @@ export default class Player extends Entity {
 
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
         ctx.translate(position.x, position.y);
+
+        this.renderBars(ctx, manager);
+
         ctx.scale(scaleX, 1);
 
         /** Render character. */
@@ -136,19 +144,6 @@ export default class Player extends Entity {
     }
 
     public destroy(manager: CanvasManager, position: { x: number, y: number }) {
-            /** Death animation information for the character. */
-            /*private deathAnim = {
-                phase: 0, // 0 = not dead, 1 = dying, 2 = dead
-
-                size: this.dimensions.height,
-                targetSize: this.dimensions.height * 1.5,
-
-                transparency: 0,
-                targetTransparency: 1,
-
-                ticks: 0,
-                targetTicks: 60
-    };*/
         this.deathAnim.phase = 1;
 
         const size = this.deathAnim.size + (((this.deathAnim.targetSize - this.deathAnim.size) / this.deathAnim.targetTicks) * this.deathAnim.ticks);
@@ -168,5 +163,58 @@ export default class Player extends Entity {
         manager.ctx.restore();
 
         if (++this.deathAnim.ticks >= this.deathAnim.targetTicks) this.deathAnim.phase = 2;
+    }
+
+    private renderBars(ctx: CanvasRenderingContext2D, manager: CanvasManager) {
+        /** Render health bar. */
+        if (this.health !== this.healthWidth) {
+            this.healthWidth += this.healthWidth < this.health ? 0.2 : -0.2;
+            // TODO(Altanis): Ensure they collide at some point.
+            if (this.healthWidth < this.health ? 
+                this.healthWidth > this.health :
+                this.healthWidth < this.health
+            ) this.healthWidth = this.health;
+        }
+
+        ctx.fillStyle = "#3d3f43";
+        manager.roundRect(-85, 200, 200, 20, 8);
+        ctx.fillStyle = "#FD3B3B"; // opponent is #cc5152
+        manager.roundRect(-85, 200, 200 * (this.healthWidth / this.maxHealth), 20, 7);
+
+        /** Render armor bar. */
+        if (this.armor !== this.armorWidth) {
+            this.armorWidth += this.armorWidth < this.armor ? 0.2 : -0.2;
+            // TODO(Altanis): Ensure they collide at some point.
+            if (this.armorWidth < this.armor ?
+                this.armorWidth > this.armor :
+                this.armorWidth < this.armor
+            ) this.armorWidth = this.armor;
+        }
+
+        ctx.fillStyle = "#3d3f43";
+        manager.roundRect(-85, 225, 200, 20, 8);
+        ctx.fillStyle = "#A8D657"; // opponent is #cc5152
+        manager.roundRect(-85, 225, 200 * (this.armorWidth / this.maxArmor), 20, 7);
+        
+        /** Render energy bar. */
+        if (this.energy !== this.energyWidth) {
+            this.energyWidth += this.energyWidth < this.energy ? 0.2 : -0.2;
+            // TODO(Altanis): Ensure they collide at some point.
+            if (this.energyWidth < this.energy ?
+                this.energyWidth > this.energy :
+                this.energyWidth < this.energy
+            ) this.energyWidth = this.energy;
+        }
+
+        ctx.fillStyle = "#3d3f43";
+        manager.roundRect(-85, 250, 200, 20, 8);
+        ctx.fillStyle = "#7300FF"; // opponent is #cc5152
+        manager.roundRect(-85, 250, 200 * (this.energyWidth / this.maxEnergy), 20, 7);
+        /*ctx.fillStyle = "#FFFFFF";
+        ctx.font = "12px Orbitron";
+        ctx.textAlign = "center";
+        ctx.fillText(`${this.health}/${this.maxHealth}`, 0, 215);
+        ctx.fillText(`${this.armor}/${this.maxArmor}`, 0, 240);
+        ctx.fillText(`${this.energy}/${this.maxEnergy}`, 0, 265);*/
     }
 }
