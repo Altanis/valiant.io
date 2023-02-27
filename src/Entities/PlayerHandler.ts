@@ -39,7 +39,7 @@ export default class PlayerHandler extends Entity {
     public cooldown: number = 0;
 
     /** The health of the player. */
-    public health: number = 0;
+    private _health: number = 0;
     /** The armor of the player. */
     public armor: number = 0;
     /** The energy of the player. */
@@ -73,6 +73,27 @@ export default class PlayerHandler extends Entity {
         
         this.ip = request.headers['x-forwarded-for']?.toString().split(',').at(-1) || request.socket.remoteAddress || "";
         this.ip && this.checkIP(request);
+
+        /** Technical things to make modifying stats easier. */
+        Object.defineProperty(this, "health", {
+            get: () => this._health,
+            set: (value: number) => {
+                if (this.armor && value > this.armor) {
+                    let o = this._health;
+
+                    this._health = constrain(0, this._health - (value - this.armor), Infinity);
+                    this.armor = 0;
+
+                    this.update.add("armor");
+                    if (o !== this._health) this.update.add("health");
+                } else {
+                    this._health = constrain(0, this._health - value, Infinity);
+                    this.update.add("health");
+                }
+
+                return this._health;
+            }
+        });
     }
 
     private addHandlers(socket: WebSocket): void {

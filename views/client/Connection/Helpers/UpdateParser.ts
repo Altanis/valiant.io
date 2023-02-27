@@ -72,7 +72,15 @@ export default class UpdateParser {
         [Fields.Health, () => {
             const health = this.packet.ReadI8();
             this.client.elements.update("health", health);
-        }]
+        }],
+        [Fields.Armor, () => {
+            const armor = this.packet.ReadI8();
+            this.client.elements.update("armor", armor);
+        }],
+        [Fields.Energy, () => {
+            const energy = this.packet.ReadI8();
+            this.client.elements.update("energy", energy);
+        }],
     ]);
 
     constructor(connection: Connection) {

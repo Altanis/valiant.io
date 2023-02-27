@@ -14,9 +14,6 @@ export class Box extends Entity {
         ["Player", (player: PlayerHandler) => {
             player.health -= 3;
             player.velocity.add(new Vector(1000, 1000));
-
-            player.update.add("position");
-            player.update.add("health");
         }]
     ]);
 

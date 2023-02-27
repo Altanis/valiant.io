@@ -82,7 +82,6 @@ export default class MessageHandler {
 
         console.log(velocity);
         player.velocity.add(velocity);
-        player.update.add("position");
     }
 
     // [2, i8(angle)]

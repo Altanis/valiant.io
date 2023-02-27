@@ -35,6 +35,7 @@ export default class Entity {
     public tick() {
         if (this.health <= 0) this.destroy();
 
+        if (this.velocity.x !== 0 || this.velocity.y !== 0) this.update.add("position");
         this.position!.add(this.velocity!, true);
         this instanceof PlayerHandler && console.log("player meetball", Math.round(this.velocity!.x), Math.round(this.velocity!.y), Math.round(this.position!.x), Math.round(this.position!.y));
         this.velocity!.x = this.velocity!.y = 0;
