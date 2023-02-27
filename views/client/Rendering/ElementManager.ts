@@ -45,6 +45,12 @@ export default class ElementManager {
     public settings = {
         /** The div which contains toggleable settings. */
         settings: document.getElementById("settingsModal")!,
+
+        /** The setting to disable grid. */
+        hideGrid: document.getElementById("hideGrid")!,
+
+        /** Back button */
+        back: document.getElementById("back")!
     };
 
     /** Elements which display while playing. */
@@ -152,6 +158,26 @@ export default class ElementManager {
             this.arena.armorText.innerText = `${armor}/${armor}`;
             /** @ts-ignore */
             this.arena.energyText.innerText = `${energy}/${energy}`;
+        });
+
+        /** Take settings into account. */
+        /** @ts-ignore */
+        this.settings.hideGrid.checked = this.client.canvas.grid = localStorage.getItem("hideGrid") === "true";
+        this.settings.hideGrid.addEventListener("change", () => {
+            /** @ts-ignore */
+            localStorage.setItem("hideGrid", this.settings.hideGrid.checked);
+            /** @ts-ignore */
+            this.client.canvas.grid = !this.settings.hideGrid.checked;
+        });
+
+        this.homescreen.settings.addEventListener("click", () => {
+            this.settings.settings.style.display = "flex";
+            this.homescreen.homescreen.style.display = "none";
+        });
+
+        this.settings.back.addEventListener("click", () => {
+            this.settings.settings.style.display = "none";
+            this.homescreen.homescreen.style.display = "block";
         });
     }
 

@@ -40,6 +40,9 @@ export default class CanvasManager {
     /** Manager for images. */
     public ImageManager = new ImageManager();
 
+    /** If the grid should be drawn. */
+    public grid = true;
+
     /** The stars on the homescreen. */
     public stars: {
         count: number,
@@ -162,21 +165,23 @@ export default class CanvasManager {
         this.ctx.fillRect(0, 0, ARENA_SIZE, ARENA_SIZE);
 
         // RENDER GRID:
-        this.ctx.strokeStyle = "#334f52";
-        this.ctx.lineWidth = 1;
+        if (this.grid) {
+            this.ctx.strokeStyle = "#334f52";
+            this.ctx.lineWidth = 1;
 
-        for (let x = 0; x < ARENA_SIZE; x += GRID_SIZE) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, 0);
-            this.ctx.lineTo(x, ARENA_SIZE);
-            this.ctx.stroke();
-        }
+            for (let x = 0; x < ARENA_SIZE; x += GRID_SIZE) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(x, 0);
+                this.ctx.lineTo(x, ARENA_SIZE);
+                this.ctx.stroke();
+            }
 
-        for (let y = 0; y < ARENA_SIZE; y += GRID_SIZE) {
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, y);
-            this.ctx.lineTo(ARENA_SIZE, y);
-            this.ctx.stroke();
+            for (let y = 0; y < ARENA_SIZE; y += GRID_SIZE) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, y);
+                this.ctx.lineTo(ARENA_SIZE, y);
+                this.ctx.stroke();
+            }
         }
             
         for (const entity of this.client.player.surroundings) entity.render(this.ctx, deltaTick);
