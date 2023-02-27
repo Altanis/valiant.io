@@ -78,22 +78,31 @@ export default class PlayerHandler extends Entity {
         Object.defineProperty(this, "health", {
             get: () => this._health,
             set: (value: number) => {
-                if (this.armor && value > this.armor) {
-                    let o = this._health;
+                if (!this.character) return;
 
-                    this._health = constrain(0, this._health - (value - this.armor), Infinity);
-                    this.armor = 0;
+                const oA = this.armor, oH = this._health;
+                value -= oH;
 
-                    this.update.add("armor");
-                    if (o !== this._health) this.update.add("health");
+                if (value > 0) {
+                    this._health = constrain(0, this._health + value, this.character!.stats.health);
                 } else {
-                    this._health = constrain(0, this._health - value, Infinity);
-                    this.update.add("health");
+                    if (this.armor) {
+                        const diff = this.armor + value;
+                        this.armor = constrain(0, diff, this.character!.stats.armor);
+
+                        if (diff < 0) {
+                            this._health = constrain(0, this._health + (oA + value), this.character!.stats.health);
+                        }
+
+                    } else this._health = constrain(0, this._health + value, this.character!.stats.health);
                 }
 
+                if (this.armor !== oA) this.update.add("armor");
+                if (this._health !== oH) this.update.add("health");
+
                 return this._health;
-            }
-        });
+            },
+        });          
     }
 
     private addHandlers(socket: WebSocket): void {
