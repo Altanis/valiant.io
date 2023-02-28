@@ -1,4 +1,5 @@
 import { ARENA_SIZE } from "./Config";
+import { constrain } from "./Functions";
 
 /** A representation of both direction and magnitude on a 2D plane. */
 export default class Vector {
@@ -15,16 +16,8 @@ export default class Vector {
     /** Adds by a vector. */
     public add(vector: Vector, strict = false): Vector {
         if (strict) {
-            let x = this.x + vector.x;
-            let y = this.y + vector.y;
-
-            if (x > ARENA_SIZE) this.x = ARENA_SIZE;
-            else if (x < 0) this.x = 0;
-            else this.x = x;
-
-            if (y > ARENA_SIZE) this.y = ARENA_SIZE;
-            else if (y < 0) this.y = 0;
-            else this.y = y;
+            this.x = constrain(0, this.x + vector.x, ARENA_SIZE);
+            this.y = constrain(0, this.y + vector.y, ARENA_SIZE);
 
             return this;
         }
@@ -38,17 +31,9 @@ export default class Vector {
     /** Subtracts by a vector. */
     public subtract(vector: Vector, strict = false): Vector {
         if (strict) {
-            let x = this.x - vector.x;
-            let y = this.y - vector.y;
-
-            if (x > ARENA_SIZE) this.x = ARENA_SIZE;
-            else if (x < 0) this.x = 0;
-            else this.x = x;
-
-            if (y > ARENA_SIZE) this.y = ARENA_SIZE;
-            else if (y < 0) this.y = 0;
-            else this.y = y;
-
+            this.x = constrain(0, this.x - vector.x, ARENA_SIZE);
+            this.y = constrain(0, this.y - vector.y, ARENA_SIZE);
+            
             return this;
         }
         
@@ -62,7 +47,6 @@ export default class Vector {
     public scale(scalar: number): Vector {
         this.x *= scalar;
         this.y *= scalar;
-
         return this;
     }
 
