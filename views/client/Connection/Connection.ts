@@ -18,6 +18,11 @@ export default class Connection extends EventTarget {
     /** The handler for incoming messages. */
     public MessageHandler = new MessageHandler(this);
 
+    /** The latency of the player. */
+    public latency = 0;
+    /** The timestamp the last ping packet was received. */
+    private lastPing = 0;
+
     constructor(client: Client, url: string) {
         super();
         
@@ -102,7 +107,17 @@ export default class Connection extends EventTarget {
             );
         });
 
-        this.socket.addEventListener("message", ({ data }) => {         
+        this.socket.addEventListener("message", ({ data }) => {     
+            if (data.byteLength === 0) { // Ping packet.
+                const old = this.lastPing;
+                this.lastPing = Date.now();
+                this.latency = this.lastPing - old;
+
+                this.client.elements.arena.ping.innerText = `${this.latency}ms localhost`;
+
+                return this.socket.send(new Uint8Array(0));
+            }
+
             this.SwiftStream.Set(data = new Uint8Array(data));
             this.parse();   
         });

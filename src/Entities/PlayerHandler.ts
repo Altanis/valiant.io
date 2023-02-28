@@ -109,6 +109,9 @@ export default class PlayerHandler extends Entity {
         socket.on("close", () => this.close(CloseEvent.Unknown));
         socket.on("message", (b: ArrayBufferLike) => {
             const buffer = new Uint8Array(b);
+
+            if (buffer.byteLength === 0) return socket.send(new Uint8Array(0)); // Ping packet.
+
             this.SwiftStream.Set(buffer);
 
             const header = this.SwiftStream.ReadI8();

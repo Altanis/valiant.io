@@ -162,7 +162,7 @@ export default class ElementManager {
 
         /** Take settings into account. */
         /** @ts-ignore */
-        this.settings.hideGrid.checked = this.client.canvas.grid = localStorage.getItem("hideGrid") === "true";
+        // this.settings.hideGrid.checked = this.client.canvas.grid = localStorage.getItem("hideGrid") === "true";
         this.settings.hideGrid.addEventListener("change", () => {
             /** @ts-ignore */
             localStorage.setItem("hideGrid", this.settings.hideGrid.checked);
@@ -243,8 +243,8 @@ export default class ElementManager {
                     measure
                 });
 
-                // player.angle.current = player.angle.target;
-                // player.angle.target = measure;
+                player.angle.current = player.angle.target;
+                player.angle.target = measure;
             }
         }
 

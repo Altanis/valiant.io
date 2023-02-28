@@ -50,6 +50,9 @@ export default class MessageHandler {
         player.update.add("weapon");
         player.update.add("fov");
         player.update.add("alive");
+
+        /** Send initial ping packet. */
+        player.socket.send(new Uint8Array(0));
     }
 
     // [1, ...i8(Movement)]

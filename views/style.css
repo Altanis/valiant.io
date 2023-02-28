@@ -491,6 +491,20 @@ transform: translate(-50%, -50%);
     animation-name: FadeInPlay;
 }
 
+/** Make #death appear on top of everything else, horizontally and vertically centered, and 100% width 100% height. Horizontally and vertically center all content inside it. */
+#death {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
 @keyframes FadeIn {
     from {
