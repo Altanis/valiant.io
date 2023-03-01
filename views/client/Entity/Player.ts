@@ -82,6 +82,9 @@ export default class Player extends Entity {
         targetTicks: 30
     };
 
+    /** The last time the player was alive. */
+    public lastAlive = 0;
+
     /** Renders the player onto the canvas. */
     public render(
         manager: CanvasManager,

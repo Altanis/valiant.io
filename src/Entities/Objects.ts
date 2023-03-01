@@ -12,7 +12,7 @@ export class Box extends Entity {
     /** @ts-ignore */
     public static CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
         ["Player", (player: PlayerHandler) => {
-            player.health -= 3;
+            player.health -= 13;
             player.velocity.add(new Vector(1000, 1000));
         }]
     ]);

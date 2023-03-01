@@ -57,12 +57,22 @@ export default class UpdateParser {
             entity.alive = alive;
             
             if (alive) {
+                entity.lastAlive = Date.now();
                 this.client.canvas.phase = Phases.Arena;
 
                 this.client.elements.homescreen.homescreen.style.display = "none";
                 this.client.elements.arena.stats.style.display =
                     this.client.elements.arena.utils.style.display =
                     this.client.canvas.mapCanvas.style.display = "block";
+            } else {
+                const time = new Date(Date.now() - entity.lastAlive);
+                const hours = time.getUTCHours().toString().padStart(2, '0');
+                const minutes = time.getUTCMinutes().toString().padStart(2, '0');
+                const seconds = time.getUTCSeconds().toString().padStart(2, '0');
+
+                setTimeout(() => this.client.elements.arena.death.style.display = "flex", 250);
+                this.client.elements.arena.killedBy.innerHTML = "You were killed by sex.";
+                this.client.elements.arena.timeAlive.innerHTML = `Time Alive: ${hours}h ${minutes}m ${seconds}s`;
             }
         }],
         [Fields.Angle, (entity: Player) => {

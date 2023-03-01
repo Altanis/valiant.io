@@ -79,6 +79,14 @@ export default class ElementManager {
         fps: document.getElementById("fps")!,
         /** The ping of the client. */
         ping: document.getElementById("ping")!,
+        
+        /** The death screen when the player dies. */
+        death: document.getElementById("death")!,
+        
+        /** The person who killed the player. */
+        killedBy: document.getElementById("killedBy")!,
+        /** The time alive. */
+        timeAlive: document.getElementById("timeAlive")!,
     };
 
     /** Elements which play when the player disconnects from the game. */
