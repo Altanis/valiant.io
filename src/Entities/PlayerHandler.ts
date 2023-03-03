@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import { IncomingMessage } from "http";
 
 import { ConnectionsPerIP } from '../Const/Config';
-import { CloseEvent, ClientBound, ServerBound, Fields } from '../Const/Enums';
+import { CloseEvent, ClientBound, ServerBound, Fields, Entities } from '../Const/Enums';
 import CharacterDefinition from '../Const/Game/Definitions/CharacterDefinition';
 import { WeaponDefinition } from '../Const/Game/Definitions/WeaponDefinition';
 
@@ -109,7 +109,6 @@ export default class PlayerHandler extends Entity {
         socket.on("close", () => this.close(CloseEvent.Unknown));
         socket.on("message", (b: ArrayBufferLike) => {
             const buffer = new Uint8Array(b);
-
             if (buffer.byteLength === 0) return socket.send(new Uint8Array(0)); // Ping packet.
 
             this.SwiftStream.Set(buffer);
@@ -149,8 +148,9 @@ export default class PlayerHandler extends Entity {
     }
 
     /** Writes update data to a buffer. */
-    public write(entity = this) {
+    public write(entity = this, surrounding = false) {
         /** Tells the client the amount of fields updated. */
+        if (surrounding) this.SwiftStream.WriteI8(Entities.Player);
         this.SwiftStream.WriteI8(entity.update.size + 1); // +1 for ID
         this.SwiftStream.WriteI8(Fields.ID).WriteI8(entity.id);
 
@@ -166,10 +166,11 @@ export default class PlayerHandler extends Entity {
                 case "health": this.SwiftStream.WriteI8(Fields.Health).WriteI8(constrain(0, entity.health, entity.health)); break;
                 case "armor": this.SwiftStream.WriteI8(Fields.Armor).WriteI8(entity.armor); break;
                 case "energy": this.SwiftStream.WriteI8(Fields.Energy).WriteI8(entity.energy); break;
+                case "name": this.SwiftStream.WriteI8(Fields.Name).WriteCString(entity.name); break;
             }
         });
 
-        this.update.clear();
+        this.id === 2 && console.log(this.SwiftStream.buffer.subarray(0, this.SwiftStream.at));
     }
 
     /** Collision effect with an entity. */
@@ -182,7 +183,18 @@ export default class PlayerHandler extends Entity {
         this.SwiftStream.WriteI8(ClientBound.Update);
 
         /** TODO(Altanis): Make each entity have a `write` method to update the client. */
-        
+
+        // TODO(Altanis): pretty sure querying is the only way to ensure collisions..
+        /** Checks if the client requires a surrounding update. */
+        const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
+        const collisions = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id, false);
+
+        /** Detect collisions. */
+        for (const box of collisions) {
+            const entity = this.server.entities[box.entityId!];
+            entity.collide(this);
+        }
+
         /** Checks if the client requires an update. */
         if (this.update.size) {
             /** Signifies a client update. */
@@ -191,45 +203,15 @@ export default class PlayerHandler extends Entity {
             this.write();
         }
 
-        // TODO(Altanis): pretty sure querying is the only way to ensure collisions..
-        /** Checks if the client requires a surrounding update. */
-        const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
-        const collisions = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id, false);
-
-        // console.log(range, this.position);
-
-        /** Tell client an entity is out in view. */
-        /*let wroteOOV = false;
-        for (const surrounding of this.surroundings) {
-            const corresponding = range.find(entity => entity.entityId === surrounding.entityId);
-            if (!corresponding) { // TODO: Remove entity from client.
-                if (!wroteOOV) {
-                    console.log("wrote OOV");
-                    this.SwiftStream.WriteI8(0x01);
-                    wroteOOV = true;
-                }
-
-                this.SwiftStream.WriteI8(surrounding.entityId);
-            }; 
-        }
-
-        if (wroteOOV) this.SwiftStream.WriteI8(0xFF);*/
-
-        // TODO(Altanis): Write deletions.
-
         if (range.length) {
             this.SwiftStream.WriteI8(0x01).WriteI8(range.length);
             for (const surrounding of range) {
                 const entity = this.server.entities[surrounding.entityId!];
                 /** @ts-ignore */
-                entity.write(this.SwiftStream);
+                if (entity instanceof PlayerHandler) this.write(entity, true);
+                /** @ts-ignore */ 
+                else entity.write(this.SwiftStream);
             };
-        }
-
-        /** Detect collisions. */
-        for (const box of collisions) {
-            const entity = this.server.entities[box.entityId!];
-            entity.collide(this);
         }
 
         const buffer = this.SwiftStream.Write();

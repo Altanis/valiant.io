@@ -4,6 +4,8 @@ export default class Box extends Entity {
     /** The dimensions of the box. */
     public dimensions = { width: 300, height: 300 };
 
+    public name = "Box";
+
     public health = 100;
     public maxHealth = 100;
 

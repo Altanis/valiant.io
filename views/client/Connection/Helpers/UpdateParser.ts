@@ -7,6 +7,8 @@ import Logger from "../../Utils/Logger";
 import Connection from "../Connection";
 import SwiftStream from "../SwiftStream";
 
+/** TODO(Altanis): Fix update for surroundings. */
+
 export default class UpdateParser {
     /** The packet being handled. */
     private packet = new SwiftStream();
@@ -28,6 +30,7 @@ export default class UpdateParser {
         [Fields.Position, (entity: Entity) => {
             const x = this.packet.ReadFloat32();
             const y = this.packet.ReadFloat32();
+            console.log("fieldT!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
 
             entity.position.target = { x, y };
         }],
@@ -49,6 +52,7 @@ export default class UpdateParser {
         [Fields.Dimensions, (entity: Entity) => {
             const width = this.packet.ReadFloat32();
             const height = this.packet.ReadFloat32();
+            console.log("fieldT!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
 
             entity.dimensions = { width, height };
         }],
@@ -71,7 +75,7 @@ export default class UpdateParser {
                 const seconds = time.getUTCSeconds().toString().padStart(2, '0');
 
                 setTimeout(() => this.client.elements.arena.death.style.display = "flex", 250);
-                this.client.elements.arena.killedBy.innerHTML = "You were killed by sex.";
+                this.client.elements.arena.killedBy.innerHTML = `You were killed by $ex.`;
                 this.client.elements.arena.timeAlive.innerHTML = `Time Alive: ${hours}h ${minutes}m ${seconds}s`;
             }
         }],
@@ -90,6 +94,10 @@ export default class UpdateParser {
         [Fields.Energy, () => {
             const energy = this.packet.ReadI8();
             this.client.elements.update("energy", energy);
+        }],
+        [Fields.Name, (entity: Entity) => {
+            const name = this.packet.ReadCString();
+            entity.name = name;
         }],
     ]);
 
@@ -111,8 +119,9 @@ export default class UpdateParser {
             this.nextFields(fieldLength);
         }
 
+        console.log("test!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
         const surroundings = group !== 0x00 ? group : this.packet.ReadI8();
-        // split buffer from current position
+        
         if (surroundings === 0x01) {
             const entityLength = this.packet.ReadI8();
             this.nextEntities(entityLength);
@@ -127,9 +136,14 @@ export default class UpdateParser {
     }
 
     private nextFields(length: number, entity?: Entity) {
+        let isBox = entity && entity.id === 0;
+        console.log(`Fields: ${length} (${isBox ? "Box" : "Player"})`);
+
         for (; length--;) {
             const field = this.packet.ReadI8();
             const executor = this.fieldMap.get(field);
+
+            if (isBox) console.log(`Field: ${Fields[field]} (${field})}`);
 
             if (!executor) Logger.err(`Unknown field ${field}!`);
             else executor(entity || this.player);
@@ -147,15 +161,19 @@ export default class UpdateParser {
             let _entity = this.player.surroundings.find(entity => entity.id === ID);
             if (!_entity) {
                 switch (entity) {
-                    case Entities.Box: _entity = new Box(); 
+                    case Entities.Player: _entity = new Player(); break;
+                    case Entities.Box: _entity = new Box(); break;
+                    default: Logger.err(`Unknown entity ${entity}!`);
                 }
 
+                _entity!.type = entity;
                 _entity!.id = ID;
                 this.player.surroundings.push(_entity!);
             }
 
             _entity!.updated = true;
             this.nextFields(fieldLength, _entity!);
+            console.log("tEST!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
         }
     }
 }

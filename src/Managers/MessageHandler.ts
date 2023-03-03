@@ -16,7 +16,7 @@ export default class MessageHandler {
 
     // [0, string(name), i8(characterIdx), i8(abilityIdx)]
     Spawn(player: PlayerHandler): void {
-        const name = player.SwiftStream.ReadUTF8String()?.trim();
+        const name = player.SwiftStream.ReadCString()?.trim();
         const characterIndex = player.SwiftStream.ReadI8();
         const abilityIndex = player.SwiftStream.ReadI8();
 
@@ -50,6 +50,7 @@ export default class MessageHandler {
         player.update.add("weapon");
         player.update.add("fov");
         player.update.add("alive");
+        player.update.add("name");
 
         /** Send initial ping packet. */
         player.socket.send(new Uint8Array(0));

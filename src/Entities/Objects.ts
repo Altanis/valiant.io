@@ -12,7 +12,7 @@ export class Box extends Entity {
     /** @ts-ignore */
     public static CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
         ["Player", (player: PlayerHandler) => {
-            player.health -= 13;
+            player.health -= 12;
             player.velocity.add(new Vector(1000, 1000));
         }]
     ]);
@@ -42,8 +42,6 @@ export class Box extends Entity {
                 case "dimensions": buffer.WriteI8(Fields.Dimensions).WriteFloat32(this.dimensions[0]).WriteFloat32(this.dimensions[1]); break;
             }
         });
-
-        this.update.clear();
     }
 
     /** Collision effect with an entity. */

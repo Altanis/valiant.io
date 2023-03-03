@@ -24,6 +24,9 @@ export default abstract class Entity {
         /** Interpolation factor. */
         factor: 0
     };
+
+    /** The name of the entity. */
+    public name = "";
     
     /** The health of the entity. */
     public abstract health: number;
@@ -40,6 +43,9 @@ export default abstract class Entity {
 
     /** Ticks since the entity was created. */
     public ticks = 0;
+
+    /** The type of entity. */
+    public type = 0;
 
     public lerpPosition(deltaTick: number): { x: number, y: number } {
         if (this.ticks <= 2) return this.position.current = this.position.target;

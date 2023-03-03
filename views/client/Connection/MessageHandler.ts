@@ -17,6 +17,7 @@ export default class MessageHandler {
     public Update() {
         const SS = new SwiftStream();
         SS.Set(this.connection.SwiftStream.buffer);
+        this.connection.SwiftStream.Clear();
 
         if (!this.UpdateParser) this.UpdateParser = new UpdateParser(this.connection);
         this.UpdateParser!.parse(SS);

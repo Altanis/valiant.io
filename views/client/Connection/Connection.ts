@@ -51,6 +51,7 @@ export default class Connection extends EventTarget {
         ) return;
         
         this.SwiftStream.WriteI8(header);
+        console.log(this.SwiftStream.buffer.subarray(0, this.SwiftStream.at));
 
         switch (header) {
             case ServerBound.Spawn: {
@@ -118,6 +119,7 @@ export default class Connection extends EventTarget {
                 return this.socket.send(new Uint8Array(0));
             }
 
+            console.log(new Uint8Array(data));
             this.SwiftStream.Set(data = new Uint8Array(data));
             this.parse();   
         });

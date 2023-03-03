@@ -1,5 +1,5 @@
 import Client from "../Client";
-import { Phases, ServerBound } from "../Const/Enums";
+import { Entities, Phases, ServerBound } from "../Const/Enums";
 import { ARENA_SIZE, GRID_SIZE } from "../Utils/Config";
 import { constrain, lerp, lerpAngle, randomRange } from "../Utils/Functions";
 import ImageManager from "./ImageManager";
@@ -184,7 +184,13 @@ export default class CanvasManager {
             }
         }
             
-        for (const entity of this.client.player.surroundings) entity.render(this.ctx, deltaTick);
+        for (const entity of this.client.player.surroundings) {
+            switch (entity.type) {
+                case Entities.Box: entity.render(this.ctx, deltaTick); break;
+                case Entities.Player: entity.render(this, this.ctx, entity.lerpPosition(deltaTick), entity.angle); break;
+            }
+        }
+
         this.client.player.render(this, this.ctx, pos, angle);
 
         this.ctx.restore();

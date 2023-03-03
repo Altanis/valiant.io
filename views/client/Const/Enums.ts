@@ -56,6 +56,8 @@ export enum Fields {
     Armor      = 0x09,
     /** The energy of the entity. */
     Energy     = 0x0A,
+    /** The name of the entity. */
+    Name       = 0x0B,
 };
 
 /** Object types. */

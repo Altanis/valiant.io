@@ -34,7 +34,7 @@ export default class SwiftStream {
         return f32[0];
     }
 
-    ReadUTF8String() {
+    ReadCString() {
         const start = this.at;
         while (this.buffer[this.at++]);
         return this.TextDecoder.decode(this.buffer.slice(start, this.at - 1));

@@ -68,6 +68,8 @@ export default class Player extends Entity {
     private armorWidth = this.armor;
     private energyWidth = this.energy;
 
+    public name = "an unnamed player";
+
     /** Death animation information for the character. */
     private deathAnim = {
         phase: 0, // 0 = not dead, 1 = dying, 2 = dead
