@@ -1,4 +1,4 @@
-import { constrain, lerp } from "../Utils/Functions";
+import { constrain, lerp, lerpAngle } from "../Utils/Functions";
 import { ARENA_SIZE } from "../Utils/Config";
 import CanvasManager from "../Rendering/CanvasManager";
 
@@ -63,6 +63,15 @@ export default abstract class Entity {
 
 
         return this.position.current;
+    }
+
+    public lerpAngle(deltaTIck: number): number {
+        if (this.ticks <= 2) return this.angle.current = this.angle.target;
+        
+        this.angle.current = lerpAngle(this.angle.current, this.angle.target, 0.35 * deltaTIck);
+        this.angle.current = constrain(-Math.PI, this.angle.current, Math.PI);
+
+        return this.angle.current;
     }
 
     public render(...args: any) { };

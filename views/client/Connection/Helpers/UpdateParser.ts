@@ -30,7 +30,6 @@ export default class UpdateParser {
         [Fields.Position, (entity: Entity) => {
             const x = this.packet.ReadFloat32();
             const y = this.packet.ReadFloat32();
-            console.log("fieldT!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
 
             entity.position.target = { x, y };
         }],
@@ -52,14 +51,14 @@ export default class UpdateParser {
         [Fields.Dimensions, (entity: Entity) => {
             const width = this.packet.ReadFloat32();
             const height = this.packet.ReadFloat32();
-            console.log("fieldT!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
 
             entity.dimensions = { width, height };
         }],
-        [Fields.Alive, (entity: Player) => {
+        [Fields.Alive, (entity: Player) => {            
             const alive = this.packet.ReadI8() === 0x01;
             entity.alive = alive;
             
+            if (entity.id !== this.player.id) return;
             if (alive) {
                 entity.lastAlive = Date.now();
                 this.client.canvas.phase = Phases.Arena;
@@ -119,7 +118,6 @@ export default class UpdateParser {
             this.nextFields(fieldLength);
         }
 
-        console.log("test!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
         const surroundings = group !== 0x00 ? group : this.packet.ReadI8();
         
         if (surroundings === 0x01) {
@@ -136,14 +134,9 @@ export default class UpdateParser {
     }
 
     private nextFields(length: number, entity?: Entity) {
-        let isBox = entity && entity.id === 0;
-        console.log(`Fields: ${length} (${isBox ? "Box" : "Player"})`);
-
         for (; length--;) {
             const field = this.packet.ReadI8();
             const executor = this.fieldMap.get(field);
-
-            if (isBox) console.log(`Field: ${Fields[field]} (${field})}`);
 
             if (!executor) Logger.err(`Unknown field ${field}!`);
             else executor(entity || this.player);
@@ -173,7 +166,6 @@ export default class UpdateParser {
 
             _entity!.updated = true;
             this.nextFields(fieldLength, _entity!);
-            console.log("tEST!", this.packet.buffer.subarray(this.packet.at, this.packet.at + 100));
         }
     }
 }

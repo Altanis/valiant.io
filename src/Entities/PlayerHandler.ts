@@ -222,8 +222,8 @@ export default class PlayerHandler extends Entity {
 
     public close(reason: number) {
         // TODO(Altanis): Add to ban list.
-        console.trace(reason);
         this.socket.close(reason);
+        this.destroy();
         this.server.players.delete(this);
     }
 

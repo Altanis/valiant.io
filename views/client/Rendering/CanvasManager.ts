@@ -141,12 +141,7 @@ export default class CanvasManager {
 
         const deltaTick = constrain(0, deltaAverage / 16.66, 1);
         const pos = this.client.player.lerpPosition(deltaTick);
-        // TODO(Altanis): Fix how angle is lerped.
-        const angle = this.client.player.angle.current = lerpAngle(
-            this.client.player.angle.current,
-            this.client.player.angle.target,
-            0.35 * deltaTick
-        );
+        const angle = this.client.player.lerpAngle(deltaTick);
 
         let { x: cameraX, y: cameraY } = pos;
 
@@ -187,7 +182,8 @@ export default class CanvasManager {
         for (const entity of this.client.player.surroundings) {
             switch (entity.type) {
                 case Entities.Box: entity.render(this.ctx, deltaTick); break;
-                case Entities.Player: entity.render(this, this.ctx, entity.lerpPosition(deltaTick), entity.angle); break;
+                /** @ts-ignore */
+                case Entities.Player: entity.renderOther(this, this.ctx, entity.lerpPosition(deltaTick), entity.lerpAngle(deltaTick)); break;
             }
         }
 

@@ -87,12 +87,64 @@ export default class Player extends Entity {
     /** The last time the player was alive. */
     public lastAlive = 0;
 
+    /** Render another player onto the canvas. */
+    public renderOther(
+        manager: CanvasManager,
+        ctx: CanvasRenderingContext2D,
+        position: { x: number, y: number },
+        angle: number,
+    ) {
+        this.ticks++;
+
+        if (!this.alive && this.deathAnim.phase === 0) this.destroy(manager, position);
+        else if (this.deathAnim.phase === 1) this.destroy(manager, position);
+
+        if (!this.alive) return;
+
+        const c = Characters[this.character];
+        const w = Weapons[this.weapon];
+
+        if (angle > Math.PI) angle = Math.PI - 0.01;
+        else if (angle < -Math.PI) angle = -Math.PI + 0.01;
+
+        ctx.save();
+        
+        const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
+        ctx.translate(position.x, position.y);
+        
+        this.renderBars(ctx, manager);
+        ctx.scale(scaleX, 1);
+
+        /** Render character. */
+        const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);
+        if (!character) return;
+
+        ctx.drawImage(character, -150, -150, this.dimensions.width, this.dimensions.height);
+
+        /** Render weapon. */
+        const weapon = manager.ImageManager.get(`img/weapons/${w.src}`);
+        if (!weapon) return;
+
+        if (scaleX === -1) {
+            if (angle > -Math.PI / 2 && angle < Math.PI) {
+                angle = Math.PI - angle;
+            } else if (angle < -Math.PI / 2 && angle > -Math.PI) {
+                angle = Math.abs(angle + (Math.PI / 2)) - (Math.PI / 2);
+            }
+        }
+        
+        ctx.rotate(angle);
+        ctx.drawImage(weapon, w.offsetX, w.offsetY, 200, 40);            
+
+        ctx.restore();
+    }
+
     /** Renders the player onto the canvas. */
     public render(
         manager: CanvasManager,
         ctx: CanvasRenderingContext2D,
         position: { x: number, y: number },
-        angle: number
+        angle: number,
     ) {
         this.ticks++;
 
@@ -153,8 +205,6 @@ export default class Player extends Entity {
 
         const size = this.deathAnim.size + (((this.deathAnim.targetSize - this.deathAnim.size) / this.deathAnim.targetTicks) * this.deathAnim.ticks);
         const transparency = ((this.deathAnim.targetTransparency - this.deathAnim.transparency) / this.deathAnim.targetTicks) * this.deathAnim.ticks;
-
-        console.log(size, 1 - transparency);
 
         const c = Characters[this.character];
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);
