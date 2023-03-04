@@ -1,66 +1,36 @@
-/** 
- * Stores entity positions in a grid and checks for collisions efficiently.
- * Credits to @PaulJohnson11 on Repl.it for his implementation of a Spatial Hashgrid.
-*/
-
-class Box {
-    /** The x-coordinate of the middle of the box. */
-    x: number;
-    /** The y-coordinate of the middle of the box. */
-    y: number;
-    /** The width of the box. */
-    w: number;
-    /** The height of the box. */
-    h: number;
-    /** The entity ID this box belongs to. */
-    entityId: number;
-    /** The query ID of the box. */
-    queryId: number | undefined;
-
-    constructor(x: number, y: number, w: number, h: number, id: number) {
-        this.x = x;
-        this.y = y;
-        this.w = w;
-        this.h = h;
-        this.entityId = id;
-    }
-
-    collidesWith(box: Box) {
-        return !(
-            this.x - this.w / 2 > box.x + box.w / 2 ||
-            this.x + this.w / 2 < box.x - box.w / 2 ||
-            this.y - this.h / 2 > box.y + box.h / 2 ||
-            this.y + this.h / 2 < box.y - box.h / 2
-        );
-    }
-}
-
-class SpatialHashGrid {
-    cells = new Map<number, Box[]>();
+export default class SpatialHashGrid {
+    /** The chunks inside the spatial hashgrid. */
+    cells = new Map<number, number[]>;
+    /** The size of each chunk. */
     cellSize = 4;
-    queryId = 0;
-    
+
+    constructor() {
+        if (!this.cellSize || (this.cellSize & (this.cellSize - 1)))
+            throw new Error("Could not initialize SpatialHashGrid: Cell size must be a power of 2.");
+    }
+
     /**
      * Inserts an entity into the grid.
      * @param x The x-coordinate of the entity.
      * @param y The y-coordinate of the entity.
      * @param w The width of the entity.
      * @param h The height of the entity.
-     */
+     * @param id The entity ID.
+    */
     insert(x: number, y: number, w: number, h: number, id: number) {
-        const box = new Box(x, y, w, h, id);
+        console.log("Inserting ID", id);
 
-        const startX = box.x >> this.cellSize;
-        const startY = box.y >> this.cellSize;
-        const endX = ((box.x + box.w) >> this.cellSize) + 1;
-        const endY = ((box.y + box.h) >> this.cellSize) + 1;
+        const startX = x >> this.cellSize;
+        const startY = y >> this.cellSize;
+        const endX = ((x + w) >> this.cellSize) + 1;
+        const endY = ((y + h) >> this.cellSize) + 1;
 
         for (let x = startX; x < endX; x++) {
             for (let y = startY; y < endY; y++) {
                 const key = x + y * 0xB504;
-                
+
                 if (!this.cells.has(key)) this.cells.set(key, []);
-                this.cells.get(key)?.push(box);
+                this.cells.get(key)?.push(id);
             }
         }
     }
@@ -71,28 +41,24 @@ class SpatialHashGrid {
      * @param y The y-coordinate of the entity.
      * @param w The width of the entity.
      * @param h The height of the entity.
-     * @param id The ID of the entity.
-     * @param inRange Checks from center of entity to get viewport.
+     * @param range Whether or not to check as a range or as a collision.
      */
-    query(x: number, y: number, w: number, h: number, id: number, inRange = false) {
-        const box = new Box(x, y, w, h, id);
-
+    query(x: number, y: number, w: number, h: number, id: number, range = false): number[] {
         let startX: number, startY: number, endX: number, endY: number;
 
-        if (inRange) {
-            startX = (box.x - box.w / 2) >> this.cellSize;
-            startY = (box.y - box.h / 2) >> this.cellSize;
-            endX = ((box.x + box.w / 2) >> this.cellSize) + 1;
-            endY = ((box.y + box.h / 2) >> this.cellSize) + 1;
+        if (range) {
+            startX = (x - w / 2) >> this.cellSize;
+            startY = (y - h / 2) >> this.cellSize;
+            endX = ((x + w / 2) >> this.cellSize) + 1;
+            endY = ((y + h / 2) >> this.cellSize) + 1;
         } else {
-            startX = box.x >> this.cellSize;
-            startY = box.y >> this.cellSize;
-            endX = ((box.x + box.w) >> this.cellSize) + 1;
-            endY = ((box.y + box.h) >> this.cellSize) + 1;
+            startX = x >> this.cellSize;
+            startY = y >> this.cellSize;
+            endX = ((x + w) >> this.cellSize) + 1;
+            endY = ((y + h) >> this.cellSize) + 1;
         }
 
-        const found: Map<number, Box> = new Map();
-        const queryId = this.queryId++;
+        const found: number[] = [];
 
         for (let x = startX; x < endX; x++) {
             for (let y = startY; y < endY; y++) {
@@ -100,24 +66,25 @@ class SpatialHashGrid {
 
                 const cell = this.cells.get(key);
                 if (!cell) continue;
-                
-                for (let i = 0; i < cell.length; i++) {
-                    const box: Box = cell[i];
 
-                    if (box.queryId !== queryId && box.entityId !== id) {
-                        box.queryId = queryId;
-                        found.set(box.entityId, box);
+                for (let i = cell.length; i --> 0;) {
+                    const entityId = cell[i];
+
+                    if (
+                        !found.includes(entityId) &&
+                        entityId !== id
+                    ) {
+                        found.push(entityId);
                     }
                 }
             }
         }
 
-        return [...found.values()];
+        return found;
     }
 
+    /** Clears the entities from the grid. */
     clear() {
         this.cells.clear();
     }
 }
-
-export { Box, SpatialHashGrid };

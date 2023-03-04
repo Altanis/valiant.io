@@ -5,7 +5,7 @@ import { MaximumConnections } from './Const/Config';
 import { CloseEvent } from './Const/Enums';
 
 import MessageHandler from './Managers/MessageHandler';
-import { SpatialHashGrid } from './Managers/SpatialHashGrid';
+import SpatialHashGrid from './Managers/SpatialHashGrid';
 
 import PlayerHandler from './Entities/PlayerHandler';
 import Entity from './Entities/Entity';
@@ -65,8 +65,7 @@ export default class GameServer {
     public tick(): void {
         this.SpatialHashGrid.clear();
         
-        this.entities.forEach(entity => {
-            entity.tick();
-        });   
+        this.entities.forEach(entity => this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id));
+        this.entities.forEach(entity => entity.tick());   
     }
 }

@@ -38,9 +38,6 @@ export default class Entity {
         if (this.velocity.x !== 0 || this.velocity.y !== 0) this.update.add("position");
         this.position!.add(this.velocity!, true);
         this.velocity!.x = this.velocity!.y = 0;
-        
-        /** Reinsert into hashgrid with updated position. */
-        this.server.SpatialHashGrid.insert(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id);
     }
 
     public collide(entity: Entity): void { };

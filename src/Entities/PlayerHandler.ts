@@ -10,7 +10,7 @@ import GameServer from '../GameServer';
 import SwiftStream from '../Utils/SwiftStream';
 
 import Entity from './Entity';
-import { Box } from '../Managers/SpatialHashGrid';
+
 import Vector from '../Utils/Vector';
 import { constrain } from '../Utils/Functions';
 
@@ -32,7 +32,7 @@ export default class PlayerHandler extends Entity {
     /** Whether or not the player is alive. */
     public alive: boolean = false;
     /** The entities surrounding the player. */
-    public surroundings: Box[] = [];
+    public surroundings: number[] = [];
     /** The weapon the player is hoding. */
     public weapon: WeaponDefinition | null = null;
     /** The amount of ticks needed to be passed before another attack. */
@@ -169,13 +169,11 @@ export default class PlayerHandler extends Entity {
                 case "name": this.SwiftStream.WriteI8(Fields.Name).WriteCString(entity.name); break;
             }
         });
-
-        this.id === 2 && console.log(this.SwiftStream.buffer.subarray(0, this.SwiftStream.at));
     }
 
     /** Collision effect with an entity. */
     public collide(entity: Entity) {
-        // This function is only invoked when a player collides with a player.
+
     }
 
     /** Sends creation data of the player. */
@@ -189,9 +187,11 @@ export default class PlayerHandler extends Entity {
         const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
         const collisions = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id, false);
 
+        if (this.id === 1) console.log("RANGE!", range);
+
         /** Detect collisions. */
-        for (const box of collisions) {
-            const entity = this.server.entities[box.entityId!];
+        for (const id of collisions) {
+            const entity = this.server.entities[id];
             entity.collide(this);
         }
 
@@ -205,8 +205,8 @@ export default class PlayerHandler extends Entity {
 
         if (range.length) {
             this.SwiftStream.WriteI8(0x01).WriteI8(range.length);
-            for (const surrounding of range) {
-                const entity = this.server.entities[surrounding.entityId!];
+            for (const id of range) {
+                const entity = this.server.entities[id];
                 /** @ts-ignore */
                 if (entity instanceof PlayerHandler) this.write(entity, true);
                 /** @ts-ignore */ 
