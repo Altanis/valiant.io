@@ -18,7 +18,7 @@ export default class ImageManager {
 
         const image = data.frames[data.at];
         /** @ts-ignore */
-        if (data.frames.length && sharded && ++data.delay > 2) {
+        if (data.frames.length && sharded && ++data.delay > 4) {
             data.at = ++data.at % data.frames.length;
             data.delay = 0;
         }
