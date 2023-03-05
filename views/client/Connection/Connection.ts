@@ -95,6 +95,7 @@ export default class Connection extends EventTarget {
         });
 
         this.socket.addEventListener("close", event => {
+            console.log(event.code);
             if (event.code === 4999) return; // Internal migration code.
             this.client.elements.homescreen.homescreen.style.display =
                 this.client.elements.arena.game.style.display = "none";

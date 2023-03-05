@@ -135,7 +135,7 @@ export default class PlayerHandler extends Entity {
             return this.close(CloseEvent.Banned);
         }
 
-        let sum = 0;
+        let sum = 1; // Account for self.
             
         this.server.players.forEach(player => {
             if (player.ip === this.ip) sum++;
@@ -222,7 +222,9 @@ export default class PlayerHandler extends Entity {
         // TODO(Altanis): Add to ban list.
         this.socket.close(reason);
         this.destroy();
+
         this.server.players.delete(this);
+        this.server.entities.splice(this.id, 1);
     }
 
     /** Tick-loop called by main game loop. */
