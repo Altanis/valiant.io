@@ -22,7 +22,7 @@ export default class Entity {
     /** The mass of the entity. */
     public mass = 0;
     /** Whether or not the entity is alive. */
-    public alive = true;
+    public alive = false;
 
     /** The health of the entity. */
     public health = 1;
@@ -34,6 +34,11 @@ export default class Entity {
 
         if (dimensions.length !== 2) throw new Error("Could not construct Entity: Malformed dimensions.");
         this.dimensions = dimensions;
+    }
+
+    /** Gets the center of the entity's hitbox. */
+    public get center(): Vector {
+        return new Vector(this.position.x + this.dimensions[0] / 2, this.position.y + this.dimensions[1] / 2);
     }
 
     public tick() {

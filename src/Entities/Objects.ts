@@ -10,13 +10,17 @@ import PlayerHandler from './PlayerHandler';
 export class Box extends Entity {
     /** EntityType => CollisionEffect() */
     /** @ts-ignore */
-    public static CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
+    public CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
         ["Player", (player: PlayerHandler) => {
-            player.health -= 12;
-            player.velocity.add(new Vector(500, 500));
+            player.health -= 1;
+            player.velocity.x = player.velocity.x || player.character!.speed;
+            player.velocity.y = player.velocity.y || player.character!.speed;
+
+            player.server.physics.applyElasticCollision(this, player);
         }]
     ]);
 
+    public alive = true;
     public mass = 100;
 
     constructor(server: GameServer) {
@@ -48,6 +52,6 @@ export class Box extends Entity {
 
     /** Collision effect with an entity. */
     public collide(entity: Entity) {
-        Box.CollisionEffects.get(entity.type)!(entity);
+        this.CollisionEffects.get(entity.type)!(entity);
     }
 }

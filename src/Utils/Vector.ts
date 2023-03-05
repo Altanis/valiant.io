@@ -89,8 +89,8 @@ export default class Vector {
     }
 
     /** Gets the angle of the vector. */
-    public get angle(): number {
-        return Math.atan2(this.y, this.x);
+    public angle(reference?: Vector): number {
+        return Math.atan2(this.y - (reference?.y || 0), this.x - (reference?.x || 0));
     }
 
     /** Gets the distance between two vectors. */

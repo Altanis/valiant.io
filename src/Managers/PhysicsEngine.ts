@@ -10,6 +10,7 @@ export default class PhysicsEngine {
         entity.velocity.scale(this.friction);
     }
 
+    /** Elastic collision when both entities are moving. */
     applyElasticCollision(entity1: Entity, entity2: Entity) {
         const totalMass = entity1.mass + entity2.mass;
         const relativeVelocity = { x: entity1.velocity.x - entity2.velocity.x, y: entity1.velocity.y - entity2.velocity.y };
@@ -27,5 +28,10 @@ export default class PhysicsEngine {
             (entity2.mass - entity1.mass) / totalMass * entity2.velocity.x + 2 * entity1.mass / totalMass * relativeVelocity.x,
             (entity2.mass - entity1.mass) / totalMass * entity2.velocity.y + 2 * entity1.mass / totalMass * relativeVelocity.y
         );
+    }
+
+    /** Knockback irrespective of the entity's velocity. */
+    applyKnockback(entity: Entity, direction: Vector, force: number) {
+        entity.velocity.add(direction.scale(force / entity.mass));
     }
 };

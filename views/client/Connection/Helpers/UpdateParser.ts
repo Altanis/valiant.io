@@ -86,19 +86,19 @@ export default class UpdateParser {
             const health = this.packet.ReadI8();
             entity.health = health;
 
-            if (entity.id !== this.player.id) this.client.elements.update("health", health);
+            if (entity.id === this.player.id) this.client.elements.update("health", health);
         }],
         [Fields.Armor, (entity: Player) => {
             const armor = this.packet.ReadI8();
             entity.armor = armor;
             
-            if (entity.id !== this.player.id) this.client.elements.update("armor", armor);
+            if (entity.id === this.player.id) this.client.elements.update("armor", armor);
         }],
         [Fields.Energy, (entity: Player) => {
             const energy = this.packet.ReadI8();
             entity.energy = energy;
 
-            if (entity.id !== this.player.id) this.client.elements.update("energy", energy);
+            if (entity.id === this.player.id) this.client.elements.update("energy", energy);
         }],
         [Fields.Name, (entity: Entity) => {
             const name = this.packet.ReadCString();

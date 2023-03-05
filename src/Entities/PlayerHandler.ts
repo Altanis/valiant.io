@@ -49,7 +49,7 @@ export default class PlayerHandler extends Entity {
     */
     public angle: number = Math.PI;
     /** The mass of the player. */
-    public mass = 200;
+    public mass = 2000;
     
     /** Attack information for the player. */
     
