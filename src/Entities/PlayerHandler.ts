@@ -29,8 +29,6 @@ export default class PlayerHandler extends Entity {
     /** PLAYER DATA INGAME */
     /** The name of the player. */
     public name: string = "unknown";
-    /** Whether or not the player is alive. */
-    public alive: boolean = false;
     /** The entities surrounding the player. */
     public surroundings: number[] = [];
     /** The weapon the player is hoding. */
@@ -50,6 +48,8 @@ export default class PlayerHandler extends Entity {
      * Measured in radians, with range of [-Math.PI, Math.PI].
     */
     public angle: number = Math.PI;
+    /** The mass of the player. */
+    public mass = 200;
     
     /** Attack information for the player. */
     
@@ -173,7 +173,7 @@ export default class PlayerHandler extends Entity {
 
     /** Collision effect with an entity. */
     public collide(entity: Entity) {
-
+        this.server.physics.applyElasticCollision(this, entity);
     }
 
     /** Sends creation data of the player. */

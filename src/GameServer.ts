@@ -6,6 +6,7 @@ import { CloseEvent } from './Const/Enums';
 
 import MessageHandler from './Managers/MessageHandler';
 import SpatialHashGrid from './Managers/SpatialHashGrid';
+import PhysicsEngine from "./Managers/PhysicsEngine";
 
 import PlayerHandler from './Entities/PlayerHandler';
 import Entity from './Entities/Entity';
@@ -18,10 +19,13 @@ export default class GameServer {
     public players = new Set<PlayerHandler>();
     /** The list of banned players. */
     public banned: string[] = [];
-    /** The handler for incoming messages. */
-    public MessageHandler = new MessageHandler(this);
     /** The entities currently in game. */
     public entities: Entity[] = [];
+
+    /** The handler for incoming messages. */
+    public MessageHandler = new MessageHandler(this);
+    /** The handler for physics. */
+    public physics = new PhysicsEngine();
 
     /** Arena information. */
     /** The length and width of the arena. */
@@ -65,7 +69,9 @@ export default class GameServer {
     public tick(): void {
         this.SpatialHashGrid.clear();
         
-        this.entities.forEach(entity => this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id));
+        this.entities.forEach(entity => {
+            if (entity.alive) this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id);
+        });
         this.entities.forEach(entity => entity.tick());   
     }
 }

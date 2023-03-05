@@ -17,6 +17,8 @@ export class Box extends Entity {
         }]
     ]);
 
+    public mass = 100;
+
     constructor(server: GameServer) {
         super(server, [300, 300], "Box");
         this.position = new Vector(0, 0);
