@@ -187,8 +187,6 @@ export default class PlayerHandler extends Entity {
         const range = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, 4200 / this.fov, 2100 / this.fov, this.id, true);
         const collisions = this.server.SpatialHashGrid.query(this.position!.x, this.position!.y, this.dimensions[0], this.dimensions[1], this.id, false);
 
-        if (this.id === 1) console.log("RANGE!", range);
-
         /** Detect collisions. */
         for (const id of collisions) {
             const entity = this.server.entities[id];

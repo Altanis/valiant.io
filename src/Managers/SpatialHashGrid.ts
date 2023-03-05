@@ -18,8 +18,6 @@ export default class SpatialHashGrid {
      * @param id The entity ID.
     */
     insert(x: number, y: number, w: number, h: number, id: number) {
-        console.log("Inserting ID", id);
-
         const startX = x >> this.cellSize;
         const startY = y >> this.cellSize;
         const endX = ((x + w) >> this.cellSize) + 1;
