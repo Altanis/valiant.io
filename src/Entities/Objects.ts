@@ -13,15 +13,13 @@ export class Box extends Entity {
     public CollisionEffects: Map<string, (entity: Entity) => void> = new Map([
         ["Player", (player: PlayerHandler) => {
             player.health -= 1;
-            player.velocity.x = player.velocity.x || player.character!.speed;
-            player.velocity.y = player.velocity.y || player.character!.speed;
-
-            player.server.physics.applyElasticCollision(this, player);
+            player.server.physics.applyElasticCollision(player, this);
         }]
     ]);
 
     public alive = true;
-    public mass = 100;
+    public mass = 200;
+    public knockback = 0;
 
     constructor(server: GameServer) {
         super(server, [300, 300], "Box");

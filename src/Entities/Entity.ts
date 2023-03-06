@@ -26,6 +26,8 @@ export default class Entity {
 
     /** The health of the entity. */
     public health = 1;
+    /** Knockback applied during collision. */
+    public knockback = 0;
 
     constructor(server: GameServer, dimensions: number[], type: EntityType) {
         this.server = server;

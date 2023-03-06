@@ -72,8 +72,8 @@ export default class Vector {
     /** Normalizes the vector (transforms it to a unit vector). */
     public normalize(): Vector {
         const magnitude = this.magnitude;
-        this.x /= magnitude || 0; 
-        this.y /= magnitude || 0;
+        this.x /= magnitude || 1; 
+        this.y /= magnitude || 1;
 
         return this;
     }
@@ -111,5 +111,10 @@ export default class Vector {
     /** Creates a new vector with a specific distance away from the current vector. */
     public moveByAngle(distance: number, angle: number): Vector {
         return new Vector(this.x + distance * Math.cos(angle), this.y + distance * Math.sin(angle));
+    }
+
+    /** Checks for equality between two vectors. */
+    public equals(vector: Vector): boolean {
+        return this.x === vector.x && this.y === vector.y;
     }
 }

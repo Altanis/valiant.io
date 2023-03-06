@@ -5,33 +5,34 @@ import Vector from "../Utils/Vector";
 export default class PhysicsEngine {
     /** The friction applied to movement. */
     public friction = 0.9;
-
+    
     applyFriction(entity: Entity) {
         entity.velocity.scale(this.friction);
     }
 
-    /** Elastic collision when both entities are moving. */
-    applyElasticCollision(entity1: Entity, entity2: Entity) {
-        const totalMass = entity1.mass + entity2.mass;
-        const relativeVelocity = { x: entity1.velocity.x - entity2.velocity.x, y: entity1.velocity.y - entity2.velocity.y };
-    
+    public applyElasticCollision(entity1: Entity, entity2: Entity) {
         /**
-         * Let M = m1 + m2
-         
-         * $$\vec{v'_1} = \frac{(m_1 - m_2)(\vec{v_1})}{M} + \frac{(2m_2)(\vec{v_2})}{M}$$ 
+         * $$v_{1x}' = \frac{(m_1 - m2) v{1x} + 2 m2 v{2x} \cos{\theta}}{m_1 + m2}$$
+            $$v{1y}' = \frac{(m_1 - m2) v{1y} + 2 m2 v{2y} \cos{\theta}}{m_1 + m2}$$
+            $$v{2x}' = \frac{(m_2 - m1) v{2x} + 2 m1 v{1x} \cos{\theta}}{m_1 + m2}$$
+            $$v{2y}' = \frac{(m_2 - m1) v{2y} + 2 m1 v{1y} \cos{\theta}}{m_1 + m_2}$$
          */
-        entity1.velocity = new Vector(
-            (entity1.mass - entity2.mass) / totalMass * entity1.velocity.x - 2 * entity2.mass / totalMass * relativeVelocity.x,
-            (entity1.mass - entity2.mass) / totalMass * entity1.velocity.y - 2 * entity2.mass / totalMass * relativeVelocity.y
-        );
-        entity2.velocity = new Vector(
-            (entity2.mass - entity1.mass) / totalMass * entity2.velocity.x + 2 * entity1.mass / totalMass * relativeVelocity.x,
-            (entity2.mass - entity1.mass) / totalMass * entity2.velocity.y + 2 * entity1.mass / totalMass * relativeVelocity.y
-        );
-    }
+        const theta = entity1.velocity.dot(entity2.velocity) / ((entity1.velocity.magnitude * entity2.velocity.magnitude) || 1);
+        const m1 = entity1.mass;
+        const m2 = entity2.mass;
+        const v1x = entity1.velocity.x || ((entity1.mass + entity2.mass) / 2);
+        const v1y = entity1.velocity.y || ((entity1.mass + entity2.mass) / 2);
+        const v2x = entity2.velocity.x || ((entity1.mass + entity2.mass) / 2);
+        const v2y = entity2.velocity.y || ((entity1.mass + entity2.mass) / 2);
 
-    /** Knockback irrespective of the entity's velocity. */
-    applyKnockback(entity: Entity, direction: Vector, force: number) {
-        entity.velocity.add(direction.scale(force / entity.mass));
+        const v1xPrime = ((m1 - m2) * v1x + 2 * m2 * v2x * Math.cos(theta)) / (m1 + m2);
+        const v1yPrime = ((m1 - m2) * v1y + 2 * m2 * v2y * Math.cos(theta)) / (m1 + m2);
+        const v2xPrime = ((m2 - m1) * v2x + 2 * m1 * v1x * Math.cos(theta)) / (m1 + m2);
+        const v2yPrime = ((m2 - m1) * v2y + 2 * m1 * v1y * Math.cos(theta)) / (m1 + m2);
+
+        entity2.velocity = new Vector(v1xPrime, v1yPrime).scale(entity2.knockback);
+        entity1.velocity = new Vector(v2xPrime, v2yPrime).scale(entity1.knockback);
+
+        console.log("V!", entity1.velocity, entity2.velocity);
     }
 };

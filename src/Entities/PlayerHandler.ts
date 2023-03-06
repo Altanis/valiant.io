@@ -43,13 +43,15 @@ export default class PlayerHandler extends Entity {
     /** The energy of the player. */
     public energy: number = 0;
 
+    public knockback = 5;
+
     /** 
      * The angle at which the player is facing.
      * Measured in radians, with range of [-Math.PI, Math.PI].
     */
     public angle: number = Math.PI;
     /** The mass of the player. */
-    public mass = 2000;
+    public mass = 100;
     
     /** Attack information for the player. */
     
