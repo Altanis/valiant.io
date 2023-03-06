@@ -251,8 +251,8 @@ export default class ElementManager {
                     measure
                 });
 
-                player.angle.current = player.angle.target;
-                player.angle.target = measure;
+                /*player.angle.current = player.angle.target;
+                player.angle.target = measure;*/
             }
         }
 
