@@ -43,12 +43,4 @@ httpServer.listen(8080, () => console.log("Server started on port 8080"));
 /** START GAME SERVER */
 const Server = new GameServer(httpServer);
 
-/*httpServer.on("upgrade", (req, socket, head) => {
-    console.log("handled many times.");
-    Server.wss.handleUpgrade(req, socket, head, (ws) => {
-        /** @ts-ignore 
-        Server.emit("connection", ws, req);
-    });
-});*/
-
 export { Server };

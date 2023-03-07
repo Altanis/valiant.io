@@ -7,6 +7,7 @@ import { CloseEvent } from './Const/Enums';
 import MessageHandler from './Managers/MessageHandler';
 import SpatialHashGrid from './Managers/SpatialHashGrid';
 import PhysicsEngine from "./Managers/PhysicsEngine";
+import Logger from "./Utils/Logger";
 
 import PlayerHandler from './Entities/PlayerHandler';
 import Entity from './Entities/Entity';
@@ -26,6 +27,8 @@ export default class GameServer {
     public MessageHandler = new MessageHandler(this);
     /** The handler for physics. */
     public physics = new PhysicsEngine();
+    /** The handler for standard output. */
+    public logger = new Logger();
 
     /** Arena information. */
     /** The length and width of the arena. */
@@ -49,11 +52,11 @@ export default class GameServer {
 
     /** Sets up handlers for the WebSocket server. */
     private handle(): void {
-        this.wss.on('listening', () => console.log("[WS]: Server is online. AddressInfo:", this.wss.address()));
-        this.wss.on('error', er => console.error("[WS]: An error has occured.", er));
-        this.wss.on('close', () => console.log("[WS]: Server closing prematurely."));
+        this.wss.on('listening', () => this.logger.log("[WS]: Server is online. AddressInfo:", this.wss.address()));
+        this.wss.on('error', er => this.logger.error("[WS]: An error has occured. " + er));
+        this.wss.on('close', () => this.logger.error("[WS]: Server closing prematurely."));
         this.wss.on('connection', (socket, request) => {
-            console.log("[WS]: A new connection has been established.");
+            this.logger.info("[WS]: A new connection has been established.");
             if (this.players.size >= MaximumConnections) {
                 request.destroy(new Error("Threshold for maximum amount of connections (per IP) has been exceeded."));
                 return socket.close(CloseEvent.ServerFilled);
