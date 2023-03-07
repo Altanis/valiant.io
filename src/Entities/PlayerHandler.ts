@@ -43,7 +43,7 @@ export default class PlayerHandler extends Entity {
     /** The energy of the player. */
     public energy: number = 0;
 
-    public knockback = 5;
+    public knockback = 100;
 
     /** 
      * The angle at which the player is facing.
@@ -175,7 +175,11 @@ export default class PlayerHandler extends Entity {
 
     /** Collision effect with an entity. */
     public collide(entity: Entity) {
-        this.server.physics.applyElasticCollision(this, entity);
+        const noCollide = super.collide(entity);
+        if (noCollide) return;
+
+        console.log("collide.");
+        this.server.physics.applyElasticCollision(entity, this);
     }
 
     /** Sends creation data of the player. */

@@ -50,6 +50,9 @@ export class Box extends Entity {
 
     /** Collision effect with an entity. */
     public collide(entity: Entity) {
+        const noCollide = super.collide(entity);
+        if (noCollide) return;
+
         this.CollisionEffects.get(entity.type)!(entity);
     }
 }

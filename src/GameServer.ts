@@ -44,7 +44,7 @@ export default class GameServer {
     /** Renders the ingame objects. */
     private renderObjects(): void {
         // render one box
-        this.entities.push(new Box(this));
+        // this.entities.push(new Box(this));
     }
 
     /** Sets up handlers for the WebSocket server. */
@@ -72,6 +72,7 @@ export default class GameServer {
         this.entities.forEach(entity => {
             if (entity.alive) this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id);
         });
+
         this.entities.forEach(entity => entity.tick());   
     }
 }

@@ -28,6 +28,9 @@ export default class Entity {
     public health = 1;
     /** Knockback applied during collision. */
     public knockback = 0;
+    
+    /** Entities collided with. */
+    public collided: number[] = [];
 
     constructor(server: GameServer, dimensions: number[], type: EntityType) {
         this.server = server;
@@ -52,6 +55,18 @@ export default class Entity {
         this.velocity!.x = this.velocity!.y = 0;
     }
 
-    public collide(entity: Entity): void { };
+    /** Returns true to signify collision should not be invoked. */
+    public collide(entity: Entity): boolean | void {
+        if (this.collided.includes(entity.id) || entity.collided.includes(this.id)) {
+            entity.collided.splice(entity.collided.indexOf(this.id), 1);
+            this.collided.splice(this.collided.indexOf(entity.id), 1);
+
+            return true;
+        }
+
+        this.collided.push(entity.id);
+        entity.collided.push(this.id);
+    };
+
     public destroy(): void { };
 }
