@@ -43,7 +43,7 @@ export default class PlayerHandler extends Entity {
     /** The energy of the player. */
     public energy: number = 0;
 
-    public knockback = 100;
+    public knockback = 1000;
 
     /** 
      * The angle at which the player is facing.
