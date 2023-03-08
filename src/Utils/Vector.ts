@@ -69,6 +69,13 @@ export default class Vector {
         return Math.sqrt(this.x * this.x + this.y * this.y);
     }
 
+    /** Sets the magnitude (length) of the vector. */
+    public set magnitude(magnitude: number) {
+        /** Normalizes vector then multiply by new magnitude. */
+        this.x = Math.cos(this.angle()) * magnitude;
+        this.y = Math.sin(this.angle()) * magnitude;
+    }
+
     /** Normalizes the vector (transforms it to a unit vector). */
     public normalize(): Vector {
         const magnitude = this.magnitude;

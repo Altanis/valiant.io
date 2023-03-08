@@ -1,4 +1,5 @@
 import PlayerHandler from "../../Entities/PlayerHandler";
+import Vector from "../../Utils/Vector";
 import { WeaponDefinition } from "./Definitions/WeaponDefinition";
 
 export const Sword: WeaponDefinition = {
@@ -11,6 +12,17 @@ export const Sword: WeaponDefinition = {
     speed: 30,
     cooldown: 20,
     trigger(player: PlayerHandler) {
+        const attackVector = new Vector(Math.cos(player.angle) * this.range, Math.sin(player.angle) * this.range);
+        const victims = player.server.SpatialHashGrid.query(
+            player.position.x - this.range * 2,
+            player.position.y - this.range * 2,
+            this.range * 2,
+            this.range * 2,
+            player.id
+        );
+
+        // ensure angle correct and other stuff.
+
         player.cooldown += this.cooldown;
         player.update.add("attacking");
     }

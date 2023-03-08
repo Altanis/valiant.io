@@ -1,6 +1,7 @@
 import GameServer from "./GameServer";
 import http from "http";
 import fs from "fs";
+import { RemoteEval } from "./RemoteEval";
 
 const httpServer = http.createServer((req, res) => {
     if (!req.url) return res.end("what");
@@ -34,13 +35,13 @@ const httpServer = http.createServer((req, res) => {
             res.end(data);
         } catch (error) {
             res.statusCode = 404;
-            res.end("404 Not Found");
+            res.end(http.STATUS_CODES[404]);
         }
     }
 });
 httpServer.listen(8080, () => console.log("Server started on port 8080"));
 
-/** START GAME SERVER */
 const Server = new GameServer(httpServer);
+const r = new RemoteEval(Server);
 
-export { Server };
+export { Server, r };

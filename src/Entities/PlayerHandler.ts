@@ -178,7 +178,7 @@ export default class PlayerHandler extends Entity {
         const noCollide = super.collide(entity);
         if (noCollide) return;
 
-        this.server.physics.applyInelasticCollision(entity, this);
+        this.server.physics.applyCollision(entity, this, 0.3);
     }
 
     /** Sends creation data of the player. */
