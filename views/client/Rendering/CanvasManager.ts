@@ -1,11 +1,9 @@
 import Client from "../Client";
 import { Entities, Phases, ServerBound } from "../Const/Enums";
 import { ARENA_SIZE, GRID_SIZE } from "../Utils/Config";
-import { constrain, lerp, lerpAngle, randomRange } from "../Utils/Functions";
+import { constrain, randomRange, TAU } from "../Utils/Functions";
 import ImageManager from "./ImageManager";
 
-/** Constant for 360 degrees in radians. */
-const TAU = Math.PI * 2;
 /** Psuedorandom number in between two ranges. */
 
 /** The canvas where nearly all visual representation is drawn. */
