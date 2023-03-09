@@ -8,18 +8,27 @@ export const Sword: WeaponDefinition = {
     type: "melee",
     rarity: "common",
     damage: 10,
-    range: Math.PI / 4,
+    range: 200,
     speed: 30,
     cooldown: 20,
-    trigger(player: PlayerHandler) {
+    trigger(player: PlayerHandler) {        
         const attack = new Vector(Math.cos(player.angle) * this.range, Math.sin(player.angle) * this.range);
+        console.log(
+            Math.max(0, player.position.x - attack.x),
+            Math.max(0, player.position.y - attack.y),
+            Math.abs(attack.x * 2),
+            Math.abs(attack.y * 2),
+            player.id
+        );
         const victims = player.server.SpatialHashGrid.query(
             Math.max(0, player.position.x - attack.x),
             Math.max(0, player.position.y - attack.y),
-            this.range,
-            this.range,
-            this.id
+            Math.abs(attack.x * 2),
+            Math.abs(attack.y * 2),
+            player.id
         );
+
+        console.log("victims", victims);
 
         // TODO(Altanis): Fix collision detection.
         for (const victim of victims) {

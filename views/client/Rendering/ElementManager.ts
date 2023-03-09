@@ -262,8 +262,8 @@ export default class ElementManager {
             player.attack.mouse = Math.atan2(this.mouse.y - (this.canvas.height / 2), this.mouse.x - (this.canvas.width / 2));
         
             const weapon = Weapons[player.weapon];
-            let posRange = player.attack.mouse + weapon.range;
-            let negRange = player.attack.mouse - weapon.range;
+            let posRange = player.attack.mouse + weapon.rotation;
+            let negRange = player.attack.mouse - weapon.rotation;
 
             if (posRange > Math.PI) posRange -= TAU;
             if (negRange < -Math.PI) negRange += TAU;

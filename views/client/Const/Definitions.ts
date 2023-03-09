@@ -49,7 +49,7 @@ const Weapons = [
         type: "melee",
         rarity: "common",
         damage: 10,
-        range: Math.PI / 4,
+        rotation: Math.PI / 4,
         speed: 30,
         src: "rusty_blade",
         offsetX: 0,

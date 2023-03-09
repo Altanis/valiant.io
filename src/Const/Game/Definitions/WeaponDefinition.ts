@@ -17,9 +17,7 @@ export interface WeaponDefinition {
     /** The cooldown of the weapon (in ticks). */
     cooldown: number;
     
-    /** The range of attack.
-     * Melee: Weapon goes down 1 radian, and attacks whatever is within <range>.
-     */
+    /** The range the attack hits, in units. */
     range: number;
     /**
      * The speed of the attack.
