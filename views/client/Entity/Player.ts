@@ -166,6 +166,19 @@ export default class Player extends Entity {
 
         ctx.scale(scaleX, 1);
 
+        /** Render range in which the sword swings as a rectangle using w.range, w.width, w.height, and other properties. */
+            const width = w.width;
+            const height = w.height;
+
+        const x = Math.cos(angle);
+        const y = Math.sin(angle);
+
+        ctx.beginPath();
+        ctx.rect(x - w.rotation, y, width + w.rotation, height);
+        ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
+        ctx.fill();
+
+
         /** Render character. */
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);
         if (!character) return;
@@ -185,9 +198,15 @@ export default class Player extends Entity {
         }
         
         ctx.rotate(angle);
-        ctx.drawImage(weapon, w.offsetX, w.offsetY, 200, 40);
+        ctx.drawImage(weapon, w.offsetX, w.offsetY, w.width, w.height);
 
-        // TODO(Altanis): Create a blue tracer to illustrate the path of the sword.
+        // TODO(Altanis): Create a red tracer to illustrate the path of the sword.
+        /*if (this.attack.attacking.client) {
+            ctx.beginPath();
+            ctx.arc(0, 0, 100, -Math.PI / 2, Math.PI / 2);
+            ctx.strokeStyle = "red";
+            ctx.stroke();
+        }*/
 
         ctx.restore();
 

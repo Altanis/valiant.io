@@ -53,7 +53,12 @@ const Weapons = [
         speed: 30,
         src: "rusty_blade",
         offsetX: 0,
-        offsetY: 0
+        offsetY: 0,
+        width: 200,
+        height: 40,
+        id: 0x00,
+        range: 200,
+        cooldown: 20,
     }
 ];
 

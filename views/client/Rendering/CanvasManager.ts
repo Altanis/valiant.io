@@ -185,6 +185,7 @@ export default class CanvasManager {
             }
         }
 
+        
         this.client.player.render(this, this.ctx, pos, angle);
 
         this.ctx.restore();
