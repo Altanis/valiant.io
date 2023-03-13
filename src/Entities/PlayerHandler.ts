@@ -45,11 +45,6 @@ export default class PlayerHandler extends Entity {
 
     public knockback = 1000;
 
-    /** 
-     * The angle at which the player is facing.
-     * Measured in radians, with range of [-Math.PI, Math.PI].
-    */
-    public angle: number = Math.PI;
     /** The mass of the player. */
     public mass = 100;
     

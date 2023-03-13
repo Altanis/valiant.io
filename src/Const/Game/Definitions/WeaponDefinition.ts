@@ -1,3 +1,4 @@
+import Entity from "../../../Entities/Entity";
 import PlayerHandler from "../../../Entities/PlayerHandler";
 
 export type WeaponType = "laser" | "melee" | "projectile";

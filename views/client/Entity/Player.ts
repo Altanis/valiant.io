@@ -169,15 +169,15 @@ export default class Player extends Entity {
         /** Render range in which the sword swings as a rectangle using w.range, w.width, w.height, and other properties. */
             const width = w.width;
             const height = w.height;
-
-        const x = Math.cos(angle);
-        const y = Math.sin(angle);
+        const x = Math.cos(angle) * w.range;
+        const y = Math.sin(angle) * w.range;
+        console.log(x);
 
         ctx.beginPath();
-        ctx.rect(x - w.rotation, y, width + w.rotation, height);
+        ctx.rect(0, y - w.rotation, width + w.rotation, height);
         ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
         ctx.fill();
-
+ 
 
         /** Render character. */
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);

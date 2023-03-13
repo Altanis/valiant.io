@@ -19,6 +19,11 @@ export default class Entity {
     public dimensions: number[];
     /** Whether or not the entity needs to be force updated. A set of properties is given. */
     public update: Set<string> = new Set();
+    /** 
+    * The angle at which the player is facing.
+    * Measured in radians, with range of [-Math.PI, Math.PI].
+    */
+    public angle: number = Math.PI;
     /** The mass of the entity. */
     public mass = 0;
     /** Whether or not the entity is alive. */
