@@ -99,6 +99,29 @@
     text-align: center;
 }
 
+#respawn {
+    height: 6%;
+    width: 10%;
+    text-transform: uppercase;
+    text-align: center;
+    line-height: 50px;
+    font-weight: bold;
+    font-size: 18px;
+    background: #76E1CE;
+    color: white;
+    -webkit-text-stroke: 0.5px #46C8B1;
+    border: 5px solid #46C8B1;
+    border-radius: 10px;
+    animation-duration: 2s;
+    animation-fill-mode: both;
+    animation-name: FadeInX;
+}
+
+#respawn:hover {
+    transition: box-shadow 0.25s ease-in-out;
+    box-shadow: 0 0 40px #46C8B1;
+}
+
 /*#stats {
     position: absolute;
     top: 15px;

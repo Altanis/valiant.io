@@ -87,6 +87,8 @@ export default class ElementManager {
         killedBy: document.getElementById("killedBy")!,
         /** The time alive. */
         timeAlive: document.getElementById("timeAlive")!,
+        /** The button to respawn. */
+        respawn: document.getElementById("respawn")!
     };
 
     /** Elements which play when the player disconnects from the game. */
@@ -168,8 +170,14 @@ export default class ElementManager {
             this.arena.energyText.innerText = `${energy}/${energy}`;
         });
 
+        /** Send play signal to server when Respawn is pressed.  */
+        this.arena.respawn.addEventListener("click", () => {
+            this.client.connection.send(ServerBound.Spawn, {
+                name: "Altanis"
+            });
+        });
+
         /** Take settings into account. */
-        /** @ts-ignore */
         // this.settings.hideGrid.checked = this.client.canvas.grid = localStorage.getItem("hideGrid") === "true";
         this.settings.hideGrid.addEventListener("change", () => {
             /** @ts-ignore */
