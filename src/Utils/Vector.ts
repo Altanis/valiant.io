@@ -102,7 +102,7 @@ export default class Vector {
 
     /** Gets the distance between two vectors. */
     public distance(vector: Vector): number {
-        return this.subtract(vector).magnitude;
+        return this.clone().subtract(vector).magnitude;
     }
 
     /** Gets the angle between two vectors. */

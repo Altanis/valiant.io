@@ -8,26 +8,28 @@ export const Sword: WeaponDefinition = {
     id: 0x00,
     type: "melee",
     rarity: "common",
-    damage: 10,
+    damage: 1,
     range: 200,
-    speed: Math.PI / 2.6,
+    speed: 30,
     cooldown: 20,
+    knockback: 10,
     trigger(player: PlayerHandler) {        
         for (const surrounding of player.surroundings) {
             const entity = player.server.entities[surrounding];
             if (!entity || surrounding === player.id) continue;
 
-            const angleBetween = player.position.angle(entity.position);
-
+            const angleBetween = entity.position.angle(player.position);
+    
             if (
                 entity.dimensions[0] + this.range > player.position.distance(entity.position)
                 && entity.dimensions[1] + this.range > player.position.distance(entity.position)
                 && angleDistance(player.angle, angleBetween) < this.range
             )
             {
+                console.log(entity.id, "was afflicted.");
                 entity.health -= this.damage;
-                entity.update.add("health");
-                entity.velocity.add(new Vector(Math.cos(angleBetween), Math.sin(angleBetween)).scale(500));
+                entity.velocity.add(new Vector(Math.cos(angleBetween), Math.sin(angleBetween)).scale(this.knockback));
+                entity.update.add("position");
             }
         }
 

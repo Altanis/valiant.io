@@ -25,6 +25,8 @@ export interface WeaponDefinition {
      * Melee: How fast it moves up/down (in radians per tick, or 40ms).
      */
     speed: number;
+    /** The scaling factor to knock a victim back by. */
+    knockback: number;
     /** The function ran when triggered. */
     trigger(player: PlayerHandler): void;
 }
