@@ -63,7 +63,8 @@ export default class UpdateParser {
                 entity.lastAlive = Date.now();
                 this.client.canvas.phase = Phases.Arena;
 
-                this.client.elements.homescreen.homescreen.style.display = "none";
+                this.client.elements.homescreen.homescreen.style.display = 
+                    this.client.elements.arena.death.style.display = "none";
                 this.client.elements.arena.stats.style.display =
                     this.client.elements.arena.utils.style.display =
                     this.client.canvas.mapCanvas.style.display = "block";

@@ -29,8 +29,8 @@ export class Box extends Entity {
         this.update.add("dimensions");
     }
 
-    public tick() {
-        super.tick();
+    public tick(tick: number) {
+        super.tick(tick);
     }
     
     /** Writes update information. */

@@ -30,6 +30,9 @@ export default class GameServer {
     /** The handler for standard output. */
     public logger = new Logger();
 
+    /** The game server tick. */
+    public tickCount = 0;
+
     /** Arena information. */
     /** The length and width of the arena. */
     public arenaBounds = 14400;
@@ -76,6 +79,6 @@ export default class GameServer {
             if (entity.alive) this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id);
         });
 
-        this.entities.forEach(entity => entity.tick());   
+        this.entities.forEach(entity => entity.tick(++this.tickCount));   
     }
 }

@@ -51,7 +51,7 @@ export default class Entity {
         return new Vector(this.position.x + this.dimensions[0] / 2, this.position.y + this.dimensions[1] / 2);
     }
 
-    public tick() {
+    public tick(tick: number) {
         if (this.health <= 0) this.destroy();
 
         if (this.velocity.x !== 0 || this.velocity.y !== 0) this.update.add("position");

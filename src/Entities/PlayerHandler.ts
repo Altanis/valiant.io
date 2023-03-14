@@ -228,14 +228,24 @@ export default class PlayerHandler extends Entity {
     }
 
     /** Tick-loop called by main game loop. */
-    public tick() {
+    public tick(tick: number) {
         if (this.cooldown > 0) {
             if (--this.cooldown === 0) this.attacking = false;
         }
 
         if (this.alive) {
-            super.tick();
-            
+            super.tick(tick);
+
+            /** Check if armor should be regenerated. */
+            // tick & x represents an interval, where x + 1 is the interval.
+            if (!(tick & 63)) { // Every 64 ticks, or roughly 1 second.
+                if (this.character && this.armor < this.character.stats.armor) {
+                    this.armor++;
+                    this.update.add("armor");
+                    console["log"]("I COULD HAB MY GUCI ON1");
+                }
+            }
+
             /** Send update to player. */
             this.SendUpdate();
 
