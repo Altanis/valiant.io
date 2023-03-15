@@ -1,6 +1,7 @@
 import { Characters, Weapons } from "../Const/Definitions";
 import CanvasManager from "../Rendering/CanvasManager";
 import { ARENA_SIZE } from "../Utils/Config";
+import { constrain } from "../Utils/Functions";
 import Entity from "./_Entity";
 
 /** A representation of a Player entity. */
@@ -86,6 +87,8 @@ export default class Player extends Entity {
 
     /** The last time the player was alive. */
     public lastAlive = 0;
+    /** The scaleX of the player. */
+    private scaleX = 1;
 
     /** Render another player onto the canvas. */
     public renderOther(
@@ -162,9 +165,13 @@ export default class Player extends Entity {
         const scaleX = (angle > Math.PI / 2 && angle < Math.PI) || (angle < -Math.PI / 2 && angle > -Math.PI) ? -1 : 1; // TODO(Altanis): Fix for attacking.
         ctx.translate(position.x, position.y);
 
+        if (this.scaleX !== scaleX) {
+            this.scaleX = constrain(-1, this.scaleX += (scaleX / 3), 1);
+        }
+
         this.renderBars(ctx, manager);
 
-        ctx.scale(scaleX, 1);
+        ctx.scale(this.scaleX, 1);
 
         /** Render character. */
         const character = manager.ImageManager.get(`img/characters/frames/${c.name}/${c.name}`, true);

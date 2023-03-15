@@ -242,7 +242,6 @@ export default class PlayerHandler extends Entity {
                 if (this.character && this.armor < this.character.stats.armor) {
                     this.armor++;
                     this.update.add("armor");
-                    console["log"]("I COULD HAB MY GUCI ON1");
                 }
             }
 
