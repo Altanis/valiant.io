@@ -12,8 +12,6 @@ export default class Player extends Entity {
     public ability = 0;
     /** The weapon the player is holding. */
     public weapon = 0;
-    /** If the player is alive. */
-    public alive = false;
     /** The dimensions of the player. */
     public dimensions = { width: 300, height: 300 };
 
@@ -99,6 +97,7 @@ export default class Player extends Entity {
     ) {
         this.ticks++;
 
+        console.log(this.alive);
         if (!this.alive && this.deathAnim.phase === 0) this.destroy(manager, position);
         else if (this.deathAnim.phase === 1) this.destroy(manager, position);
 
@@ -216,6 +215,8 @@ export default class Player extends Entity {
     public destroy(manager: CanvasManager, position: { x: number, y: number }) {
         this.deathAnim.phase = 1;
 
+        console.log("killing player", this.id);
+
         const size = this.deathAnim.size + (((this.deathAnim.targetSize - this.deathAnim.size) / this.deathAnim.targetTicks) * this.deathAnim.ticks);
         const transparency = ((this.deathAnim.targetTransparency - this.deathAnim.transparency) / this.deathAnim.targetTicks) * this.deathAnim.ticks;
 
@@ -230,7 +231,10 @@ export default class Player extends Entity {
         manager.ctx.drawImage(character, -(size / 2), -(size / 2), size, size);
         manager.ctx.restore();
 
-        if (++this.deathAnim.ticks >= this.deathAnim.targetTicks) this.deathAnim.phase = 2;
+        if (++this.deathAnim.ticks >= this.deathAnim.targetTicks) {
+            this.deathAnim.phase = 2;
+            this.alive = null;
+        }
     }
 
     private renderBars(ctx: CanvasRenderingContext2D, manager: CanvasManager) {

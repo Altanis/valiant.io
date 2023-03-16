@@ -132,7 +132,7 @@ export default class UpdateParser {
             this.nextEntities(entityLength);
         }
 
-        this.player.surroundings = this.player.surroundings.filter(entity => entity.updated);
+        this.player.surroundings = this.player.surroundings.filter(entity => entity.updated || entity.alive === false);
         this.player.surroundings.forEach(entity => entity.updated = false);
     }
 

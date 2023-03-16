@@ -47,6 +47,9 @@ export default abstract class Entity {
     /** The type of entity. */
     public type = 0;
 
+    /** If the entity is alive. */
+    public alive: boolean | null = true;
+
     public lerpPosition(deltaTick: number): { x: number, y: number } {
         if (this.ticks <= 2) return this.position.current = this.position.target;
 
