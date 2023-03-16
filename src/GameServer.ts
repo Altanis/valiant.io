@@ -79,6 +79,7 @@ export default class GameServer {
             if (entity.alive) this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id);
         });
 
-        this.entities.forEach(entity => entity.tick(++this.tickCount));   
+        this.tickCount++;
+        this.entities.forEach(entity => entity.tick(this.tickCount));   
     }
 }
