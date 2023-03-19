@@ -2,9 +2,10 @@ import Connection from "./Connection/Connection";
 
 import Logger from "./Utils/Logger";
 
-import ElementManager from "./Rendering/ElementManager";
-import CanvasManager from "./Rendering/CanvasManager";
+import ElementManager from "./Interface/ElementManager";
+import CanvasManager from "./Interface/CanvasManager";
 import Player from "./Entity/Player";
+import AudioManager from "./Interface/AudioManager";
 
 /** A representation of the client currently on the site. */
 export default class Client {
@@ -18,4 +19,6 @@ export default class Client {
     public elements = new ElementManager(this);
     /** The canvas on which the client draws on. */
     public canvas = new CanvasManager(this);
+    /** The audio manager. */
+    public audio = new AudioManager();
 };

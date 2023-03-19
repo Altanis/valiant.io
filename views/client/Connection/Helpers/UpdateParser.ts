@@ -68,7 +68,11 @@ export default class UpdateParser {
                 this.client.elements.arena.stats.style.display =
                     this.client.elements.arena.utils.style.display =
                     this.client.canvas.mapCanvas.style.display = "block";
+                
+                this.client.audio.play("game");
             } else {
+                this.client.audio.stop("game");
+
                 const time = new Date(Date.now() - entity.lastAlive);
                 const hours = time.getUTCHours().toString().padStart(2, '0');
                 const minutes = time.getUTCMinutes().toString().padStart(2, '0');

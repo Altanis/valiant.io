@@ -1,6 +1,6 @@
 import { constrain, lerp, lerpAngle } from "../Utils/Functions";
 import { ARENA_SIZE } from "../Utils/Config";
-import CanvasManager from "../Rendering/CanvasManager";
+import CanvasManager from "../Interface/CanvasManager";
 
 export default abstract class Entity {
     /** The ID of the entity. */

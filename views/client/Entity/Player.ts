@@ -1,5 +1,5 @@
 import { Characters, Weapons } from "../Const/Definitions";
-import CanvasManager from "../Rendering/CanvasManager";
+import CanvasManager from "../Interface/CanvasManager";
 import { ARENA_SIZE } from "../Utils/Config";
 import { constrain } from "../Utils/Functions";
 import Entity from "./_Entity";
