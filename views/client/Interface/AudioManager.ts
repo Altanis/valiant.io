@@ -6,10 +6,11 @@ interface CustomAudio extends HTMLAudioElement {
 export default class AudioManager {
     /** Path to the audio files. */
     private files = [
-        { path: "/audio/ingame.mp3", loop: true }
+        { path: "/audio/ingame.mp3", loop: true, effect: false },
+        { path: "/audio/button_press.mp3", loop: false, effect: true }
     ];
     /** Indexes to each audio track. */
-    private indexes: string[] = ["game"];
+    private indexes: string[] = ["game", "button_press"];
 
     public tracks: CustomAudio[] = [];
 
@@ -38,7 +39,7 @@ export default class AudioManager {
     public tick() {
         for (const track of this.tracks) {
             if (track.stopping) {
-                track.volume -= 0.1;
+                track.volume -= 0.01;
                 if (track.volume <= 0) {
                     track.pause();
                     track.currentTime = 0;

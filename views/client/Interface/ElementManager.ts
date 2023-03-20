@@ -125,8 +125,10 @@ export default class ElementManager {
             this.canvas.height = window.innerHeight * window.devicePixelRatio;
             this.canvas.width = window.innerWidth * window.devicePixelRatio;
         });
-
         window.dispatchEvent(new Event("resize"));
+
+        /** Sound effects for button presses. */
+        document.querySelectorAll("button").forEach(b => b.addEventListener("click", () => this.client.audio.play("button_press")));
 
         /** Add stat texts. */
         document.querySelectorAll(".progress-bar")!.forEach((p, i) => {
@@ -178,7 +180,8 @@ export default class ElementManager {
         });
 
         /** Take settings into account. */
-        // this.settings.hideGrid.checked = this.client.canvas.grid = localStorage.getItem("hideGrid") === "true";
+        /** @ts-ignore */
+        setTimeout(() => this.settings.hideGrid.checked = this.client.canvas.grid = localStorage.getItem("hideGrid") === "true", 1000);
         this.settings.hideGrid.addEventListener("change", () => {
             /** @ts-ignore */
             localStorage.setItem("hideGrid", this.settings.hideGrid.checked);

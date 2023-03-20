@@ -26,6 +26,7 @@ const httpServer = http.createServer((req, res) => {
         case "svg": return res.setHeader("Content-Type", "text/img+svg");
     }*/
 
+    // TODO(Altanis): OPTIMIZE! Why are you not caching the files?
     try {
         const data = fs.readFileSync(`views/assets${req.url}`);
         res.end(data);
@@ -42,6 +43,6 @@ const httpServer = http.createServer((req, res) => {
 httpServer.listen(8080, () => console.log("Server started on port 8080"));
 
 const Server = new GameServer(httpServer);
-const r = new RemoteEval(Server);
+const Evaluation = new RemoteEval(Server);
 
-export { Server, r };
+export { Server, Evaluation };
