@@ -63,7 +63,7 @@ export default class PlayerHandler extends Entity {
         super(server, [100, 100], "Player");
 
         this.server = server;
-        this.id = this.server.entities.length;
+        this.id = id;
         console.log("WOW!", id);
         this.socket = socket;
 
@@ -209,7 +209,7 @@ export default class PlayerHandler extends Entity {
                 /** @ts-ignore */
                 if (entity instanceof PlayerHandler) this.write(entity, true);
                 /** @ts-ignore */ 
-                else entity.write(this.SwiftStream);
+                else entity?.write(this.SwiftStream);
             };
         }
 
