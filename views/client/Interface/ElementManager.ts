@@ -49,6 +49,11 @@ export default class ElementManager {
         /** The setting to disable grid. */
         hideGrid: document.getElementById("hideGrid")!,
 
+        /** The setting to disable soundtracks. */
+        disableSoundTrack: document.getElementById("disableSoundTrack")!,
+        /** The setting to disable sound effects. */
+        disableSoundEffects: document.getElementById("disableSoundEffects")!,
+
         /** Back button */
         back: document.getElementById("back")!
     };
@@ -187,6 +192,16 @@ export default class ElementManager {
             localStorage.setItem("hideGrid", this.settings.hideGrid.checked);
             /** @ts-ignore */
             this.client.canvas.grid = !this.settings.hideGrid.checked;
+        });
+
+        this.settings.disableSoundTrack.addEventListener("change", () => {
+            /** @ts-ignore */
+            localStorage.setItem("disableSoundTracks", this.settings.disableSoundTrack.checked);
+        });
+
+        this.settings.disableSoundEffects.addEventListener("change", () => {
+            /** @ts-ignore */
+            localStorage.setItem("disableSoundEffects", this.settings.disableSoundEffects.checked);
         });
 
         this.homescreen.settings.addEventListener("click", () => {

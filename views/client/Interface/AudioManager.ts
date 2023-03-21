@@ -26,8 +26,12 @@ export default class AudioManager {
 
     /** Plays the audio track. */
     public play(phase: string) {
-        if (localStorage.noMusic) return;
-        this.tracks[this.indexes.indexOf(phase)].play();
+        const idx = this.indexes.indexOf(phase);
+
+        if (localStorage.getItem("disableSoundTracks") && !this.files[idx].effect) return;
+        if (localStorage.getItem("disableSoundEffects") && this.files[idx].effect) return;
+        
+        this.tracks[idx].play();
     }
 
     /** Stops the audio track. */
