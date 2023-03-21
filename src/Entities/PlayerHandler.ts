@@ -59,11 +59,12 @@ export default class PlayerHandler extends Entity {
     */
     public fov = 0.9; // TODO(Altanis): Let characters have different fovs.
 
-    constructor(server: GameServer, request: IncomingMessage, socket: WebSocket) {
-        super(server, [50, 50], "Player");
+    constructor(server: GameServer, id: number, request: IncomingMessage, socket: WebSocket) {
+        super(server, [100, 100], "Player");
 
         this.server = server;
         this.id = this.server.entities.length;
+        console.log("WOW!", id);
         this.socket = socket;
 
         this.addHandlers(socket);
@@ -173,7 +174,7 @@ export default class PlayerHandler extends Entity {
         const noCollide = super.collide(entity);
         if (noCollide) return;
 
-        this.server.physics.applyCollision(entity, this, 0.3);
+        this.server.physics.applyCollision(entity, this, 0.2);
     }
 
     /** Sends creation data of the player. */
@@ -190,7 +191,7 @@ export default class PlayerHandler extends Entity {
         /** Detect collisions. */
         for (const id of collisions) {
             const entity = this.server.entities[id];
-            entity.collide(this);
+            entity?.collide(this);
         }
 
         /** Checks if the client requires an update. */
@@ -224,7 +225,7 @@ export default class PlayerHandler extends Entity {
         this.destroy();
 
         this.server.players.delete(this);
-        this.server.entities.splice(this.id, 1);
+        this.server.entities[this.id] = undefined;
     }
 
     /** Tick-loop called by main game loop. */

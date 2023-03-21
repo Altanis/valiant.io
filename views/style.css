@@ -6,6 +6,7 @@
     font-family: "Orbitron", "Ubuntu";
     color: white;
     overflow: hidden;
+    user-select: none;
 }
 
 #canvas {

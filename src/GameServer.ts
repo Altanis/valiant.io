@@ -21,7 +21,7 @@ export default class GameServer {
     /** The list of banned players. */
     public banned: string[] = [];
     /** The entities currently in game. */
-    public entities: Entity[] = [];
+    public entities: (Entity | undefined)[] = [];
 
     /** The handler for incoming messages. */
     public MessageHandler = new MessageHandler(this);
@@ -65,10 +65,17 @@ export default class GameServer {
                 return socket.close(CloseEvent.ServerFilled);
             }
 
-            const manager = new PlayerHandler(this, request, socket);
+            const manager = new PlayerHandler(this, this.nextId, request, socket);
             this.players.add(manager);
-            this.entities[this.entities.length] = manager;
+            this.entities[this.nextId] = manager;
         });
+    }
+
+    /** Gets the next available ID. */
+    public get nextId(): number {
+        const idx = this.entities.indexOf(undefined);   
+        if (idx < 0) return this.entities.length;
+        return idx;
     }
 
     /** Tick-loop which executes every frame (25 TPS). */
@@ -76,10 +83,10 @@ export default class GameServer {
         this.SpatialHashGrid.clear();
         
         this.entities.forEach(entity => {
-            if (entity.alive) this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id);
+            if (entity?.alive) this.SpatialHashGrid.insert(entity.position!.x, entity.position!.y, entity.dimensions[0], entity.dimensions[1], entity.id);
         });
 
         this.tickCount++;
-        this.entities.forEach(entity => entity.tick(this.tickCount));   
+        this.entities.forEach(entity => entity?.tick(this.tickCount));   
     }
 }

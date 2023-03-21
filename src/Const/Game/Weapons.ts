@@ -9,7 +9,7 @@ export const Sword: WeaponDefinition = {
     type: "melee",
     rarity: "common",
     damage: 1,
-    range: 200,
+    range: 250,
     speed: 30,
     cooldown: 20,
     knockback: 10,
@@ -26,7 +26,6 @@ export const Sword: WeaponDefinition = {
                 && angleDistance(player.angle, angleBetween) < this.range
             )
             {
-                console.log(entity.id, "was afflicted.");
                 entity.health -= this.damage;
                 entity.velocity.add(new Vector(Math.cos(angleBetween), Math.sin(angleBetween)).scale(this.knockback));
                 entity.update.add("position");

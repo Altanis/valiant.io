@@ -84,7 +84,6 @@ export default class MessageHandler {
             velocity!.scale(player.character!.speed / velocity.magnitude);
         }
 
-        console.log(velocity);
         player.velocity.add(velocity);
     }
 

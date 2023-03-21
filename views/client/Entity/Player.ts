@@ -97,7 +97,6 @@ export default class Player extends Entity {
     ) {
         this.ticks++;
 
-        console.log(this.alive);
         if (!this.alive && this.deathAnim.phase === 0) this.destroy(manager, position);
         else if (this.deathAnim.phase === 1) this.destroy(manager, position);
 
@@ -136,7 +135,7 @@ export default class Player extends Entity {
         }
         
         ctx.rotate(angle);
-        ctx.drawImage(weapon, w.offsetX, w.offsetY, 200, 40);            
+        ctx.drawImage(weapon, w.offsetX, w.offsetY, w.width, w.height);            
 
         ctx.restore();
     }
@@ -191,7 +190,8 @@ export default class Player extends Entity {
         }
         
         ctx.rotate(angle);
-        ctx.drawImage(weapon, w.offsetX, w.offsetY, w.width, w.height);
+        /** @ts-ignore */
+        ctx.drawImage(weapon, (window.starlight || w.offsetX), (window.dazzle || w.offsetY), (window.moon || w.width), (window.sun || w.height));
 
         // TODO(Altanis): Create a red tracer to illustrate the path of the sword.
         /*if (this.attack.attacking.client) {
