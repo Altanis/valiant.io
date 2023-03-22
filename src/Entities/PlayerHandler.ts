@@ -192,6 +192,7 @@ export default class PlayerHandler extends Entity {
         for (const id of collisions) {
             const entity = this.server.entities[id];
             entity?.collide(this);
+            this.SwiftStream.WriteI8(0xFF);
         }
 
         /** Checks if the client requires an update. */

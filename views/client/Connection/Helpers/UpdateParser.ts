@@ -122,7 +122,12 @@ export default class UpdateParser {
 
         this.packet.ReadI8(); // Header
 
-        const group = this.nextGroup();
+        let group = this.nextGroup();
+        console.log(group);
+        if (group === 0xFF) { // collision
+            this.client.audio.play("bump");
+            group = this.nextGroup();
+        }
 
         if (group === 0x00) {
             const fieldLength = this.packet.ReadI8();

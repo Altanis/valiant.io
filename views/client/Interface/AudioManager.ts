@@ -6,11 +6,12 @@ interface CustomAudio extends HTMLAudioElement {
 export default class AudioManager {
     /** Path to the audio files. */
     private files = [
-        { path: "/audio/ingame.mp3", loop: true, effect: false },
-        { path: "/audio/button_press.mp3", loop: false, effect: true }
+        { path: "/audio/ingame.mp3", loop: true, effect: false, playing: false },
+        { path: "/audio/button_press.mp3", loop: false, effect: true, playing: false },
+        { path: "/audio/bump.mp3", loop: false, effect: true, playing: false },
     ];
     /** Indexes to each audio track. */
-    private indexes: string[] = ["game", "button_press"];
+    private indexes: string[] = ["game", "button_press", "bump"];
 
     public tracks: CustomAudio[] = [];
 
@@ -28,15 +29,21 @@ export default class AudioManager {
     public play(phase: string) {
         const idx = this.indexes.indexOf(phase);
 
-        if (localStorage.getItem("disableSoundTracks") && !this.files[idx].effect) return;
-        if (localStorage.getItem("disableSoundEffects") && this.files[idx].effect) return;
+        if (this.files[idx].playing === true) return;
+        console.log(localStorage.getItem("disableSoundTracks"), !this.files[idx].effect);
+        if (localStorage.getItem("disableSoundTracks") === "true" && !this.files[idx].effect) return;
+        if (localStorage.getItem("disableSoundEffects") === "true" && this.files[idx].effect) return;
         
         this.tracks[idx].play();
+        this.files[idx].playing = true;
     }
 
     /** Stops the audio track. */
     public stop(phase: string) {
-        const track = this.tracks[this.indexes.indexOf(phase)] as CustomAudio;
+        const idx = this.indexes.indexOf(phase);
+
+        this.files[idx].playing = false;
+        const track = this.tracks[idx] as CustomAudio;
         track.stopping = true;
     }
 

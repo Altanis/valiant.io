@@ -186,7 +186,12 @@ export default class ElementManager {
 
         /** Take settings into account. */
         /** @ts-ignore */
-        setTimeout(() => (this.settings.hideGrid.checked = localStorage.getItem("hideGrid") === "true") && (this.client.canvas.grid = !this.settings.hideGrid.checked), 1000);
+        setTimeout(() => (this.settings.hideGrid.checked = localStorage.getItem("hideGrid") === "true"), 1000);
+        /** @ts-ignore */
+        setTimeout(() => (this.settings.disableSoundTrack.checked = localStorage.getItem("disableSoundTracks") === "true"), 1000);
+        /** @ts-ignore */
+        setTimeout(() => (this.settings.disableSoundEffects.checked = localStorage.getItem("disableSoundEffects") === "true"), 1000);
+
         this.settings.hideGrid.addEventListener("change", () => {
             /** @ts-ignore */
             localStorage.setItem("hideGrid", this.settings.hideGrid.checked);

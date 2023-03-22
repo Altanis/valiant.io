@@ -39,7 +39,7 @@ export default class CanvasManager {
     public ImageManager = new ImageManager();
 
     /** If the grid should be drawn. */
-    public grid = true;
+    public grid = localStorage.getItem("hideGrid") !== "true";
 
     /** The stars on the homescreen. */
     public stars: {
