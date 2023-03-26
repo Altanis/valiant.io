@@ -3,3 +3,6 @@ node_modules
 lib/
 ideas.txt
 views/bundle.js
+### Rivet ###
+.rivet/
+.env

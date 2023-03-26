@@ -4,6 +4,7 @@
   "description": "A real-time game involving websockets.",
   "main": "index.js",
   "dependencies": {
+    "@rivet-gg/api": "^0.0.1-rc15",
     "@types/node": "^18.11.18",
     "accepts": "^1.3.8",
     "array-flatten": "^1.1.1",
